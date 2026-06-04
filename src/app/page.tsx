@@ -21,6 +21,8 @@ import { CreateFollowUpDialogWrapper } from "./follow-ups/create-dialog-wrapper"
 import { DashboardNotesClient, DashboardPinned } from "./dashboard-notes-client";
 import { AIChatbox } from "@/components/ai-chatbox";
 
+export const dynamic = "force-dynamic";
+
 export default async function DashboardPage() {
   let todayFollowUps: (typeof followUps.$inferSelect)[] = [];
   let allFollowUps: (typeof followUps.$inferSelect)[] = [];

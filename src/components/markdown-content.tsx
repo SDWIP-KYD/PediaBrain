@@ -3,6 +3,8 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+const FONT = "font-['Arial',sans-serif] text-[11px] leading-relaxed";
+
 export function MarkdownContent({
   content,
   className,
@@ -11,30 +13,30 @@ export function MarkdownContent({
   className?: string;
 }) {
   return (
-    <div className={className}>
+    <div className={`${FONT} ${className ?? ""}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
           h1: ({ children }) => (
-            <h1 className="text-lg font-bold mb-2 mt-3 first:mt-0">{children}</h1>
+            <h1 className="text-[13px] font-bold mb-2 mt-3 first:mt-0">{children}</h1>
           ),
           h2: ({ children }) => (
-            <h2 className="text-base font-semibold mb-1.5 mt-2.5 first:mt-0">{children}</h2>
+            <h2 className="text-[12px] font-semibold mb-1.5 mt-2.5 first:mt-0">{children}</h2>
           ),
           h3: ({ children }) => (
-            <h3 className="text-sm font-semibold mb-1 mt-2 first:mt-0">{children}</h3>
+            <h3 className="text-[11px] font-semibold mb-1 mt-2 first:mt-0">{children}</h3>
           ),
           p: ({ children }) => (
-            <p className="text-sm leading-relaxed mb-1.5">{children}</p>
+            <p className="mb-1.5">{children}</p>
           ),
           ul: ({ children }) => (
-            <ul className="list-disc list-inside text-sm space-y-0.5 mb-1.5">{children}</ul>
+            <ul className="list-disc list-inside space-y-0.5 mb-1.5">{children}</ul>
           ),
           ol: ({ children }) => (
-            <ol className="list-decimal list-inside text-sm space-y-0.5 mb-1.5">{children}</ol>
+            <ol className="list-decimal list-inside space-y-0.5 mb-1.5">{children}</ol>
           ),
           li: ({ children }) => (
-            <li className="text-sm">{children}</li>
+            <li>{children}</li>
           ),
           strong: ({ children }) => (
             <strong className="font-semibold text-foreground">{children}</strong>
@@ -46,13 +48,13 @@ export function MarkdownContent({
             const isInline = !className;
             if (isInline) {
               return (
-                <code className="bg-muted/50 px-1.5 py-0.5 rounded text-xs font-mono text-neon">
+                <code className="bg-muted/50 px-1 py-0.5 rounded text-[10px] font-mono text-neon">
                   {children}
                 </code>
               );
             }
             return (
-              <code className="block bg-muted/50 p-2 rounded text-xs font-mono overflow-x-auto">
+              <code className="block bg-muted/50 p-2 rounded text-[10px] font-mono overflow-x-auto">
                 {children}
               </code>
             );
@@ -63,13 +65,13 @@ export function MarkdownContent({
             </pre>
           ),
           blockquote: ({ children }) => (
-            <blockquote className="border-l-2 border-neon/30 pl-3 italic text-muted-foreground text-sm mb-1.5">
+            <blockquote className="border-l-2 border-neon/30 pl-3 italic text-muted-foreground mb-1.5">
               {children}
             </blockquote>
           ),
           table: ({ children }) => (
             <div className="overflow-x-auto mb-2">
-              <table className="w-full text-sm border-collapse">{children}</table>
+              <table className="w-full border-collapse">{children}</table>
             </div>
           ),
           th: ({ children }) => (

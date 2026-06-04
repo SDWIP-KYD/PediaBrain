@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSessionToken, buildSessionCookie, verifyPassword } from "@/lib/auth";
+import { cookies } from "next/headers";
+import { createSessionToken, verifyPassword } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,7 +11,6 @@ export async function POST(request: NextRequest) {
     const secret = process.env.SESSION_SECRET;
 
     if (!storedPassword || !secret) {
-      console.error("[Auth] AUTH_PASSWORD or SESSION_SECRET not set");
       return NextResponse.json(
         { error: "Server misconfiguration" },
         { status: 500 }
@@ -18,27 +18,23 @@ export async function POST(request: NextRequest) {
     }
 
     if (!verifyPassword(password, storedPassword)) {
-      // Wrong password — still validate timing to prevent timing attacks
-      // (verifyPassword already does constant-time)
       return NextResponse.json(
         { error: "Wrong password" },
         { status: 401 }
       );
     }
 
-    // Password correct — create session
     const token = createSessionToken(secret, "1");
-    const cookie = buildSessionCookie(token);
+    const cookieStore = await cookies();
+    cookieStore.set("session", token, {
+      httpOnly: true,
+      path: "/",
+      sameSite: "lax",
+      maxAge: 30 * 60,
+      secure: true,
+    });
 
-    return NextResponse.json(
-      { ok: true },
-      {
-        status: 200,
-        headers: {
-          "Set-Cookie": cookie,
-        },
-      }
-    );
+    return NextResponse.json({ ok: true }, { status: 200 });
   } catch (err) {
     console.error("[Auth] Login error:", err);
     return NextResponse.json(

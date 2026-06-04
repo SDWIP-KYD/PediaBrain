@@ -38,9 +38,7 @@ export default function LoginPage() {
       });
 
       if (res.ok) {
-        // Success — redirect to original destination
-        router.push(from);
-        router.refresh();
+        window.location.href = from;
       } else {
         const data = await res.json();
         setError(data.error || "Login failed");
