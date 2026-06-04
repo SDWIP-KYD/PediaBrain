@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sepsis Anak 2026 — SSC Guidelines</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #C0392B;
+    --red-light: #E74C3C;
+    --red-pale: #FDECEA;
+    --navy: #1A2332;
+    --navy-mid: #243447;
+    --slate: #34495E;
+    --gold: #E6A817;
+    --gold-pale: #FEF9EC;
+    --green: #1E8449;
+    --green-pale: #E8F8EF;
+    --blue: #1A5276;
+    --blue-pale: #EAF2F8;
+    --purple: #6C3483;
+    --purple-pale: #F5EEF8;
+    --orange: #BA4A00;
+    --orange-pale: #FDF0E8;
+    --bg: #F4F6F8;
+    --white: #FFFFFF;
+    --border: #DDE2E8;
+    --text: #1A2332;
+    --text-light: #5D6D7E;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--navy);
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 280px; height: 280px;
+    background: radial-gradient(circle, rgba(192,57,43,0.3) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: 30%;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(230,168,23,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .header-inner {
+    position: relative;
+    z-index: 1;
+    padding: 36px 32px 28px;
+  }
+  .badge {
+    display: inline-block;
+    background: var(--red);
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 2px;
+    margin-bottom: 14px;
+  }
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    font-weight: 900;
+    color: white;
+    line-height: 1.15;
+    margin-bottom: 8px;
+  }
+  h1 span { color: var(--gold); }
+  .subtitle {
+    color: rgba(255,255,255,0.6);
+    font-size: 13px;
+    font-weight: 300;
+    letter-spacing: 0.3px;
+  }
+  .header-meta {
+    display: flex;
+    gap: 20px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+  .meta-pill {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.75);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .meta-pill strong { color: white; }
+
+  /* NAV TABS */
+  .nav-wrap {
+    background: var(--white);
+    border-bottom: 2px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .nav-tabs {
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 0;
+    padding: 0 16px;
+  }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    flex-shrink: 0;
+    padding: 14px 16px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-light);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tab-btn:hover { color: var(--red); }
+  .tab-btn.active {
+    color: var(--red);
+    border-bottom-color: var(--red);
+    font-weight: 600;
+  }
+  .tab-icon { font-size: 14px; }
+
+  /* CONTENT */
+  .content { padding: 20px 16px 40px; max-width: 860px; margin: 0 auto; }
+  .section { display: none; animation: fadeIn 0.3s ease; }
+  .section.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* SECTION HEADER */
+  .sec-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sec-icon {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .sec-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; line-height: 1.2; }
+  .sec-sub { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+
+  /* CARDS */
+  .card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+  .card-head {
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  .card-head:hover { background: var(--bg); }
+  .card-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .card-label {
+    font-size: 13px;
+    font-weight: 600;
+    flex: 1;
+    color: var(--text);
+  }
+  .card-chevron {
+    font-size: 11px;
+    color: var(--text-light);
+    transition: transform 0.2s;
+  }
+  .card.open .card-chevron { transform: rotate(180deg); }
+  .card-body {
+    display: none;
+    padding: 0 16px 16px;
+    border-top: 1px solid var(--border);
+  }
+  .card.open .card-body { display: block; }
+
+  /* HIGHLIGHT BOXES */
+  .hbox {
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    border-left: 4px solid;
+  }
+  .hbox.red { background: var(--red-pale); border-color: var(--red); }
+  .hbox.gold { background: var(--gold-pale); border-color: var(--gold); }
+  .hbox.green { background: var(--green-pale); border-color: var(--green); }
+  .hbox.blue { background: var(--blue-pale); border-color: var(--blue); }
+  .hbox.purple { background: var(--purple-pale); border-color: var(--purple); }
+  .hbox.orange { background: var(--orange-pale); border-color: var(--orange); }
+  .hbox-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    opacity: 0.7;
+  }
+  .hbox p, .hbox li {
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--text);
+  }
+  .hbox ul { padding-left: 16px; }
+  .hbox ul li { margin-bottom: 4px; }
+
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 10px 0; }
+  th {
+    background: var(--navy);
+    color: white;
+    padding: 8px 10px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+  }
+  td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.5; }
+  tr:nth-child(even) td { background: var(--bg); }
+  tr:last-child td { border-bottom: none; }
+
+  /* BADGE/CHIP */
+  .chip {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .chip.strong { background: #1E8449; color: white; }
+  .chip.cond { background: #1A5276; color: white; }
+  .chip.gps { background: #7D6608; color: white; }
+  .chip.insuf { background: #717D7E; color: white; }
+
+  /* TIMELINE */
+  .timeline { position: relative; padding-left: 24px; }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 8px; top: 6px; bottom: 6px;
+    width: 2px;
+    background: var(--border);
+  }
+  .tl-item {
+    position: relative;
+    margin-bottom: 16px;
+  }
+  .tl-dot {
+    position: absolute;
+    left: -20px; top: 4px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 0 0 2px currentColor;
+  }
+  .tl-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 3px;
+  }
+  .tl-text { font-size: 13px; line-height: 1.6; }
+
+  /* SCORE CARD */
+  .score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .score-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+  }
+  .score-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); margin-bottom: 4px; }
+  .score-val { font-family: 'DM Mono', monospace; font-size: 18px; font-weight: 500; color: var(--navy); }
+  .score-desc { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+
+  /* FLOW CHART */
+  .flow { display: flex; flex-direction: column; gap: 6px; }
+  .flow-box {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 11px 14px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    position: relative;
+  }
+  .flow-box.accent { border-color: var(--red); background: var(--red-pale); }
+  .flow-box.decision {
+    border-color: var(--gold);
+    background: var(--gold-pale);
+    border-style: dashed;
+  }
+  .flow-arrow {
+    text-align: center;
+    color: var(--text-light);
+    font-size: 16px;
+    line-height: 1;
+  }
+  .flow-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-light);
+    margin-bottom: 3px;
+  }
+
+  p { font-size: 13px; line-height: 1.7; color: var(--text); margin-bottom: 8px; }
+  strong { font-weight: 600; }
+  .mt { margin-top: 14px; }
+  .mb { margin-bottom: 14px; }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 24px 16px;
+    font-size: 11px;
+    color: var(--text-light);
+    border-top: 1px solid var(--border);
+    background: white;
+    max-width: 860px;
+    margin: 0 auto;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="badge">SSC Guidelines 2026</div>
+    <h1>Sepsis pada <span>Anak</span></h1>
+    <p class="subtitle">Surviving Sepsis Campaign — SCCM & ESICM | Update Maret 2026</p>
+    <div class="header-meta">
+      <div class="meta-pill">📄 <strong>61</strong> Rekomendasi</div>
+      <div class="meta-pill">🧑‍⚕️ <strong>68</strong> Pakar Internasional</div>
+      <div class="meta-pill">📅 Published <strong>Mar 2026</strong></div>
+      <div class="meta-pill">🔄 Update dari <strong>2020</strong></div>
+    </div>
+  </div>
+</header>
+
+<div class="nav-wrap">
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="showTab('definisi',this)"><span class="tab-icon">📖</span>Definisi</button>
+    <button class="tab-btn" onclick="showTab('patofisio',this)"><span class="tab-icon">🔬</span>Patofisiologi</button>
+    <button class="tab-btn" onclick="showTab('klinis',this)"><span class="tab-icon">🩺</span>Klinis</button>
+    <button class="tab-btn" onclick="showTab('diagnosis',this)"><span class="tab-icon">🔍</span>Diagnosis</button>
+    <button class="tab-btn" onclick="showTab('tatalaksana',this)"><span class="tab-icon">💊</span>Tatalaksana</button>
+    <button class="tab-btn" onclick="showTab('evaluasi',this)"><span class="tab-icon">📊</span>Evaluasi</button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- ===== DEFINISI ===== -->
+  <div class="section active" id="definisi">
+    <div class="sec-head">
+      <div class="sec-icon" style="background:#FDECEA;">📖</div>
+      <div>
+        <div class="sec-title">Definisi & Terminologi</div>
+        <div class="sec-sub">Phoenix Criteria 2024 — digunakan dalam SSC 2026</div>
+      </div>
+    </div>
+
+    <div class="hbox red">
+      <div class="hbox-title">⚠️ Definisi Sepsis Anak (Baru 2024)</div>
+      <p><strong>Sepsis</strong> = Infeksi + disfungsi organ yang mengancam jiwa, dioperasionalisasikan sebagai disfungsi sedang-berat pada ≥1 sistem berikut:</p>
+      <ul>
+        <li>🫁 <strong>Respirasi</strong></li>
+        <li>❤️ <strong>Kardiovaskular</strong></li>
+        <li>🩸 <strong>Koagulasi</strong></li>
+        <li>🧠 <strong>Neurologis</strong></li>
+      </ul>
+      <p style="margin-top:8px; font-size:11px; opacity:0.75">→ Phoenix Sepsis Score (operasionalisasi resmi)</p>
+    </div>
+
+    <div class="hbox orange">
+      <div class="hbox-title">⚡ Definisi Septic Shock</div>
+      <p><strong>Septic Shock</strong> = Sepsis + ≥1 disfungsi kardiovaskular berupa:</p>
+      <ul>
+        <li>Hipotensi (TD &lt; persentil 5 sesuai usia)</li>
+        <li>Hiperlaktatemia ≥ <strong>5 mmol/L</strong></li>
+        <li>Penggunaan obat vasoaktif</li>
+      </ul>
+    </div>
+
+    <div class="card open">
+      <div class="card-head" onclick="toggleCard(this)">
+        <span class="card-dot" style="background:#1A5276"></span>
+        <span class="card-label">Populasi yang dicakup panduan ini</span>
+        <span class="card-chevron">▼</span>
+      </div>
+      <div class="card-body">
+        <table>
+          <tr><th>Kriteria</th><th>Keterangan</th></tr>
+          <tr><td>Usia minimum</td><td>≥ 37 minggu gestasi saat lahir</td></tr>
+          <tr><td>Usia maksimum</td><td>18 tahun</td></tr>
+          <tr><td>Kelompok</td><td>Bayi, balita, anak usia sekolah, remaja</td></tr>
+          <tr><td>Setting</td><td>RS, IGD, atau fasilitas perawatan akut</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <span class="card-dot" style="background:#7D6608"></span>
+        <span class="card-label">Perbandingan Definisi Lama vs Baru</span>
+        <span class="card-chevron">▼</span>
+      </div>
+      <div class="card-body">
+        <table>
+          <tr><th>Aspek</th><th>IPSCC 2005</th><th>Phoenix 2024 / SSC 2026</th></tr>
+          <tr><td>Sepsis</td><td>SIRS + infeksi</td><td>Infeksi + disfungsi organ</td></tr>
+          <tr><td>Severe sepsis</td><td>Sepsis + disfungsi organ</td><td>Tidak digunakan lagi</td></tr>
+          <tr><td>Septic shock</td><td>Sepsis + hipoperfusi</td><td>Sepsis + ≥1 disfungsi kardiovaskular</td></tr>
+          <tr><td>Skor</td><td>Kriteria SIRS</td><td>Phoenix Sepsis Score</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="hbox gold">
+      <div class="hbox-title">📌 Phoenix Sepsis Score</div>
+      <p>Sistem skoring operasional yang menggantikan SIRS pada anak. Menilai 4 domain organ:</p>
+      <ul>
+        <li><strong>Respirasi</strong>: SpO₂/FiO₂, PaO₂/FiO₂, ventilasi mekanik</li>
+        <li><strong>Kardiovaskular</strong>: laktат, vasoaktif, MAP vs persentil usia</li>
+        <li><strong>Koagulasi</strong>: platelet, INR, D-dimer, fibrinogen</li>
+        <li><strong>Neurologis</strong>: GCS, pupil reaktif</li>
+      </ul>
+      <p style="margin-top:6px; font-size:12px"><strong>Sepsis</strong> = Phoenix score ≥ 2 | <strong>Septic Shock</strong> = Sepsis + ≥1 poin kardiovaskular</p>
+    </div>
+  </div>
+
+  <!-- ===== PATOFISIOLOGI ===== -->
+  <div class="section" id="patofisio">
+    <div class="sec-head">
+      <div class="sec-icon" style="background:#E8F8EF;">🔬</div>
+      <div>
+        <div class="sec-title">Patofisiologi</div>
+        <div class="sec-sub">Mekanisme molekular hingga disfungsi organ</div>
+      </div>
+    </div>
+
+    <div class="hbox blue">
+      <div class="hbox-title">🧬 Inisiasi</div>
+      <p>Patogen (bakteri, virus, jamur, parasit) mengaktifkan <strong>Pattern Recognition Receptors (PRR)</strong> → aktivasi kaskade inflamasi sistemik. PAMP (Pathogen-Associated Molecular Patterns) memicu respons imun innate yang berlebihan.</p>
+    </div>
+
+    <div class="card open">
+      <div class="card-head" onclick="toggleCard(this)">
+        <span class="card-dot" style="background:#C0392B"></span>
+        <span class="card-label">Kaskade Inflamasi & Imunopatologi</span>
+        <span class="card-chevron">▼</span>
+      </div>
+      <div class="card-body" style="padding-top:14px">
+        <div class="flow">
+          <div class="flow-box accent">
+            <div class="flow-label">Trigger</div>
+            Infeksi → PAMP/DAMP → aktivasi TLR, NLR, dsb.
+          </div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-box">
+            <div class="flow-label">Respons Proinflamasi</div>
+            TNF-α, IL-1β, IL-6, IL-8 ↑ → aktivasi endotel, neutrofil, makrofag → peningkatan permeabilitas vaskular
+          </div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-box decision">
+            <div class="flow-label">Imunoparalisis (fase lanjut)</div>
+            Apoptosis limfosit masif → IL-10, TGF-β ↑ → imunosupresi → rentan infeksi sekunder
+          </div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-box accent">
+            <div class="flow-label">Disfungsi Organ</div>
+            Disfungsi mikrovaskular, gangguan utilisasi oksigen seluler → MODS (Multi-Organ Dysfunction Syndrome)
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <span class="card-dot" style="background:#1A5276"></span>
+        <span class="card-label">Patofisiologi Syok Septik pada Anak</span>
+        <span class="card-chevron">▼</span>
+      </div>
+      <div class="card-body">
+        <table>
+          <tr><th>Mekanisme</th><th>Efek</th></tr>
+          <tr><td>Vasodilatasi (NO ↑)</td><td>Resistensi vaskular sistemik ↓, hipotensi</td></tr>
+          <tr><td>Kebocoran kapiler</td><td>Hipovolemia relatif, edema interstisial</td></tr>
+          <tr><td>Disfungsi miokard</td><td>CO ↓ (terutama pada anak kecil)</td></tr>
+          <tr><td>Vasokonstriksi splanknik</td><td>Iskemia usus, translokasi bakteri</td></tr>
+          <tr><td>Koagulopati</td><td>DIC, mikrotrombus → iskemia organ</td></tr>
+          <tr><td>Disfungsi mitokondria</td><td>Utilisasi O₂ seluler ↓ meski DO₂ cukup</td></tr>
+        </table>
+        <div class="hbox red mt">
+          <p><strong>Perbedaan penting anak vs dewasa:</strong> Anak lebih sering mengalami syok dengan <strong>cardiac output rendah + resistensi tinggi</strong> (cold shock), bukan vasodilatasi (warm shock) seperti dewasa.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <span class="card-dot" style="background:#6C3483"></span>
+        <span class="card-label">Disfungsi Organ Spesifik</span>
+        <span class="card-chevron">▼</span>
+      </div>
+      <div class="card-body">
+        <table>
+          <tr><th>Organ</th><th>Manifestasi</th></tr>
+          <tr><td>🫁 Paru</td><td>ARDS, ALI — hipoksemia refrakter</td></tr>
+          <tr><td>🫀 Jantung</td><td>Disfungsi miokard, aritmia</td></tr>
+          <tr><td>🧠 Otak</td><td>Ensefalopati, penurunan kesadaran</td></tr>
+          <tr><td>🫘 Ginjal</td><td>AKI — oliguria, kreatinin ↑</td></tr>
+          <tr><td>🩸 Koagulasi</td><td>DIC, trombositopenia, perdarahan</td></tr>
+          <tr><td>🫀 Hati</td><td>Koagulopati, hiperglikemia/hipoglikemia</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== KLINIS ===== -->
+  <div class="section" id="klinis">
+    <div class="sec-head">
+      <div class="sec-icon" style="background:#EAF2F8;">🩺</div>
+      <div>
+        <div class="sec-title">Manifestasi Klinis</div>
+        <div class="sec-sub">Tanda & gejala sepsis dan septic shock pada anak</div>
+      </div>
+    </div>
+
+    <div class="hbox gold">
+      <div class="hbox-title">⚡ Red Flags — Kenali Segera!</div>
+      <ul>
+        <li>Demam tinggi atau hipotermia (bayi)</li>
+        <li>Takikardia tidak sesuai keadaan klinis</li>
+        <li>Capillary refill time > 2 detik</li>
+        <li>Perubahan status mental / penurunan kesadaran</li>
+        <li>Oliguria atau anuria</li>
+        <li>Petechiae / purpura</li>
+        <li>Neonatus: letargi, malas minum, tidak mau menangis</li>
+      </ul>
+    </div>
+
+    <div class="card open">
+      <div class="card-head" onclick="toggleCard(this)">
+        <span class="card-dot" style="background:#C0392B"></span>
+        <span class="card-label">Tanda Vital per Usia</span>
+        <span class="card-chevron">▼</span>
+      </div>
+      <div class="card-body">
+        <table>
+          <tr><th>Usia</th><th>Takikardia (HR)</th><th>Bradikardi</th><th>Takipnea (RR)</th><th>Hipotensi (SBP)</th></tr>
+          <tr><td>0–1 bulan</td><td>&gt;180</td><td>&lt;100</td><td>&gt;50</td><td>&lt;60</td></tr>
+          <tr><td>1–12 bulan</td><td>&gt;180</td><td>&lt;90</td><td>&gt;40</td><td>&lt;70</td></tr>
+          <tr><td>1–5 tahun</td><td>&gt;140</td><td>–</td><td>&gt;34</td><td>&lt;75</td></tr>
+          <tr><td>6–12 tahun</td><td>&gt;130</td><td>–</td><td>&gt;22</td><td>&lt;83</td></tr>
+          <tr><td>12–18 tahun</td><td>&gt;110</td><td>–</td><td>&gt;18</td><td>&lt;90</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <span class="card-dot" style="background:#1E8449"></span>
+        <span class="card-label">Cold Shock vs Warm Shock</span>
+        <span class="card-chevron">▼</span>
+      </div>
+      <div class="card-body">
+        <table>
+          <tr><th>Fitur</th><th>Cold Shock (↓ CO)</th><th>Warm Shock (↓ SVR)</th></tr>
+          <tr><td>Ekstremitas</td><td>Dingin, mottled</td><td>Hangat, merah</td></tr>
+          <tr><td>CRT</td><td>&gt; 2 detik</td><td>Flash (&lt;1 detik)</td></tr>
+          <tr><td>Nadi</td><td>Lemah, filiformis</td><td>Kuat, bounding</td></tr>
+          <tr><td>TD</td><td>Rendah / normal</td><td>Rendah, pulse pressure lebar</td></tr>
+          <tr><td>Urine</td><td>Oliguria</td><td>Bisa normal awal</td></tr>
+          <tr><td>Lebih sering pada</td><td>Anak (dominan)</td><td>Dewasa, early sepsis</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <span class="card-dot" style="background:#6C3483"></span>
+        <span class="card-label">Manifestasi Klinis Berdasarkan Organ</span>
+        <span class="card-chevron">▼</span>
+      </div>
+      <div class="card-body">
+        <table>
+          <tr><th>Sistem</th><th>Gejala / Tanda</th></tr>
+          <tr><td>Respirasi</td><td>Takipnea, distres napas, SpO₂ ↓, retraksi</td></tr>
+          <tr><td>Kardiovaskular</td><td>Takikardia, hipotensi, CRT panjang, gallop</td></tr>
+          <tr><td>Neurologis</td><td>Agitasi/somnolen, GCS ↓, kejang</td></tr>
+          <tr><td>Ginjal</td><td>Oliguria, edema, kreatinin ↑</td></tr>
+          <tr><td>Koagulasi</td><td>Petechiae, purpura, perdarahan spontan</td></tr>
+          <tr><td>GI</td><td>Ileus, hepatomegali, ikterus</td></tr>
+          <tr><td>Metabolik</td><td>Hipoglikemia, hipokalsemia, asidosis</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="hbox purple">
+      <div class="hbox-title">🧒 Khusus Neonatus & Bayi Muda</div>
+      <ul>
+        <li>Gejala sering tidak spesifik: malas minum, letargi</li>
+        <li>Demam mungkin tidak ada — hipotermia lebih sering</li>
+        <li>Bulging fontanel → meningitis</li>
+        <li>Kuning mendadak, apnea berulang</li>
+        <li>Threshold curiga lebih rendah → evaluasi segera</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===== DIAGNOSIS ===== -->
+  <div class="section" id="diagnosis">
+    <div class="sec-head">
+      <div class="sec-icon" style="background:#F5EEF8;">🔍</div>
+      <div>
+        <div class="sec-title">Diagnosis</div>
+        <div class="sec-sub">Phoenix Criteria + pemeriksaan penunjang</div>
+      </div>
+    </div>
+
+    <div class="hbox red">
+      <div class="hbox-title">🎯 Langkah Diagnosis</div>
+      <ol style="padding-left:16px; font-size:13px; line-height:1.9">
+        <li>Kenali anak sakit akut → curigai infeksi</li>
+        <li>Hitung <strong>Phoenix Sepsis Score</strong></li>
+        <li>Tentukan: sepsis atau septic shock</li>
+        <li>Ambil kultur darah (sebelum antibiotik jika tidak menunda)</li>
+        <li>Ukur <strong>laktat darah</strong> (rekomendasi kuat)</li>
+        <li>Cari sumber infeksi (source of infection)</li>
+      </ol>
+    </div>
+
+    <div class="card open">
+      <div class="card-head" onclick="toggleCard(this)">
+        <span class="card-dot" style="background:#7D6608"></span>
+        <span class="card-label">Phoenix Sepsis Score — Penilaian 4 Domain</span>
+        <span class="card-chevron">▼</span>
+      </div>
+      <div class="card-body">
+        <table>
+          <tr><th>Domain</th><th>Parameter</th><th>Skor</th></tr>
+          <tr><td rowspan="3"><strong>Respirasi</strong></td><td>SpO₂/FiO₂ 97–215 (atau PF 100–200) + vent</td><td>1</td></tr>
+          <tr><td>SpO₂/FiO₂ &lt;97 (atau PF &lt;100) + vent</td><td>2</td></tr>
+          <tr><td>Ventilasi invasif saja</td><td>1</td></tr>
+          <tr><td rowspan="3"><strong>Kardiovaskular</strong></td><td>Laktat 5–10.9 mmol/L atau 1 vasoaktif</td><td>1</td></tr>
+          <tr><td>Laktat ≥11 atau 2+ vasoaktif</td><td>2</td></tr>
+          <tr><td>Hipotensi + vasoaktif atau laktat ≥5</td><td>+1</td></tr>
+          <tr><td rowspan="2"><strong>Koagulasi</strong></td><td>Plt &lt;100 atau INR &gt;1.3 atau D-dimer &gt;2</td><td>1</td></tr>
+          <tr><td>Plt &lt;50 atau INR &gt;1.5 atau fibrinogen &lt;100</td><td>2</td></tr>
+          <tr><td rowspan="2"><strong>Neurologis</strong></td><td>GCS ≤10</td><td>1</td></tr>
+          <tr><td>Pupil anisokor/fixed bilateral</td><td>2</td></tr>
+        </table>
+        <div class="hbox green mt">
+          <p><strong>Sepsis</strong>: Total skor ≥ 2 &nbsp;|&nbsp; <strong>Septic Shock</strong>: Sepsis + ≥1 poin dari domain kardiovaskular</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <span class="card-dot" style="background:#1A5276"></span>
+        <span class="card-label">Pemeriksaan Penunjang</span>
+        <span class="card-chevron">▼</span>
+      </div>
+      <div class="card-body">
+        <table>
+          <tr><th>Pemeriksaan</th><th>Indikasi / Catatan</th></tr>
+          <tr><td><strong>Laktat darah</strong></td><td>⭐ Rekomendasi kuat. Periksa semua probable sepsis</td></tr>
+          <tr><td>Kultur darah (2 set)</td><td>Sebelum antibiotik; jangan tunda antibiotik</td></tr>
+          <tr><td>DPL + hitung jenis</td><td>Leukositosis/leukopenia, trombositopenia</td></tr>
+          <tr><td>CRP / Procalcitonin</td><td>PCT: bukan untuk rutin panduan de-eskalasi</td></tr>
+          <tr><td>Fungsi ginjal (ureum, Cr)</td><td>AKI monitoring</td></tr>
+          <tr><td>Fungsi hati (ALT, AST, bilirubin)</td><td>Disfungsi hepatik</td></tr>
+          <tr><td>Koagulasi (PT, APTT, fibrinogen, D-dimer)</td><td>DIC assessment</td></tr>
+          <tr><td>Gula darah</td><td>Hipoglikemia/hiperglikemia</td></tr>
+          <tr><td>Kalsium, Mg</td><td>Elektrolit kritis pada sepsis</td></tr>
+          <tr><td>Kultur urin, LCS</td><td>Sesuai klinis & sumber infeksi</td></tr>
+          <tr><td>Rontgen dada</td><td>Bila dicurigai sumber paru</td></tr>
+          <tr><td>POCUS (jantung + paru)</td><td>✅ Disarankan untuk panduan resusitasi</td></tr>
+          <tr><td>Molecular testing (PCR)</td><td>Bukti tidak cukup untuk rutin direkomendasikan</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="hbox blue">
+      <div class="hbox-title">🔍 Tidak Direkomendasikan Rutin</div>
+      <ul>
+        <li>Systematic sepsis screening tambahan di luar protokol klinis yang ada</li>
+        <li>Molecular pathogen testing rutin (PCT untuk de-eskalasi jika sudah ada stewardship program)</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===== TATALAKSANA ===== -->
+  <div class="section" id="tatalaksana">
+    <div class="sec-head">
+      <div class="sec-icon" style="background:#E8F8EF;">💊</div>
+      <div>
+        <div class="sec-title">Tatalaksana</div>
+        <div class="sec-sub">Resusitasi, antibiotik, vasoaktif, ventilasi — SSC 2026</div>
+      </div>
+    </div>
+
+    <div class="hbox red">
+      <div class="hbox-title">🚨 Prinsip Utama — "Sepsis Bundles"</div>
+      <ol style="padding-left:16px; font-size:13px; line-height:1.9">
+        <li>Kenali segera, ukur <strong>laktat</strong></li>
+        <li>Ambil <strong>kultur darah</strong></li>
+        <li>Mulai <strong>antibiotik</strong> (1 jam untuk shock, 3 jam untuk probable sepsis)</li>
+        <li>Resusitasi <strong>cairan</strong> bertahap</li>
+        <li>Mulai <strong>vasoaktif</strong> jika diperlukan</li>
+        <li><strong>Source control</strong> sesegera mungkin</li>
+      </ol>
+    </div>
+
+    <div class="card open">
+      <div class="card-head" onclick="toggleCard(this)">
+        <span class="card-dot" style="background:#BA4A00"></span>
+        <span class="card-label">A. Antimikroba</span>
+        <span class="card-chevron">▼</span>
+      </div>
+      <div class="card-body">
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-dot" style="color:#C0392B"></div>
+            <div class="tl-time" style="color:#C0392B">⏱ Dalam 1 Jam</div>
+            <div class="tl-text"><strong>Septic shock</strong> → mulai antibiotik segera (rekomendasi KUAT)</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot" style="color:#E6A817"></div>
+            <div class="tl-time" style="color:#E6A817">⏱ Dalam 3 Jam</div>
+            <div class="tl-text"><strong>Probable sepsis tanpa shock</strong> → evaluasi cepat, lalu antibiotik jika terkonfirmasi</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot" style="color:#1E8449"></div>
+            <div class="tl-time" style="color:#1E8449">Pilihan regimen</div>
+            <div class="tl-text">Empiris <strong>broad-spectrum</strong>; imunokompromais/MDR risk → multidrug. De-eskalasi setelah hasil kultur</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <span class="card-dot" style="background:#1A5276"></span>
+        <span class="card-label">B. Resusitasi Cairan ⭐ Update 2026</span>
+        <span class="card-chevron">▼</span>
+      </div>
+      <div class="card-body">
+        <table>
+          <tr><th>Setting</th><th>Kondisi</th><th>Rekomendasi</th></tr>
+          <tr><td>Dengan ICU</td><td>Septic shock</td><td><strong>10–20 mL/kg/bolus</strong>, max <strong>40–60 mL/kg</strong> dalam 1 jam</td></tr>
+          <tr><td>Tanpa ICU</td><td>Sepsis tanpa hipotensi</td><td>❌ <strong>Hindari</strong> bolus; mulai maintenance saja (Rekomendasi KUAT)</td></tr>
+          <tr><td>Tanpa ICU</td><td>Septic shock + hipotensi</td><td>Bolus 10–20 mL/kg, max <strong>40 mL/kg</strong></td></tr>
+        </table>
+        <div class="hbox green mt">
+          <p>✅ <strong>Reassess</strong> setelah setiap bolus — hentikan jika syok teratasi atau ada tanda <strong>fluid overload</strong></p>
+          <p style="margin-top:4px">✅ Pilih <strong>balanced/buffered crystalloid</strong> (misal: Ringer Laktat) dibanding NaCl 0,9%</p>
+          <p style="margin-top:4px">✅ Kristaloid lebih disarankan dari albumin untuk resusitasi awal</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <span class="card-dot" style="background:#6C3483"></span>
+        <span class="card-label">C. Vasoaktif</span>
+        <span class="card-chevron">▼</span>
+      </div>
+      <div class="card-body">
+        <div class="hbox purple">
+          <p>✅ Mulai vasoaktif melalui <strong>akses vena perifer</strong> — jangan tunda menunggu akses sentral</p>
+        </div>
+        <table>
+          <tr><th>Situasi</th><th>Rekomendasi</th></tr>
+          <tr><td>Lini pertama</td><td>Epinefrin ATAU Norepinefrin (bukti seimbang)</td></tr>
+          <tr><td>Katekol dosis tinggi</td><td>Tambahkan <strong>Vasopressin</strong></td></tr>
+          <tr><td>Disfungsi jantung</td><td>Pertimbangkan inodilator (bukti belum cukup)</td></tr>
+          <tr><td>Hipoperfusi refrakter</td><td>Angiotensin II / Methylene blue: bukti tidak cukup</td></tr>
+        </table>
+        <p class="mt" style="font-size:12px; color:var(--text-light)">Target: MAP ≥ persentil 5 sesuai usia. Target ScvO₂ ≥ 70% jika akses vena sentral tersedia.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <span class="card-dot" style="background:#1E8449"></span>
+        <span class="card-label">D. Ventilasi</span>
+        <span class="card-chevron">▼</span>
+      </div>
+      <div class="card-body">
+        <table>
+          <tr><th>Aspek</th><th>Rekomendasi</th></tr>
+          <tr><td>Etomidate</td><td>❌ Hindari saat intubasi</td></tr>
+          <tr><td>Target SpO₂</td><td><strong>88–92%</strong> (konservatif) — bukan &gt;94%</td></tr>
+          <tr><td>Intubasi tanpa gagal napas</td><td>Bukti tidak cukup (pada fluid-refractory/catecholamine-resistant shock)</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <span class="card-dot" style="background:#7D6608"></span>
+        <span class="card-label">E. Kortikosteroid</span>
+        <span class="card-chevron">▼</span>
+      </div>
+      <div class="card-body">
+        <div class="hbox gold">
+          <ul>
+            <li>Hemodinamik stabil dengan cairan + vasoaktif: <strong>❌ tidak disarankan hidrokortison rutin</strong></li>
+            <li>Tetap tidak stabil meski terapi adekuat: bukti tidak cukup (pertimbangkan kasus per kasus)</li>
+            <li><strong>✅ Wajib</strong> diberikan jika curiga/terbukti <strong>insufisiensi adrenal</strong></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <span class="card-dot" style="background:#C0392B"></span>
+        <span class="card-label">F. Tidak Direkomendasikan (Baru 2026)</span>
+        <span class="card-chevron">▼</span>
+      </div>
+      <div class="card-body">
+        <table>
+          <tr><th>Intervensi</th><th>Rekomendasi</th></tr>
+          <tr><td>Vitamin C (ascorbic acid)</td><td>❌ Tidak disarankan rutin</td></tr>
+          <tr><td>Thiamine (Vitamin B1)</td><td>❌ Tidak disarankan rutin</td></tr>
+          <tr><td>Vitamin D (tanpa defisiensi)</td><td>❌ Tidak disarankan</td></tr>
+          <tr><td>IVIG rutin</td><td>❌ Tidak disarankan (kecuali defisiensi humoral)</td></tr>
+          <tr><td>Levothyroxine (sick euthyroid)</td><td>❌ Tidak disarankan</td></tr>
+          <tr><td>High-volume hemofiltration</td><td>⚠️ Disarankan jika RRT diperlukan (&gt;35 mL/kg/jam)</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="hbox green">
+      <div class="hbox-title">🆕 Source Control</div>
+      <ul>
+        <li>Source control dilakukan <strong>sesegera mungkin</strong> setelah diagnosis</li>
+        <li>Cabut akses intravaskular yang menjadi sumber infeksi <strong>setelah</strong> akses lain tersedia</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===== EVALUASI ===== -->
+  <div class="section" id="evaluasi">
+    <div class="sec-head">
+      <div class="sec-icon" style="background:#FEF9EC;">📊</div>
+      <div>
+        <div class="sec-title">Evaluasi & Monitoring</div>
+        <div class="sec-sub">Target resusitasi, de-eskalasi, follow-up jangka panjang</div>
+      </div>
+    </div>
+
+    <div class="card open">
+      <div class="card-head" onclick="toggleCard(this)">
+        <span class="card-dot" style="background:#C0392B"></span>
+        <span class="card-label">Parameter Monitoring Hemodinamik</span>
+        <span class="card-chevron">▼</span>
+      </div>
+      <div class="card-body">
+        <div class="score-grid">
+          <div class="score-item">
+            <div class="score-label">Heart Rate</div>
+            <div class="score-val">↓ Normal</div>
+            <div class="score-desc">Sesuai usia</div>
+          </div>
+          <div class="score-item">
+            <div class="score-label">Tekanan Darah</div>
+            <div class="score-val">≥P50</div>
+            <div class="score-desc">MAP sesuai usia</div>
+          </div>
+          <div class="score-item">
+            <div class="score-label">Capillary Refill</div>
+            <div class="score-val">≤2 dtk</div>
+            <div class="score-desc">Perfusi perifer</div>
+          </div>
+          <div class="score-item">
+            <div class="score-label">Urine Output</div>
+            <div class="score-val">&gt;1 mL/kg/j</div>
+            <div class="score-desc">Target diuresis</div>
+          </div>
+          <div class="score-item">
+            <div class="score-label">Laktat</div>
+            <div class="score-val">&lt;2 mmol/L</div>
+            <div class="score-desc">Clearance laktat</div>
+          </div>
+          <div class="score-item">
+            <div class="score-label">ScvO₂</div>
+            <div class="score-val">≥70%</div>
+            <div class="score-desc">Jika CVC tersedia</div>
+          </div>
+        </div>
+        <div class="hbox blue mt">
+          <p>Monitor secara <strong>berkelanjutan</strong>: HR, TD, CRT, suhu ekstremitas, kualitas nadi, kesadaran (GCS), urine output. Gunakan <strong>POCUS</strong> untuk panduan resusitasi jika tersedia.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <span class="card-dot" style="background:#1E8449"></span>
+        <span class="card-label">De-eskalasi Antibiotik</span>
+        <span class="card-chevron">▼</span>
+      </div>
+      <div class="card-body">
+        <div class="flow">
+          <div class="flow-box">Kultur tersedia + sensitivitas diketahui → <strong>perlimbang de-eskalasi atau penyempitan cakupan</strong></div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-box decision">Tidak ada patogen teridentifikasi → <strong>evaluasi klinis</strong> + konsultasi ID/mikrobiologi → pertimbangkan <strong>hentikan antibiotik</strong></div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-box accent">Procalcitonin (PCT): <strong>tidak</strong> rutin digunakan untuk panduan de-eskalasi jika sudah ada program stewardship yang efektif</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <span class="card-dot" style="background:#1A5276"></span>
+        <span class="card-label">Manajemen Cairan Fase Lanjut</span>
+        <span class="card-chevron">▼</span>
+      </div>
+      <div class="card-body">
+        <div class="hbox blue">
+          <p>Setelah hemodinamik stabil:</p>
+          <ul>
+            <li>Cegah <strong>fluid overload</strong> — pantau total intake</li>
+            <li>Pertimbangkan <strong>de-resusitasi aktif</strong> (diuretik/UF)</li>
+            <li>Monitor ketat: jangan sampai compromising perfusi organ</li>
+            <li>RRT jika diperlukan → gunakan <strong>hemofiltasi volume tinggi</strong> (&gt;35 mL/kg/jam)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <span class="card-dot" style="background:#6C3483"></span>
+        <span class="card-label">ECMO — Rescue Therapy</span>
+        <span class="card-chevron">▼</span>
+      </div>
+      <div class="card-body">
+        <table>
+          <tr><th>Modalitas</th><th>Indikasi</th></tr>
+          <tr><td><strong>VV-ECMO</strong></td><td>Hipoksemia refrakter meski terapi lain maksimal</td></tr>
+          <tr><td><strong>VA-ECMO</strong></td><td>Septic shock refrakter semua terapi (rescue only)</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head" onclick="toggleCard(this)">
+        <span class="card-dot" style="background:#BA4A00"></span>
+        <span class="card-label">🆕 Rehabilitasi & Follow-up Jangka Panjang</span>
+        <span class="card-chevron">▼</span>
+      </div>
+      <div class="card-body">
+        <div class="hbox orange">
+          <div class="hbox-title">⚠️ Post-Sepsis Syndrome</div>
+          <p>Hingga <strong>30–40%</strong> anak yang selamat dari sepsis berat (butuh ICU) mengalami morbiditas jangka panjang: gangguan kognitif, fisik, emosional, dan kualitas hidup.</p>
+        </div>
+        <table>
+          <tr><th>Rekomendasi</th><th>Keterangan</th></tr>
+          <tr><td>Rehabilitasi dini</td><td>✅ Bundle rehabilitasi individual sejak fase akut (rekomendasi kondisional)</td></tr>
+          <tr><td>Nilai faktor risiko</td><td>Identifikasi risiko morbiditas post-sepsis saat discharge</td></tr>
+          <tr><td>Edukasi keluarga</td><td>Informasikan gejala post-sepsis syndrome kepada pasien, keluarga, dan klinisi</td></tr>
+          <tr><td>Evaluasi post-discharge</td><td>Cari sekuele baru jangka panjang setelah pulang</td></tr>
+          <tr><td>Follow-up terstruktur</td><td>Bukti belum cukup untuk rekomendasi rutin (disesuaikan kasus)</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="hbox green">
+      <div class="hbox-title">📋 Ringkasan Kekuatan Rekomendasi Kunci</div>
+      <table style="margin:0">
+        <tr><th>Rekomendasi</th><th>Kekuatan</th></tr>
+        <tr><td>Program peningkatan performa RS</td><td><span class="chip strong">Kuat</span></td></tr>
+        <tr><td>Ukur laktat darah</td><td><span class="chip strong">Kuat</span></td></tr>
+        <tr><td>Antibiotik &lt;1 jam (shock)</td><td><span class="chip strong">Kuat</span></td></tr>
+        <tr><td>Hindari bolus (tanpa ICU, tanpa hipotensi)</td><td><span class="chip strong">Kuat</span></td></tr>
+        <tr><td>Cabut IV line sumber infeksi</td><td><span class="chip strong">Kuat</span></td></tr>
+        <tr><td>Balanced crystalloid vs NaCl 0,9%</td><td><span class="chip cond">Kondisional</span></td></tr>
+        <tr><td>Vasoaktif via perifer</td><td><span class="chip cond">Kondisional</span></td></tr>
+        <tr><td>SpO₂ target 88–92%</td><td><span class="chip cond">Kondisional</span></td></tr>
+        <tr><td>Hindari etomidate</td><td><span class="chip cond">Kondisional</span></td></tr>
+        <tr><td>Rehabilitasi dini</td><td><span class="chip cond">Kondisional</span></td></tr>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Surviving Sepsis Campaign International Guidelines for the Management of Sepsis and Septic Shock in Children 2026<br>
+  Pediatric Critical Care Medicine & Intensive Care Medicine · March 2026 · SCCM / ESICM
+</footer>
+
+<script>
+function showTab(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+function toggleCard(head) {
+  head.parentElement.classList.toggle('open');
+}
+</script>
+</body>
+</html>

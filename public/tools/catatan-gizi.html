@@ -1,0 +1,1610 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catatan Gizi Pediatrik</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1f2937;
+    --border: #30363d;
+    --accent: #58a6ff;
+    --accent2: #3fb950;
+    --accent3: #f0883e;
+    --accent4: #d2a8ff;
+    --danger: #f85149;
+    --warn: #e3b341;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, #0d1117 0%, #1a2332 50%, #0d1f0f 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 24px 32px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .header-icon {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .header h1 {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+
+  .header h1 span { color: var(--accent2); }
+
+  .header-sub {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: var(--mono);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 12px;
+    min-width: 220px;
+  }
+
+  .search-box input {
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    width: 100%;
+  }
+
+  .search-box input::placeholder { color: var(--muted); }
+
+  /* NAV TABS */
+  .nav-tabs {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 2px;
+    padding: 0 24px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .nav-tabs::-webkit-scrollbar { display: none; }
+
+  .tab-btn {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 12px 16px;
+    transition: all 0.15s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .tab-btn:hover { color: var(--text); }
+
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .tab-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  /* MAIN CONTENT */
+  .main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 28px 24px;
+  }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* SECTION HEADER */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-header h2 {
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .badge-green { background: rgba(63,185,80,0.15); color: var(--accent2); border: 1px solid rgba(63,185,80,0.3); }
+  .badge-blue { background: rgba(88,166,255,0.15); color: var(--accent); border: 1px solid rgba(88,166,255,0.3); }
+  .badge-orange { background: rgba(240,136,62,0.15); color: var(--accent3); border: 1px solid rgba(240,136,62,0.3); }
+  .badge-purple { background: rgba(210,168,255,0.15); color: var(--accent4); border: 1px solid rgba(210,168,255,0.3); }
+  .badge-red { background: rgba(248,81,73,0.15); color: var(--danger); border: 1px solid rgba(248,81,73,0.3); }
+
+  /* GRID LAYOUT */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .col-span-2 { grid-column: span 2; }
+  .col-span-3 { grid-column: span 3; }
+
+  @media (max-width: 768px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .col-span-2, .col-span-3 { grid-column: span 1; }
+    .header { flex-direction: column; align-items: flex-start; }
+    .search-box { width: 100%; min-width: auto; }
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .card-header {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .card-title {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .card-body { padding: 16px; }
+
+  /* FORMULA DISPLAY */
+  .formula-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    margin: 8px 0;
+  }
+
+  .formula-box.green { border-left-color: var(--accent2); color: var(--accent2); }
+  .formula-box.orange { border-left-color: var(--accent3); color: var(--accent3); }
+  .formula-box.purple { border-left-color: var(--accent4); color: var(--accent4); }
+  .formula-box.red { border-left-color: var(--danger); color: var(--danger); }
+
+  /* TABLES */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .data-table thead tr {
+    background: var(--surface2);
+  }
+
+  .data-table th {
+    padding: 8px 12px;
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  .data-table td {
+    padding: 7px 12px;
+    border-bottom: 1px solid rgba(48,54,61,0.5);
+    color: var(--text);
+  }
+
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: rgba(88,166,255,0.04); }
+
+  .data-table td.mono { font-family: var(--mono); color: var(--accent2); }
+  .data-table td.center { text-align: center; }
+  .data-table td.highlight { color: var(--accent3); font-weight: 600; }
+
+  /* STATUS INDICATORS */
+  .status-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .status-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+
+  .status-item .label { font-size: 13px; color: var(--muted); }
+  .status-item .value { font-family: var(--mono); font-size: 13px; font-weight: 600; }
+
+  /* PHASE CARDS */
+  .phase-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+  @media (max-width: 600px) { .phase-grid { grid-template-columns: 1fr; } }
+
+  .phase-card {
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid;
+  }
+
+  .phase-card.stabilisasi { 
+    background: rgba(248,81,73,0.08);
+    border-color: rgba(248,81,73,0.3);
+  }
+  .phase-card.transisi {
+    background: rgba(227,179,65,0.08);
+    border-color: rgba(227,179,65,0.3);
+  }
+  .phase-card.rehabilitasi {
+    background: rgba(63,185,80,0.08);
+    border-color: rgba(63,185,80,0.3);
+  }
+
+  .phase-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .phase-card.stabilisasi .phase-label { color: var(--danger); }
+  .phase-card.transisi .phase-label { color: var(--warn); }
+  .phase-card.rehabilitasi .phase-label { color: var(--accent2); }
+
+  .phase-val {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+
+  .phase-unit { font-size: 11px; color: var(--muted); }
+
+  .phase-detail { margin-top: 8px; font-size: 12px; color: var(--muted); }
+
+  /* CALCULATOR */
+  .calc-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .calc-header {
+    background: linear-gradient(90deg, rgba(63,185,80,0.15), rgba(88,166,255,0.1));
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .calc-header h3 {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent2);
+  }
+
+  .calc-body { padding: 20px; }
+
+  .input-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .input-group label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .input-group input,
+  .input-group select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    padding: 8px 12px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .input-group input:focus,
+  .input-group select:focus { border-color: var(--accent); }
+
+  .input-group select option { background: var(--surface2); }
+
+  .calc-btn {
+    background: linear-gradient(135deg, var(--accent2), #2ea043);
+    border: none;
+    border-radius: 6px;
+    color: #0d1117;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    padding: 10px 24px;
+    letter-spacing: 0.5px;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+
+  .calc-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .calc-btn:active { transform: translateY(0); }
+
+  .result-box {
+    margin-top: 16px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    display: none;
+  }
+
+  .result-box.show { display: block; }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .result-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    text-align: center;
+  }
+
+  .result-item .r-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; font-family: var(--mono); text-transform: uppercase; }
+  .result-item .r-val { font-family: var(--mono); font-size: 18px; font-weight: 700; color: var(--accent2); }
+  .result-item .r-unit { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .result-title { font-family: var(--mono); font-size: 12px; color: var(--accent); margin-bottom: 8px; }
+
+  /* HIGHLIGHT BOX */
+  .info-box {
+    background: rgba(88,166,255,0.07);
+    border: 1px solid rgba(88,166,255,0.2);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 12px;
+  }
+
+  .info-box strong { color: var(--accent); }
+
+  .warn-box {
+    background: rgba(227,179,65,0.07);
+    border: 1px solid rgba(227,179,65,0.2);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 12px;
+  }
+
+  .warn-box strong { color: var(--warn); }
+
+  /* TAGS */
+  .tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin: 2px;
+  }
+
+  .tag-green { background: rgba(63,185,80,0.15); color: var(--accent2); }
+  .tag-blue { background: rgba(88,166,255,0.15); color: var(--accent); }
+  .tag-red { background: rgba(248,81,73,0.15); color: var(--danger); }
+  .tag-orange { background: rgba(240,136,62,0.15); color: var(--accent3); }
+
+  /* SCROLLABLE TABLE WRAPPER */
+  .table-scroll { overflow-x: auto; }
+  .table-scroll .data-table { min-width: 400px; }
+
+  /* SEARCH HIGHLIGHT */
+  mark {
+    background: rgba(227,179,65,0.3);
+    color: var(--warn);
+    border-radius: 2px;
+    padding: 0 2px;
+  }
+
+  /* LIST */
+  .item-list { list-style: none; }
+  .item-list li {
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(48,54,61,0.5);
+    font-size: 13px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .item-list li:last-child { border-bottom: none; }
+  .item-list li::before {
+    content: '▸';
+    color: var(--accent2);
+    font-size: 10px;
+    margin-top: 3px;
+    flex-shrink: 0;
+  }
+
+  /* MILK SEARCH */
+  .milk-filter { 
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;
+  }
+  .filter-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 4px 14px;
+    transition: all 0.15s;
+  }
+  .filter-btn.active, .filter-btn:hover {
+    background: rgba(88,166,255,0.15);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* PRSL CALCULATOR */
+  .prsl-result {
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 700;
+    text-align: center;
+    padding: 16px;
+  }
+  .prsl-safe { color: var(--accent2); }
+  .prsl-warn { color: var(--warn); }
+  .prsl-danger { color: var(--danger); }
+
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+  
+  /* Knee height note */
+  .knee-formula { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr 1fr; 
+    gap: 8px; 
+    margin-top: 8px; 
+  }
+  @media (max-width: 600px) { .knee-formula { grid-template-columns: 1fr; } }
+
+  .knee-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  .knee-item .ki-label { color: var(--muted); font-size: 11px; margin-bottom: 4px; }
+  .knee-item .ki-val { color: var(--accent4); }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-brand">
+    <div class="header-icon">🩺</div>
+    <div>
+      <h1>Catatan Gizi <span>// Pediatrik</span></h1>
+      <div class="header-sub">Referensi Klinis Gizi Anak · GITA</div>
+    </div>
+  </div>
+  <div class="search-box">
+    <span style="color:var(--muted); font-size:13px;">⌕</span>
+    <input type="text" id="globalSearch" placeholder="Cari susu, formula, tabel..." oninput="handleSearch(this.value)">
+  </div>
+</div>
+
+<div class="nav-tabs">
+  <button class="tab-btn active" onclick="showTab('kalkulator')"><div class="tab-dot" style="background:var(--accent2)"></div> Kalkulator</button>
+  <button class="tab-btn" onclick="showTab('gizi-buruk')"><div class="tab-dot" style="background:var(--danger)"></div> Gizi Buruk</button>
+  <button class="tab-btn" onclick="showTab('susu')"><div class="tab-dot" style="background:var(--accent)"></div> Referensi Susu</button>
+  <button class="tab-btn" onclick="showTab('pertumbuhan')"><div class="tab-dot" style="background:var(--warn)"></div> Pertumbuhan</button>
+  <button class="tab-btn" onclick="showTab('tpn')"><div class="tab-dot" style="background:var(--accent4)"></div> NP / TPN</button>
+  <button class="tab-btn" onclick="showTab('formula')"><div class="tab-dot" style="background:var(--accent3)"></div> Formula & Rumus</button>
+</div>
+
+<div class="main">
+
+<!-- ======================== KALKULATOR ======================== -->
+<div id="kalkulator" class="section active">
+  <div class="section-header">
+    <h2>🧮 Kalkulator Gizi Klinis</h2>
+    <span class="badge badge-green">Interactive</span>
+  </div>
+
+  <!-- Kebutuhan Kalori -->
+  <div class="calc-panel" style="margin-bottom:20px;">
+    <div class="calc-header">
+      <h3>⚡ Kebutuhan Kalori & Pengentalan Susu</h3>
+    </div>
+    <div class="calc-body">
+      <div class="input-row">
+        <div class="input-group">
+          <label>BB Aktual (kg)</label>
+          <input type="number" id="bba" placeholder="mis. 4.6" step="0.1">
+        </div>
+        <div class="input-group">
+          <label>BB Ideal / BBI (kg)</label>
+          <input type="number" id="bbi" placeholder="mis. 6.4" step="0.1">
+        </div>
+        <div class="input-group">
+          <label>Usia (bulan)</label>
+          <input type="number" id="usia_bln" placeholder="mis. 11" min="0">
+        </div>
+        <div class="input-group">
+          <label>Status Gizi</label>
+          <select id="status_gizi">
+            <option value="normal">Normal</option>
+            <option value="kurang">Gizi Kurang</option>
+            <option value="buruk">Gizi Buruk</option>
+            <option value="obesitas">Obesitas</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>Jenis Susu</label>
+          <select id="jenis_susu">
+            <option value="">-- Pilih susu --</option>
+            <option value="sgm_ananda_06">SGM Ananda 0-6 bln (0.65)</option>
+            <option value="sgm_ananda_612">SGM Ananda 6-12 bln (0.67)</option>
+            <option value="sgm_optigrow">SGM Optigrow (0.45/cc)</option>
+            <option value="infatrini">Infatrini (1.0/cc)</option>
+            <option value="pediasure">Pediasure (0.84/cc)</option>
+            <option value="pediacomplete">Pediacomplete (1.0/cc)</option>
+            <option value="lactogen1">Lactogen 1 (0.67)</option>
+            <option value="lactogen2">Lactogen 2 (0.7)</option>
+            <option value="ensure">Ensure (1.0/cc)</option>
+            <option value="goldsure">Goldsure (1.0/cc)</option>
+            <option value="f75">F75 (0.75/cc)</option>
+            <option value="f100">F100 (1.0/cc)</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>Volume/kali minum (ml)</label>
+          <input type="number" id="vol_sekali" placeholder="mis. 45" min="0">
+        </div>
+        <div class="input-group">
+          <label>Frekuensi minum/hari</label>
+          <input type="number" id="frekuensi" placeholder="mis. 8" min="0">
+        </div>
+      </div>
+      <button class="calc-btn" onclick="hitungKalori()">▶ Hitung Kebutuhan</button>
+
+      <div class="result-box" id="result_kalori">
+        <div class="result-title">// HASIL PERHITUNGAN</div>
+        <div class="result-grid" id="result_grid_kalori"></div>
+        <div id="result_detail" style="margin-top:12px; font-size:13px; color:var(--muted); line-height:1.8;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRSL Calculator -->
+  <div class="calc-panel" style="margin-bottom:20px;">
+    <div class="calc-header">
+      <h3>🧪 PRSL Calculator (Potential Renal Solute Load)</h3>
+    </div>
+    <div class="calc-body">
+      <div class="info-box" style="margin-bottom:16px;">
+        <strong>Rumus:</strong> PRSL = N/28 + Na/23 + K/39 + Cl/23 + P/31 &nbsp;|&nbsp; <strong>Aman: &lt; 261 mOsm/L</strong>
+      </div>
+      <div class="input-row">
+        <div class="input-group">
+          <label>Protein N (g)</label>
+          <input type="number" id="prsl_n" placeholder="mis. 23.22" step="0.01">
+        </div>
+        <div class="input-group">
+          <label>Na (mg)</label>
+          <input type="number" id="prsl_na" placeholder="mis. 149" step="0.1">
+        </div>
+        <div class="input-group">
+          <label>K (mg)</label>
+          <input type="number" id="prsl_k" placeholder="mis. 466" step="0.1">
+        </div>
+        <div class="input-group">
+          <label>Cl (mg)</label>
+          <input type="number" id="prsl_cl" placeholder="mis. 147" step="0.1">
+        </div>
+        <div class="input-group">
+          <label>P (mg)</label>
+          <input type="number" id="prsl_p" placeholder="mis. 264" step="0.1">
+        </div>
+      </div>
+      <button class="calc-btn" onclick="hitungPRSL()">▶ Hitung PRSL</button>
+      <div class="result-box" id="result_prsl">
+        <div class="prsl-result" id="prsl_val">— mOsm/L</div>
+        <div id="prsl_status" style="text-align:center; font-size:13px; margin-bottom:8px;"></div>
+        <div id="prsl_breakdown" style="font-family:var(--mono); font-size:12px; color:var(--muted); text-align:center;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pengukuran Scurvy/Immobile -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">📏 Knee-to-Heel Formula (Estimasi Tinggi Badan)</div>
+      <span class="badge badge-purple">Bed-bound / Kontraktur</span>
+    </div>
+    <div class="card-body">
+      <div class="knee-formula">
+        <div class="knee-item">
+          <div class="ki-label">♂ Laki-laki</div>
+          <div class="ki-val">TB = 64.19 + (2.02 × KH)</div>
+        </div>
+        <div class="knee-item">
+          <div class="ki-label">♀ Perempuan</div>
+          <div class="ki-val">TB = 84.88 + (1.83 × KH)</div>
+        </div>
+        <div class="knee-item">
+          <div class="ki-label">👶 Anak</div>
+          <div class="ki-val">TB = (2.69 × KH) + 24.2</div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="input-row">
+        <div class="input-group">
+          <label>Knee Height (cm)</label>
+          <input type="number" id="kh_val" placeholder="mis. 35" step="0.1">
+        </div>
+        <div class="input-group">
+          <label>Jenis Kelamin</label>
+          <select id="kh_sex">
+            <option value="laki">Laki-laki</option>
+            <option value="perempuan">Perempuan</option>
+            <option value="anak">Anak</option>
+          </select>
+        </div>
+      </div>
+      <button class="calc-btn" onclick="hitungKnee()">▶ Estimasi TB</button>
+      <div class="result-box" id="result_knee">
+        <div style="text-align:center;">
+          <div style="font-family:var(--mono); font-size:11px; color:var(--muted); margin-bottom:4px;">ESTIMASI TINGGI BADAN</div>
+          <div style="font-family:var(--mono); font-size:32px; font-weight:700; color:var(--accent2);" id="knee_result">— cm</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== GIZI BURUK ======================== -->
+<div id="gizi-buruk" class="section">
+  <div class="section-header">
+    <h2>🚨 Manajemen Gizi Buruk</h2>
+    <span class="badge badge-red">Severe Malnutrition</span>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:20px;">
+    <!-- Status Antropometri -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📊 Klasifikasi Status Gizi (BB/TB)</div>
+      </div>
+      <div class="card-body">
+        <table class="data-table">
+          <thead><tr><th>Status Gizi</th><th>Z-Score</th></tr></thead>
+          <tbody>
+            <tr><td>Gizi Lebih</td><td class="mono">&gt; +2 SD</td></tr>
+            <tr><td>Gizi Baik</td><td class="mono">-2 SD s/d +2 SD</td></tr>
+            <tr><td>Gizi Kurang</td><td class="mono">≥ -3 SD s/d &lt; -2 SD</td></tr>
+            <tr><td style="color:var(--danger); font-weight:600;">Gizi Buruk</td><td class="mono" style="color:var(--danger);">&lt; -3 SD</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Penilaian Kenaikan BB -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">⚖️ Penilaian Kenaikan BB</div>
+      </div>
+      <div class="card-body">
+        <table class="data-table">
+          <thead><tr><th>Kategori</th><th>Kenaikan BB</th></tr></thead>
+          <tbody>
+            <tr><td style="color:var(--danger);">Kurang</td><td class="mono" style="color:var(--danger);">&lt; 5 g/kg/hari</td></tr>
+            <tr><td style="color:var(--warn);">Cukup</td><td class="mono" style="color:var(--warn);">5–10 g/kg/hari</td></tr>
+            <tr><td style="color:var(--accent2);">Baik</td><td class="mono" style="color:var(--accent2);">&gt; 10 g/kg/hari</td></tr>
+          </tbody>
+        </table>
+        <div class="info-box" style="margin-top:12px;">
+          <strong>Contoh:</strong> Bayi 10 bln, BB 6.0→6.4 kg setelah 14 hari<br>
+          Kenaikan 400g, rata-rata BB 6.2 kg<br>
+          = 400/(6.2×14) = <strong style="color:var(--accent3);">4.6 g/kg/hari → Kurang</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fase Tatalaksana -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-header">
+      <div class="card-title">🏥 Fase Tatalaksana</div>
+      <span class="badge badge-blue">WHO Protocol</span>
+    </div>
+    <div class="card-body">
+      <div class="phase-grid">
+        <div class="phase-card stabilisasi">
+          <div class="phase-label">S — Stabilisasi</div>
+          <div class="phase-val">80–100</div>
+          <div class="phase-unit">kkal/kgBB/hari (BBA)</div>
+          <div class="phase-detail">
+            Hari 1–2<br>Formula: <strong>F75</strong><br>
+            Protein: 1–1.5 g/kg/hari<br>
+            Cairan: 130 ml/kg/hari<br>
+            <span style="color:var(--muted); font-size:11px;">PNC: 50% × RDA × BBI</span>
+          </div>
+        </div>
+        <div class="phase-card transisi">
+          <div class="phase-label">T — Transisi</div>
+          <div class="phase-val">100–150</div>
+          <div class="phase-unit">kkal/kgBB/hari (BBA)</div>
+          <div class="phase-detail">
+            Hari 3+<br>Formula: <strong>F100</strong><br>
+            Protein: 1–3 g/kg/hari<br>
+            Cairan: 150 ml/kg/hari<br>
+            <span style="color:var(--muted); font-size:11px;">PNC: 75% × RDA × BBI</span>
+          </div>
+        </div>
+        <div class="phase-card rehabilitasi">
+          <div class="phase-label">R — Rehabilitasi</div>
+          <div class="phase-val">150–220</div>
+          <div class="phase-unit">kkal/kgBB/hari (BBA)</div>
+          <div class="phase-detail">
+            Fase lanjut<br>Formula: <strong>F100 / RUTF</strong><br>
+            Protein: 4–6 g/kg/hari<br>
+            Cairan: 150–200 ml/kg/hari<br>
+            <span style="color:var(--muted); font-size:11px;">PNC: 100% × RDA × BBI</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formula F75 F100 F135 -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🧪 Komposisi Formula per 100 mL</div>
+      </div>
+      <div class="card-body table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Bahan</th><th>F75</th><th>F100</th><th>F135</th></tr></thead>
+          <tbody>
+            <tr><td>Susu skim</td><td class="mono">25 g</td><td class="mono">85 g</td><td class="mono">95 g</td></tr>
+            <tr><td>Gula pasir</td><td class="mono">70 g</td><td class="mono">50 g</td><td class="mono">65 g</td></tr>
+            <tr><td>Minyak</td><td class="mono">30 mL</td><td class="mono">60 mL</td><td class="mono">75 mL</td></tr>
+            <tr><td>Mineral mix</td><td class="mono">20 mL</td><td class="mono">20 mL</td><td class="mono">27 mL</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📈 Nilai Gizi Formula per 1000 mL</div>
+      </div>
+      <div class="card-body table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Zat Gizi</th><th>F75</th><th>F100</th><th>F135</th></tr></thead>
+          <tbody>
+            <tr><td>Energi (kkal)</td><td class="mono">75</td><td class="mono">100</td><td class="mono">135</td></tr>
+            <tr><td>Protein (g)</td><td class="mono">0.9</td><td class="mono">2.9</td><td class="mono">3.3</td></tr>
+            <tr><td>Laktosa (g)</td><td class="mono">1.3</td><td class="mono">4.2</td><td class="mono">5.3</td></tr>
+            <tr><td>Kalium (mmol)</td><td class="mono">36</td><td class="mono">49</td><td class="mono">63</td></tr>
+            <tr><td>Natrium (mmol)</td><td class="mono">6.9</td><td class="mono">7.5</td><td class="mono">8.2</td></tr>
+            <tr><td>Osmolality</td><td class="mono">413</td><td class="mono">419</td><td class="mono">508</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contoh Pengentalan -->
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header">
+      <div class="card-title">📝 Contoh Kasus: Pengentalan Susu</div>
+      <span class="badge badge-orange">Asqiara · 11 bln · PJT</span>
+    </div>
+    <div class="card-body">
+      <div class="grid-2">
+        <div>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:8px; font-family:var(--mono); text-transform:uppercase; letter-spacing:0.5px;">Data Pasien</p>
+          <ul class="item-list">
+            <li>BB: 4.6 kg | BBI: 6.4 kg | TB: 62 cm</li>
+            <li>WA: 1 bln 15 hr | HA: 4 bln | CA: 11 bln</li>
+            <li>Status: BB/U &lt;-3SD, TB/U &lt;-3SD, BB/TB &lt;-3SD</li>
+            <li>Assessment: Stunting + Nutritional Marasmus</li>
+          </ul>
+        </div>
+        <div>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:8px; font-family:var(--mono); text-transform:uppercase; letter-spacing:0.5px;">Terapi</p>
+          <div class="formula-box">BBI × RDA = 6.4 × 120 = 768 kkal</div>
+          <div class="formula-box orange">BBA × 150–220 = 690–1012 kkal</div>
+          <ul class="item-list" style="margin-top:8px;">
+            <li>Kemampuan: 8 × 45 ml SGM Optigrow = 360 kkal ⚠️</li>
+            <li>Pengentalan: +1 takar/45ml → +8 takar/hari</li>
+            <li>Kalori akhir: 360 + (8×45) = <strong style="color:var(--accent2);">720 kkal ✓</strong></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== SUSU ======================== -->
+<div id="susu" class="section">
+  <div class="section-header">
+    <h2>🥛 Referensi Susu Formula</h2>
+    <span class="badge badge-blue">46+ Produk</span>
+  </div>
+
+  <div class="milk-filter" id="milkFilter">
+    <button class="filter-btn active" onclick="filterMilk('semua', this)">Semua</button>
+    <button class="filter-btn" onclick="filterMilk('SGM', this)">SGM</button>
+    <button class="filter-btn" onclick="filterMilk('LACTOGEN', this)">Lactogen</button>
+    <button class="filter-btn" onclick="filterMilk('NUTRICIA', this)">Nutricia</button>
+    <button class="filter-btn" onclick="filterMilk('NESTLE', this)">Nestle</button>
+    <button class="filter-btn" onclick="filterMilk('FRISIAN FLAG', this)">Frisian Flag</button>
+    <button class="filter-btn" onclick="filterMilk('MORINAGA', this)">Morinaga</button>
+    <button class="filter-btn" onclick="filterMilk('khusus', this)">Formula Khusus</button>
+  </div>
+
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-header">
+      <div class="card-title">📐 Takaran & Kalori Susu Formula</div>
+    </div>
+    <div class="card-body table-scroll">
+      <table class="data-table" id="milkTable">
+        <thead>
+          <tr>
+            <th>Merk Susu</th>
+            <th>Usia</th>
+            <th>Takaran Standar</th>
+            <th>Kalori/cc</th>
+            <th>Grup</th>
+          </tr>
+        </thead>
+        <tbody id="milkTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Susu yang sering digunakan -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">⭐ Susu Sering Digunakan</div>
+      </div>
+      <div class="card-body table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Susu</th><th>Takaran</th></tr></thead>
+          <tbody>
+            <tr><td>Infatrini</td><td class="mono">1 sdt = 25 ml air</td></tr>
+            <tr><td>SGM Gain 100</td><td class="mono">1 sdt = 20 ml air</td></tr>
+            <tr><td>SGM Optigrow</td><td class="mono">1 sdt = 45 ml air</td></tr>
+            <tr><td>Pediacomplete</td><td class="mono">1 sdt = 40 ml air</td></tr>
+            <tr><td>Pediasure</td><td class="mono">1 sdt = 50 ml air</td></tr>
+            <tr><td>Goldsure</td><td class="mono">1 sdt = 30 ml air</td></tr>
+            <tr><td>Chilkid Platinum</td><td class="mono">1 sdt = 35 ml air</td></tr>
+            <tr><td>Morigro</td><td class="mono">1 sdt = 35 ml air</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🎯 Rekomendasi per Usia</div>
+      </div>
+      <div class="card-body">
+        <div class="status-row">
+          <div class="status-item">
+            <span class="label">👶 &lt; 1 tahun</span>
+            <div><span class="tag tag-blue">SGM Ananda</span><span class="tag tag-blue">Lactogen</span><span class="tag tag-blue">Infatrini</span><span class="tag tag-orange">Pregestimil</span></div>
+          </div>
+          <div class="status-item">
+            <span class="label">🧒 1–10 tahun</span>
+            <div><span class="tag tag-green">Pediasure</span><span class="tag tag-green">Pediacomplete</span></div>
+          </div>
+          <div class="status-item">
+            <span class="label">🧑 &gt; 10 tahun</span>
+            <div><span class="tag tag-blue">Ensure</span><span class="tag tag-blue">Goldsure</span></div>
+          </div>
+          <div class="status-item">
+            <span class="label">🚨 Gizi Buruk</span>
+            <div><span class="tag tag-red">F75</span><span class="tag tag-red">F100</span></div>
+          </div>
+        </div>
+
+        <!-- SGM Optigrow kandungan -->
+        <div class="divider"></div>
+        <p style="font-family:var(--mono); font-size:11px; color:var(--accent); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">SGM Optigrow / 100g</p>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+          <div class="formula-box" style="margin:0; font-size:12px;">Protein: 12.2 g</div>
+          <div class="formula-box" style="margin:0; font-size:12px;">Na: 149 mg</div>
+          <div class="formula-box green" style="margin:0; font-size:12px;">K: 466 mg</div>
+          <div class="formula-box orange" style="margin:0; font-size:12px;">P: 264 mg</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== PERTUMBUHAN ======================== -->
+<div id="pertumbuhan" class="section">
+  <div class="section-header">
+    <h2>📈 Tabel Pertumbuhan & Kebutuhan</h2>
+    <span class="badge badge-orange">Growth Charts</span>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:20px;">
+    <!-- Kenaikan BB -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">⚖️ Target Kenaikan BB Normal</div>
+      </div>
+      <div class="card-body table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Usia</th><th>per Hari</th><th>per Bulan</th></tr></thead>
+          <tbody>
+            <tr><td>1–3 bulan</td><td class="mono">25–30 g</td><td class="mono">750–900 g</td></tr>
+            <tr><td>4–6 bulan</td><td class="mono">20 g</td><td class="mono">600 g</td></tr>
+            <tr><td>7–9 bulan</td><td class="mono">15 g</td><td class="mono">450 g</td></tr>
+            <tr><td>10–12 bulan</td><td class="mono">8–10 g</td><td class="mono">200–300 g</td></tr>
+            <tr><td>1–3 tahun</td><td class="mono">8 g</td><td class="mono">240 g</td></tr>
+            <tr><td>4–6 tahun</td><td class="mono">6 g</td><td class="mono">180 g</td></tr>
+            <tr><td>&gt; 1 tahun</td><td class="mono" colspan="2">≥ 2 kg/tahun</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- RDA -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">⚡ RDA — Kebutuhan Energi (kkal/kg/hari)</div>
+      </div>
+      <div class="card-body table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Usia</th><th>Laki-laki</th><th>Perempuan</th></tr></thead>
+          <tbody>
+            <tr><td>0–1 tahun</td><td class="mono highlight">110–120</td><td class="mono highlight">110–120</td></tr>
+            <tr><td>1–3 tahun</td><td class="mono">100</td><td class="mono">100</td></tr>
+            <tr><td>4–6 tahun</td><td class="mono">90</td><td class="mono">90</td></tr>
+            <tr><td>7–9 tahun</td><td class="mono">80</td><td class="mono">80</td></tr>
+            <tr><td>10–12 tahun</td><td class="mono">70</td><td class="mono">60</td></tr>
+            <tr><td>13–15 tahun</td><td class="mono">60</td><td class="mono">50</td></tr>
+            <tr><td>15–18 tahun</td><td class="mono">50–70</td><td class="mono">40–65</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Kebutuhan Cairan -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-header">
+      <div class="card-title">💧 Kebutuhan Cairan (ml/kgBB/hari)</div>
+    </div>
+    <div class="card-body table-scroll">
+      <table class="data-table">
+        <thead><tr><th>Usia</th><th>Kebutuhan</th><th>Usia</th><th>Kebutuhan</th></tr></thead>
+        <tbody>
+          <tr><td>0–3 hari</td><td class="mono">80–100</td><td>2–5 tahun</td><td class="mono">100–110</td></tr>
+          <tr><td>3–7 hari</td><td class="mono">120–150</td><td>5–10 tahun</td><td class="mono">80–90</td></tr>
+          <tr><td>1–3 bulan</td><td class="mono">140–160</td><td>10–13 tahun</td><td class="mono">70–85</td></tr>
+          <tr><td>3–6 bulan</td><td class="mono">130–155</td><td>&gt;13 tahun</td><td class="mono">40–60</td></tr>
+          <tr><td>6–9 bulan</td><td class="mono">120–135</td><td></td><td></td></tr>
+          <tr><td>9–12 bulan</td><td class="mono">115–125</td><td></td><td></td></tr>
+          <tr><td>1–2 tahun</td><td class="mono">110–125</td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Pertumbuhan Lengkap -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">📊 Tabel Pertumbuhan Lengkap</div>
+    </div>
+    <div class="card-body table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Usia</th>
+            <th>BB Harian (g)</th>
+            <th>BB Bulanan (g)</th>
+            <th>Pertumbuhan TB (cm/bln)</th>
+            <th>Lingkar Kepala (cm/bln)</th>
+            <th>RDA (kkal/kg/hr)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>0–3 bln</td><td class="mono">30</td><td class="mono">900</td><td class="mono">3.5</td><td class="mono">1.0</td><td class="mono highlight">115</td></tr>
+          <tr><td>3–6 bln</td><td class="mono">20</td><td class="mono">600</td><td class="mono">2.0</td><td class="mono">1.0</td><td class="mono highlight">110</td></tr>
+          <tr><td>6–9 bln</td><td class="mono">15</td><td class="mono">450</td><td class="mono">1.5</td><td class="mono">0.5</td><td class="mono">100</td></tr>
+          <tr><td>9–12 bln</td><td class="mono">12</td><td class="mono">360</td><td class="mono">1.2</td><td class="mono">0.5</td><td class="mono">100</td></tr>
+          <tr><td>1–3 thn</td><td class="mono">8</td><td class="mono">240</td><td class="mono">1.0</td><td class="mono">0.25</td><td class="mono">100</td></tr>
+          <tr><td>4–6 thn</td><td class="mono">6</td><td class="mono">180</td><td class="mono">0.5</td><td class="mono">0.25</td><td class="mono">90–100</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== TPN ======================== -->
+<div id="tpn" class="section">
+  <div class="section-header">
+    <h2>💉 Nutrisi Parenteral (TPN/NP)</h2>
+    <span class="badge badge-purple">Parenteral Nutrition</span>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:20px;">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📋 Komposisi Nutrisi Parenteral</div>
+      </div>
+      <div class="card-body">
+        <ul class="item-list">
+          <li><strong style="color:var(--accent4);">Protein:</strong> (1–2) × BB × 1/22 × 4 = <span class="tag tag-blue">10–20%</span></li>
+          <li><strong style="color:var(--accent3);">Lipid:</strong> (1–3) × BB × 9 = <span class="tag tag-orange">20–30%</span></li>
+          <li><strong style="color:var(--accent2);">Karbohidrat:</strong> 100 – Protein – Lipid = <span class="tag tag-green">50–60%</span></li>
+          <li><strong style="color:var(--accent);">Energi NP:</strong> Total kalori – kalori Schofield &gt; 60%</li>
+          <li><strong style="color:var(--warn);">Balance N:</strong> 150–250 mg N/kgBB/hari</li>
+        </ul>
+        <div class="formula-box purple" style="margin-top:12px;">
+          GIR = 0.167 × Dextrose% × Rate (ml/jam) ÷ BB (kg)
+        </div>
+        <div class="info-box">
+          <strong>Target GIR:</strong> 4–6 mg/kgBB/menit<br>
+          Maks tanpa CVC: 12.5% dextrose
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">⚗️ TPN Rules: Batas Osmolaritas</div>
+      </div>
+      <div class="card-body">
+        <table class="data-table">
+          <thead><tr><th>Akses Vena</th><th>Max Osmolaritas</th><th>Max Dextrose</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Vena Perifer</td>
+              <td class="mono" style="color:var(--warn);">900 mOsm</td>
+              <td class="mono" style="color:var(--warn);">12.5%</td>
+            </tr>
+            <tr>
+              <td>Vena Dalam (CVC)</td>
+              <td class="mono" style="color:var(--accent2);">1600 mOsm</td>
+              <td class="mono" style="color:var(--accent2);">25%</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="divider"></div>
+        <p style="font-family:var(--mono); font-size:11px; color:var(--accent4); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Contoh NP (BB 12.2 kg)</p>
+        <div class="formula-box purple" style="font-size:12px;">
+          Protein = 1.7 × 12.2 × 1/22 × 4 ≈ 18 g (≈ 18%)
+        </div>
+        <div class="formula-box orange" style="font-size:12px;">
+          Lipid = 1 × 12.2 × 9 ≈ 110 kkal (≈ 26%)
+        </div>
+        <div class="formula-box green" style="font-size:12px;">
+          KH = 100 – 18 – 26 ≈ 56%
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESOMAL -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">💊 Kandungan ReSoMal per Liter</div>
+    </div>
+    <div class="card-body">
+      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;">
+        <div class="formula-box" style="text-align:center; font-size:15px;">
+          <div style="font-size:11px; color:var(--muted); margin-bottom:4px;">Natrium</div>
+          37.5 mmol
+        </div>
+        <div class="formula-box green" style="text-align:center; font-size:15px;">
+          <div style="font-size:11px; color:var(--muted); margin-bottom:4px;">Kalium</div>
+          40 mmol
+        </div>
+        <div class="formula-box purple" style="text-align:center; font-size:15px;">
+          <div style="font-size:11px; color:var(--muted); margin-bottom:4px;">Magnesium</div>
+          3 mmol
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== FORMULA & RUMUS ======================== -->
+<div id="formula" class="section">
+  <div class="section-header">
+    <h2>📐 Formula & Rumus Klinis</h2>
+    <span class="badge badge-orange">Quick Reference</span>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:20px;">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">⚡ Rumus Kebutuhan Kalori</div>
+      </div>
+      <div class="card-body">
+        <ul class="item-list">
+          <li><strong style="color:var(--accent);">Normal:</strong> BBI × RDA = kebutuhan kkal/hari</li>
+          <li><strong style="color:var(--danger);">Gizi Buruk (WHO):</strong> BBA × 80–220 kkal/kg/hr</li>
+          <li><strong style="color:var(--warn);">Obesitas:</strong> BBI × RDA – 30%</li>
+        </ul>
+        <div class="divider"></div>
+        <p style="font-family:var(--mono); font-size:11px; color:var(--muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">Rumus BBI per Usia</p>
+        <div class="formula-box">
+          Bayi: BBI = (usia bln + 9) / 2<br>
+          1–6 thn: BBI = (usia thn × 2) + 8<br>
+          7–12 thn: BBI = (usia thn × 7 – 5) / 2
+        </div>
+        <div class="warn-box">
+          <strong>⚠️ Obesitas:</strong> Target penurunan BB 500 g/bulan (≈ 2 kg/4 bulan)
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🍼 Konversi Kalori</div>
+      </div>
+      <div class="card-body">
+        <table class="data-table">
+          <thead><tr><th>Jenis</th><th>Nilai Energi</th></tr></thead>
+          <tbody>
+            <tr><td>Bubur saring</td><td class="mono">1.49 kkal/cc</td></tr>
+            <tr><td>Jus</td><td class="mono">0.5–1.5 kkal/cc</td></tr>
+            <tr><td>Diet lunak</td><td class="mono">1700–2100 kkal/hari</td></tr>
+          </tbody>
+        </table>
+
+        <div class="divider"></div>
+        <p style="font-family:var(--mono); font-size:11px; color:var(--muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">Formula Daging Ayam (per 205 g bahan)</p>
+        <ul class="item-list">
+          <li>Beras tepung 50g: 176 kkal, protein 3.4g</li>
+          <li>Daging ayam segar 50g: 47.5 kkal, protein 9g</li>
+          <li>Gula pasir 25g: 94 kkal</li>
+          <li>Minyak kacang 25g: 45 kkal, lemak 5g</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📊 BMI & Status Gizi</div>
+      </div>
+      <div class="card-body">
+        <div class="formula-box" style="margin-bottom:10px;">
+          BMI = BB (kg) / TB² (m)
+        </div>
+        <ul class="item-list">
+          <li style="color:var(--danger);">Gizi Buruk &lt; -3 SD</li>
+          <li style="color:var(--warn);">Gizi Kurang: ≥-3 s/d &lt;-2 SD</li>
+          <li style="color:var(--accent2);">Gizi Baik: -2 s/d +2 SD</li>
+          <li style="color:var(--accent3);">Gizi Lebih/Obes &gt; +2 SD</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🔢 Tingkat Kenaikan BB (Normal)</div>
+      </div>
+      <div class="card-body">
+        <ul class="item-list">
+          <li>Tingkat I: 25–30 g/hari</li>
+          <li>Tingkat II: 20 g/hari</li>
+          <li>Tingkat III: 15 g/hari</li>
+          <li>Tingkat IV: 8–10 g/hari</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🧂 SGM Optigrow: PRSL</div>
+      </div>
+      <div class="card-body">
+        <div class="formula-box" style="font-size:12px; line-height:1.8;">
+          PRSL = N/28 + Na/23<br>
+          + K/39 + Cl/23 + P/31
+        </div>
+        <div class="info-box" style="margin-top:8px;">
+          Hasil contoh: <strong>138.2 mOsm/L</strong><br>
+          <span style="color:var(--accent2);">✓ Aman (&lt; 261 mOsm/L)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end .main -->
+
+<script>
+// ==================== DATA ====================
+const milkData = [
+  // SGM
+  {name:'SGM BBLR', age:'BBLR', kal:'0.8', grup:'SGM', takaran:'80 kkal/100ml'},
+  {name:'SGM Ananda', age:'0-6 bln', kal:'0.65', grup:'SGM', takaran:'65 kkal/100ml'},
+  {name:'SGM Ananda', age:'6-12 bln', kal:'0.67', grup:'SGM', takaran:'67 kkal/100ml'},
+  {name:'SGM Eksplor', age:'1-3 thn', kal:'0.75', grup:'SGM', takaran:'150 kkal/200ml'},
+  {name:'SGM Eksplor', age:'3-5 thn', kal:'0.8', grup:'SGM', takaran:'160 kkal/200ml'},
+  {name:'SGM Eksplor', age:'5-12 thn', kal:'0.9', grup:'SGM', takaran:'160 kkal/170ml'},
+  {name:'SGM Ananda PHPro', age:'0-6 bln', kal:'0.66', grup:'SGM', takaran:'66 kkal/100ml'},
+  {name:'SGM Ananda PHPro', age:'6-12 bln', kal:'0.66', grup:'SGM', takaran:'66 kkal/100ml'},
+  {name:'SGM Eksplor PHPro', age:'1-3 thn', kal:'0.75', grup:'SGM', takaran:'150 kkal/200ml'},
+  {name:'SGM Ananda Soya', age:'0-6 bln', kal:'0.66', grup:'SGM', takaran:'66 kkal/100ml'},
+  {name:'SGM Ananda Soya', age:'6-12 bln', kal:'0.65', grup:'SGM', takaran:'65 kkal/100ml'},
+  {name:'SGM Eksplor Soya', age:'1-5 thn', kal:'0.85', grup:'SGM', takaran:'170 kkal/200ml'},
+  {name:'SGM Digesmill', age:'1-3 thn', kal:'0.75', grup:'SGM', takaran:'150 kkal/200ml'},
+  // LACTOGEN
+  {name:'Lactogen 1', age:'0-6 bln', kal:'0.67', grup:'LACTOGEN', takaran:'67 kkal/100ml'},
+  {name:'Lactogen 2', age:'6-12 bln', kal:'0.7', grup:'LACTOGEN', takaran:'160 kkal/230ml'},
+  {name:'Lactogrow 3', age:'1-3 thn', kal:'0.84', grup:'LACTOGEN', takaran:'160 kkal/190ml'},
+  {name:'Lactogrow 4', age:'3-5 thn', kal:'0.84', grup:'LACTOGEN', takaran:'160 kkal/190ml'},
+  // NUTRICIA
+  {name:'Nurtribaby 1', age:'0-6 bln', kal:'0.65', grup:'NUTRICIA', takaran:'65 kkal/100ml'},
+  {name:'Nutribaby 2', age:'6-12 bln', kal:'0.65', grup:'NUTRICIA', takaran:'130 kkal/200ml'},
+  {name:'Nutrilon 3', age:'1-3 thn', kal:'0.78', grup:'NUTRICIA', takaran:'180 kkal/230ml'},
+  {name:'Nutrilon 4', age:'3-5 thn', kal:'0.79', grup:'NUTRICIA', takaran:'185 kkal/235ml'},
+  {name:'Nurtribaby Royal 1', age:'0-6 bln', kal:'0.65', grup:'NUTRICIA', takaran:'65 kkal/100ml'},
+  {name:'Nutribaby Royal 2', age:'6-12 bln', kal:'0.7', grup:'NUTRICIA', takaran:'140 kkal/200ml'},
+  {name:'Nutrilon Royal 3', age:'1-3 thn', kal:'0.78', grup:'NUTRICIA', takaran:'180 kkal/230ml'},
+  {name:'Nutrilon Royal 4', age:'3-5 thn', kal:'0.81', grup:'NUTRICIA', takaran:'190 kkal/235ml'},
+  {name:'Bebelove 1', age:'0-6 bln', kal:'0.66', grup:'NUTRICIA', takaran:'66 kkal/100ml'},
+  {name:'Bebelove 2', age:'6-12 bln', kal:'0.7', grup:'NUTRICIA', takaran:'140 kkal/200ml'},
+  {name:'Bebelac 3', age:'1-3 thn', kal:'0.77', grup:'NUTRICIA', takaran:'180 kkal/235ml'},
+  {name:'Bebelac 4', age:'3-5 thn', kal:'0.77', grup:'NUTRICIA', takaran:'180 kkal/235ml'},
+  // NESTLE
+  {name:'Danstart 1', age:'0-6 bln', kal:'0.67', grup:'NESTLE', takaran:'67 kkal/100ml'},
+  {name:'Danstart 2', age:'6-12 bln', kal:'0.7', grup:'NESTLE', takaran:'140 kkal/200ml'},
+  {name:'Dancow 3', age:'1-3 thn', kal:'0.84', grup:'NESTLE', takaran:'160 kkal/190ml'},
+  {name:'Dancow 4', age:'3-5 thn', kal:'0.85', grup:'NESTLE', takaran:'170 kkal/200ml'},
+  {name:'Dancow 5', age:'5-12 thn', kal:'0.97', grup:'NESTLE', takaran:'180 kkal/185ml'},
+  {name:'Batita', age:'1-3 thn', kal:'0.8', grup:'NESTLE', takaran:'160 kkal/200ml'},
+  {name:'Datita', age:'3-5 thn', kal:'0.8', grup:'NESTLE', takaran:'160 kkal/200ml'},
+  {name:'Datita', age:'5-12 thn', kal:'0.75', grup:'NESTLE', takaran:'150 kkal/200ml'},
+  {name:'NAN 1', age:'0-6 bln', kal:'0.67', grup:'NESTLE', takaran:'67 kkal/100ml'},
+  {name:'NAN 2', age:'6-12 bln', kal:'0.69', grup:'NESTLE', takaran:'160 kkal/230ml'},
+  {name:'NAN 3', age:'1-3 thn', kal:'0.65', grup:'NESTLE', takaran:'150 kkal/230ml'},
+  // FRISIAN FLAG
+  {name:'Jelajah', age:'1-3 thn', kal:'0.85', grup:'FRISIAN FLAG', takaran:'170 kkal/200ml'},
+  {name:'Karya', age:'3-5 thn', kal:'0.9', grup:'FRISIAN FLAG', takaran:'180 kkal/200ml'},
+  // MORINAGA
+  {name:'BMT', age:'0-6 bln', kal:'0.67', grup:'MORINAGA', takaran:'67 kkal/100ml'},
+  {name:'Chil-mil', age:'1-3 thn', kal:'0.64', grup:'MORINAGA', takaran:'140 kkal/220ml'},
+  {name:'Chil-kid', age:'3-5 thn', kal:'0.75', grup:'MORINAGA', takaran:'150 kkal/200ml'},
+  {name:'Chil-school', age:'5-12 thn', kal:'1.0', grup:'MORINAGA', takaran:'200 kkal/200ml'},
+  // KHUSUS
+  {name:'Infatrini', age:'BBLR/Prematur', kal:'1.0', grup:'khusus', takaran:'1 sdt = 25ml'},
+  {name:'Pediasure', age:'1-10 thn', kal:'0.84', grup:'khusus', takaran:'4 sdt + 190ml'},
+  {name:'Pediacomplete', age:'1-10 thn', kal:'1.0', grup:'khusus', takaran:'5 sdt + 190ml'},
+  {name:'Ensure', age:'>10 thn', kal:'1.0', grup:'khusus', takaran:'1 sdt = 50ml'},
+  {name:'Goldsure', age:'>10 thn', kal:'1.0', grup:'khusus', takaran:'6 sdt + 185ml'},
+  {name:'Pregestimil', age:'Alergi/Malabsorpsi', kal:'0.67', grup:'khusus', takaran:'30ml + 1 sdt'},
+  {name:'Neocate', age:'Alergi berat', kal:'0.67', grup:'khusus', takaran:'30ml + 1 sdt'},
+  {name:'F75', age:'Gizi Buruk Stabilisasi', kal:'0.75', grup:'khusus', takaran:'Per 1000ml'},
+  {name:'F100', age:'Gizi Buruk Transisi', kal:'1.0', grup:'khusus', takaran:'Per 1000ml'},
+];
+
+const kaloriSusu = {
+  'sgm_ananda_06': 0.65, 'sgm_ananda_612': 0.67, 'sgm_optigrow': 0.45,
+  'infatrini': 1.0, 'pediasure': 0.84, 'pediacomplete': 1.0,
+  'lactogen1': 0.67, 'lactogen2': 0.7, 'ensure': 1.0, 'goldsure': 1.0,
+  'f75': 0.75, 'f100': 1.0
+};
+
+// ==================== RENDER MILK TABLE ====================
+function renderMilkTable(filter='semua') {
+  const tbody = document.getElementById('milkTableBody');
+  const filtered = filter === 'semua' ? milkData : milkData.filter(m => m.grup === filter);
+  const kalColor = k => parseFloat(k) >= 1.0 ? 'var(--accent2)' : parseFloat(k) >= 0.8 ? 'var(--warn)' : 'var(--accent)';
+  tbody.innerHTML = filtered.map(m => `
+    <tr>
+      <td style="font-weight:600;">${m.name}</td>
+      <td style="color:var(--muted); font-size:12px;">${m.age}</td>
+      <td style="color:var(--muted); font-size:12px; font-family:var(--mono);">${m.takaran}</td>
+      <td style="font-family:var(--mono); font-weight:700; color:${kalColor(m.kal)};">${m.kal}</td>
+      <td><span class="tag ${m.grup==='khusus'?'tag-red':m.grup==='SGM'?'tag-blue':'tag-green'}" style="font-size:10px;">${m.grup}</span></td>
+    </tr>
+  `).join('');
+}
+
+function filterMilk(filter, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMilkTable(filter);
+}
+
+// ==================== KALKULATOR KALORI ====================
+function getRDA(usiaBln) {
+  if (usiaBln <= 6) return 120;
+  if (usiaBln <= 12) return 110;
+  if (usiaBln <= 36) return 100;
+  if (usiaBln <= 72) return 90;
+  if (usiaBln <= 108) return 80;
+  if (usiaBln <= 144) return 70;
+  if (usiaBln <= 180) return 60;
+  return 50;
+}
+
+function hitungKalori() {
+  const bba = parseFloat(document.getElementById('bba').value);
+  const bbi = parseFloat(document.getElementById('bbi').value);
+  const usiaBln = parseFloat(document.getElementById('usia_bln').value) || 6;
+  const statusGizi = document.getElementById('status_gizi').value;
+  const jenisSusu = document.getElementById('jenis_susu').value;
+  const volSekali = parseFloat(document.getElementById('vol_sekali').value) || 0;
+  const frek = parseFloat(document.getElementById('frekuensi').value) || 0;
+
+  if (!bba || !bbi) { alert('Isi BB Aktual dan BB Ideal!'); return; }
+
+  const rda = getRDA(usiaBln);
+  const kebutuhanBBI = bbi * rda;
+  const totalVol = volSekali * frek;
+  const kalSusu = jenisSusu ? kaloriSusu[jenisSusu] || 1.0 : null;
+  const kalAktual = kalSusu ? totalVol * kalSusu : null;
+
+  let minKal, maxKal, formula = '';
+  if (statusGizi === 'buruk') {
+    minKal = bba * 80; maxKal = bba * 220;
+    formula = `BBA (${bba}kg) × 80–220 kkal/kg`;
+  } else if (statusGizi === 'kurang') {
+    minKal = bbi * rda * 0.75; maxKal = bbi * rda;
+    formula = `BBI (${bbi}kg) × RDA (${rda}) × 75–100%`;
+  } else if (statusGizi === 'obesitas') {
+    minKal = kebutuhanBBI * 0.7; maxKal = kebutuhanBBI * 0.7;
+    formula = `BBI (${bbi}kg) × RDA (${rda}) × 70% (reduksi 30%)`;
+  } else {
+    minKal = kebutuhanBBI; maxKal = kebutuhanBBI;
+    formula = `BBI (${bbi}kg) × RDA (${rda} kkal/kg)`;
+  }
+
+  const grid = document.getElementById('result_grid_kalori');
+  grid.innerHTML = `
+    <div class="result-item">
+      <div class="r-label">RDA</div>
+      <div class="r-val">${rda}</div>
+      <div class="r-unit">kkal/kg/hari</div>
+    </div>
+    <div class="result-item">
+      <div class="r-label">Kebutuhan (BBI)</div>
+      <div class="r-val">${Math.round(kebutuhanBBI)}</div>
+      <div class="r-unit">kkal/hari</div>
+    </div>
+    <div class="result-item">
+      <div class="r-label">Range Target</div>
+      <div class="r-val" style="font-size:14px;">${Math.round(minKal)}–${Math.round(maxKal)}</div>
+      <div class="r-unit">kkal/hari</div>
+    </div>
+    ${kalAktual !== null ? `
+    <div class="result-item">
+      <div class="r-label">Kalori Aktual</div>
+      <div class="r-val" style="color:${kalAktual >= minKal ? 'var(--accent2)' : 'var(--danger)'};">${Math.round(kalAktual)}</div>
+      <div class="r-unit">${kalAktual >= minKal ? '✓ Terpenuhi' : '⚠️ Defisit'}</div>
+    </div>` : ''}
+  `;
+
+  let detail = `<div class="formula-box" style="margin-bottom:8px;">Formula: ${formula}</div>`;
+  if (kalAktual !== null && kalAktual < minKal) {
+    const defisit = minKal - kalAktual;
+    detail += `<div class="warn-box">⚠️ Defisit <strong>${Math.round(defisit)} kkal/hari</strong>. Pertimbangkan pengentalan atau penambahan frekuensi minum.</div>`;
+  } else if (kalAktual !== null) {
+    detail += `<div class="info-box">✓ Kalori aktual mencukupi kebutuhan minimal.</div>`;
+  }
+
+  document.getElementById('result_detail').innerHTML = detail;
+  const box = document.getElementById('result_kalori');
+  box.classList.add('show');
+}
+
+// ==================== PRSL ====================
+function hitungPRSL() {
+  const n = parseFloat(document.getElementById('prsl_n').value) || 0;
+  const na = parseFloat(document.getElementById('prsl_na').value) || 0;
+  const k = parseFloat(document.getElementById('prsl_k').value) || 0;
+  const cl = parseFloat(document.getElementById('prsl_cl').value) || 0;
+  const p = parseFloat(document.getElementById('prsl_p').value) || 0;
+
+  const prsl = (n/28) + (na/23) + (k/39) + (cl/23) + (p/31);
+  const rounded = prsl.toFixed(1);
+
+  const valEl = document.getElementById('prsl_val');
+  const statusEl = document.getElementById('prsl_status');
+  const breakdownEl = document.getElementById('prsl_breakdown');
+
+  valEl.textContent = `${rounded} mOsm/L`;
+  if (prsl < 200) {
+    valEl.className = 'prsl-result prsl-safe';
+    statusEl.innerHTML = '<span style="color:var(--accent2);">✓ AMAN — Bebas risiko renal</span>';
+  } else if (prsl < 261) {
+    valEl.className = 'prsl-result prsl-warn';
+    statusEl.innerHTML = '<span style="color:var(--warn);">⚠️ BATAS AMAN — Pantau asupan cairan</span>';
+  } else {
+    valEl.className = 'prsl-result prsl-danger';
+    statusEl.innerHTML = '<span style="color:var(--danger);">⛔ MELEBIHI BATAS — Risiko renal solute overload!</span>';
+  }
+
+  breakdownEl.textContent = `N/28=${(n/28).toFixed(1)} + Na/23=${(na/23).toFixed(1)} + K/39=${(k/39).toFixed(1)} + Cl/23=${(cl/23).toFixed(1)} + P/31=${(p/31).toFixed(1)}`;
+
+  document.getElementById('result_prsl').classList.add('show');
+}
+
+// ==================== KNEE HEIGHT ====================
+function hitungKnee() {
+  const kh = parseFloat(document.getElementById('kh_val').value);
+  const sex = document.getElementById('kh_sex').value;
+  if (!kh) { alert('Masukkan nilai Knee Height!'); return; }
+
+  let tb;
+  if (sex === 'laki') tb = 64.19 + (2.02 * kh);
+  else if (sex === 'perempuan') tb = 84.88 + (1.83 * kh);
+  else tb = (2.69 * kh) + 24.2;
+
+  document.getElementById('knee_result').textContent = `${tb.toFixed(1)} cm`;
+  document.getElementById('result_knee').classList.add('show');
+}
+
+// ==================== TABS ====================
+function showTab(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// ==================== SEARCH ====================
+function handleSearch(val) {
+  if (!val.trim()) return;
+  // Basic highlight search - focus on susu tab for milk searches
+  const lower = val.toLowerCase();
+  const milkKeywords = ['sgm','lactogen','pediasure','infatrini','susu','formula','ensure','goldsure','bebelac','dancow','nutrilon'];
+  if (milkKeywords.some(k => lower.includes(k))) {
+    showTabByName('susu');
+  }
+}
+
+function showTabByName(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    if (b.getAttribute('onclick')?.includes(name)) b.classList.add('active');
+  });
+}
+
+// ==================== INIT ====================
+renderMilkTable();
+</script>
+</body>
+</html>

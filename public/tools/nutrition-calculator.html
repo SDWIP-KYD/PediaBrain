@@ -1,0 +1,2185 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1a3a2a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gizi Anak">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="description" content="Kalkulator Gizi & Nutrisi Anak — Status gizi, kebutuhan energi, TPN, enteral, MPASI, SAM, dan lebih banyak lagi.">
+<meta name="application-name" content="Gizi Anak">
+<meta name="msapplication-TileColor" content="#1a3a2a">
+
+<!-- PWA Manifest (inline via JS, no external file needed) -->
+<link id="pwa-manifest" rel="manifest">
+
+<!-- Apple Touch Icons (inline SVG via JS) -->
+<link id="apple-icon" rel="apple-touch-icon">
+
+<title>Kalkulator Gizi & Nutrisi Anak</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Literata:ital,opsz,wght@0,7..72,300;0,7..72,400;0,7..72,500;0,7..72,600;1,7..72,300&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<!-- PWA Bootstrap: inject manifest + SW from inline blobs -->
+<script>
+(function(){
+  // ── 1. MANIFEST ──
+  const manifest = {
+    name: "Kalkulator Gizi & Nutrisi Anak",
+    short_name: "Gizi Anak",
+    description: "Kalkulator klinis nutrisi pediatrik — status gizi, energi, TPN, enteral, SAM, MPASI",
+    start_url: "./",
+    display: "standalone",
+    orientation: "any",
+    background_color: "#1a3a2a",
+    theme_color: "#1a3a2a",
+    lang: "id",
+    categories: ["medical","health"],
+    icons: [
+      { src: makeIcon(192), sizes: "192x192", type: "image/png", purpose: "any maskable" },
+      { src: makeIcon(512), sizes: "512x512", type: "image/png", purpose: "any maskable" }
+    ],
+    shortcuts: [
+      { name: "Status Gizi", short_name: "Antropometri", url: "./#status", description: "Hitung WAZ, HAZ, WHZ" },
+      { name: "Kebutuhan Energi", short_name: "Energi", url: "./#energy", description: "REE, TEE, Schofield" },
+      { name: "TPN Calculator", short_name: "TPN", url: "./#parenteral", description: "Total Parenteral Nutrition" }
+    ]
+  };
+
+  function makeIcon(size) {
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${size}' viewBox='0 0 100 100'>
+      <rect width='100' height='100' rx='22' fill='%231a3a2a'/>
+      <text x='50' y='68' font-size='52' text-anchor='middle' font-family='serif'>🌿</text>
+      <text x='50' y='90' font-size='11' text-anchor='middle' fill='%23a8d5b5' font-family='sans-serif' font-weight='bold'>GIZI ANAK</text>
+    </svg>`;
+    const canvas = document.createElement('canvas');
+    canvas.width = size; canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.onload = () => ctx.drawImage(img, 0, 0);
+    img.src = 'data:image/svg+xml,' + svg;
+    return canvas.toDataURL('image/png');
+  }
+
+  // Inject manifest as blob URL
+  const manifestBlob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
+  const manifestURL = URL.createObjectURL(manifestBlob);
+  document.getElementById('pwa-manifest').href = manifestURL;
+
+  // Inject apple touch icon
+  const iconSvg = `<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 100 100'>
+    <rect width='100' height='100' rx='22' fill='%231a3a2a'/>
+    <text x='50' y='65' font-size='50' text-anchor='middle' font-family='serif'>🌿</text>
+    <text x='50' y='88' font-size='10' text-anchor='middle' fill='%23a8d5b5' font-family='sans-serif' font-weight='bold'>GIZI ANAK</text>
+  </svg>`;
+  const iconURL = 'data:image/svg+xml;charset=utf-8,' + iconSvg;
+  document.getElementById('apple-icon').href = iconURL;
+
+  // ── 2. SERVICE WORKER (inline as blob) ──
+  const swCode = `
+const CACHE = 'gizi-anak-v1';
+const FONTS = [
+  'https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Literata:ital,opsz,wght@0,7..72,300;0,7..72,400;0,7..72,500;0,7..72,600;1,7..72,300&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap'
+];
+
+self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open(CACHE).then(c => c.addAll(FONTS).catch(()=>{}))
+      .then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys().then(keys => Promise.all(
+      keys.filter(k => k !== CACHE).map(k => caches.delete(k))
+    )).then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', e => {
+  // Cache-first for fonts, network-first for app page
+  if (e.request.url.includes('fonts.gstatic.com') || e.request.url.includes('fonts.googleapis.com')) {
+    e.respondWith(
+      caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
+        const clone = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+        return res;
+      }).catch(() => cached || new Response('', {status: 404})))
+    );
+    return;
+  }
+  // For main HTML: network-first with cache fallback
+  if (e.request.mode === 'navigate' || e.request.headers.get('accept')?.includes('text/html')) {
+    e.respondWith(
+      fetch(e.request).then(res => {
+        const clone = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+        return res;
+      }).catch(() => caches.match(e.request).then(cached => cached || caches.match('./') || new Response('<h1>Offline - Buka saat ada koneksi pertama kali</h1>', {headers:{'Content-Type':'text/html'}})))
+    );
+    return;
+  }
+  // Default: stale-while-revalidate
+  e.respondWith(
+    caches.match(e.request).then(cached => {
+      const network = fetch(e.request).then(res => {
+        caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+        return res;
+      }).catch(() => cached);
+      return cached || network;
+    })
+  );
+});
+`;
+
+  if ('serviceWorker' in navigator) {
+    const swBlob = new Blob([swCode], { type: 'application/javascript' });
+    const swURL = URL.createObjectURL(swBlob);
+    navigator.serviceWorker.register(swURL, { scope: './' })
+      .then(reg => {
+        console.log('[PWA] Service Worker registered:', reg.scope);
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              showUpdateToast();
+            }
+          });
+        });
+      })
+      .catch(err => console.log('[PWA] SW registration failed:', err));
+  }
+})();
+</script>
+<style>
+:root {
+  --forest:   #1a3a2a;
+  --moss:     #2d5a3d;
+  --sage:     #4a7c59;
+  --fern:     #6b9e7a;
+  --mint:     #a8d5b5;
+  --cream:    #faf7f0;
+  --warm:     #f5f0e8;
+  --paper:    #fffef9;
+  --border:   #d4e8d8;
+  --text:     #1c2e1e;
+  --muted:    #5a7a62;
+  --light:    #8aab92;
+
+  --orange:   #e07020;
+  --orange-l: #fdf2e8;
+  --blue:     #1e5a8a;
+  --blue-l:   #e8f3fc;
+  --rose:     #9e3050;
+  --rose-l:   #fce8ee;
+  --gold:     #b8860b;
+  --gold-l:   #fdf8e8;
+  --purple:   #5a3080;
+  --purple-l: #f0ebf8;
+  --red:      #c0392b;
+  --red-l:    #fdf0ee;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+
+body {
+  background: var(--cream);
+  color: var(--text);
+  font-family: 'Literata', serif;
+  font-weight: 300;
+  min-height: 100vh;
+  background-image:
+    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%234a7c59' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"),
+    radial-gradient(ellipse 70% 50% at 0% 0%, rgba(26,58,42,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 60% at 100% 100%, rgba(168,213,181,0.12) 0%, transparent 60%);
+}
+
+/* ── HEADER ── */
+.hdr {
+  background: var(--forest);
+  color: var(--cream);
+  position: sticky;top:0;z-index:200;
+  overflow: hidden;
+}
+
+.hdr::before {
+  content:'';
+  position:absolute;inset:0;
+  background: repeating-linear-gradient(
+    45deg, transparent, transparent 20px,
+    rgba(168,213,181,0.03) 20px, rgba(168,213,181,0.03) 40px
+  );
+}
+
+.hdr-inner {
+  display:flex;align-items:center;gap:1rem;
+  padding:0.9rem 1.5rem;
+  position:relative;z-index:1;
+  border-bottom:1px solid rgba(168,213,181,0.1);
+}
+
+.hdr-mark {
+  width:46px;height:46px;
+  background:linear-gradient(135deg,var(--moss),var(--sage));
+  border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem;flex-shrink:0;
+  box-shadow:0 4px 16px rgba(0,0,0,0.2);
+}
+
+.hdr-title {
+  font-family:'DM Serif Display',serif;
+  font-size:1.25rem;font-weight:400;font-style:italic;
+  letter-spacing:0.01em;line-height:1.1;
+  color:var(--cream);
+}
+
+.hdr-sub {
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.58rem;color:rgba(250,247,240,0.45);
+  letter-spacing:0.14em;text-transform:uppercase;margin-top:0.15rem;
+}
+
+/* patient strip */
+.pt-strip {
+  display:flex;align-items:center;gap:0.5rem;
+  padding:0.5rem 1.5rem;
+  position:relative;z-index:1;
+  overflow-x:auto;scrollbar-width:none;
+}
+.pt-strip::-webkit-scrollbar{display:none;}
+
+.pf{display:flex;flex-direction:column;gap:0.1rem;flex-shrink:0;}
+.pf-lbl{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.5rem;letter-spacing:0.15em;
+  text-transform:uppercase;color:rgba(168,213,181,0.55);
+}
+.pf-inp{
+  background:rgba(168,213,181,0.1);
+  border:1px solid rgba(168,213,181,0.25);
+  border-radius:6px;color:var(--mint);
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.85rem;font-weight:500;
+  padding:0.28rem 0.55rem;width:78px;outline:none;
+}
+.pf-inp:focus{border-color:rgba(168,213,181,0.6);}
+.pf-inp.w100{width:100px;}
+.pf-inp.w60{width:60px;}
+.pt-sep{width:1px;height:26px;background:rgba(168,213,181,0.15);flex-shrink:0;}
+.pt-badge{
+  font-family:'IBM Plex Mono',monospace;font-size:0.65rem;
+  padding:0.25rem 0.65rem;border-radius:5px;flex-shrink:0;
+  border:1px solid rgba(168,213,181,0.25);
+  background:rgba(168,213,181,0.08);color:var(--mint);
+  white-space:nowrap;
+}
+
+/* ── TABS ── */
+.tab-nav {
+  background:var(--paper);
+  border-bottom:2px solid var(--border);
+  display:flex;overflow-x:auto;scrollbar-width:none;
+  box-shadow:0 2px 12px rgba(26,58,42,0.08);
+}
+.tab-nav::-webkit-scrollbar{display:none;}
+
+.tb {
+  flex:0 0 auto;background:none;border:none;
+  border-bottom:3px solid transparent;margin-bottom:-2px;
+  color:var(--muted);
+  font-family:'Literata',serif;font-size:0.78rem;font-weight:500;
+  padding:0.75rem 1.1rem;cursor:pointer;
+  display:flex;align-items:center;gap:0.4rem;
+  transition:all 0.15s;white-space:nowrap;
+}
+.tb:hover{color:var(--text);background:var(--warm);}
+.tb.active{color:var(--forest);border-bottom-color:var(--sage);}
+
+/* ── CONTENT ── */
+.tc{display:none;padding:1.25rem;animation:slIn 0.25s ease;}
+.tc.active{display:block;}
+@keyframes slIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1rem;}
+.grid-w{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:1rem;}
+
+/* ── CARD ── */
+.card{
+  background:var(--paper);
+  border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;
+  box-shadow:0 2px 12px rgba(26,58,42,0.06);
+  transition:box-shadow 0.2s,transform 0.2s;
+}
+.card:hover{box-shadow:0 8px 28px rgba(26,58,42,0.12);transform:translateY(-1px);}
+
+.ch{
+  display:flex;align-items:center;gap:0.75rem;
+  padding:0.85rem 1.1rem;
+  border-bottom:1px solid var(--border);
+  position:relative;overflow:hidden;
+}
+.ch::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+}
+
+.cico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.ct{font-family:'DM Serif Display',serif;font-size:1rem;font-weight:400;color:var(--text);line-height:1.1;}
+.cs{font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:var(--muted);margin-top:0.1rem;letter-spacing:0.04em;}
+
+.cb{padding:1.1rem;}
+
+/* inputs */
+.ir{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.6rem;}
+.ir.s1{grid-template-columns:1fr;}
+.ir.s3{grid-template-columns:repeat(3,1fr);}
+.ir.s4{grid-template-columns:repeat(4,1fr);}
+
+.ig{display:flex;flex-direction:column;gap:0.18rem;}
+.il{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.58rem;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--muted);
+}
+.ii{
+  background:var(--warm);border:1.5px solid var(--border);
+  border-radius:8px;color:var(--text);
+  font-family:'IBM Plex Mono',monospace;font-size:0.82rem;font-weight:500;
+  padding:0.42rem 0.65rem;outline:none;width:100%;
+  transition:border-color 0.15s,box-shadow 0.15s;
+}
+.ii:focus{border-color:var(--sage);box-shadow:0 0 0 3px rgba(74,124,89,0.1);}
+select.ii{cursor:pointer;}
+
+/* buttons */
+.btn{
+  width:100%;border:none;border-radius:9px;
+  font-family:'Literata',serif;font-size:0.82rem;font-weight:500;
+  padding:0.62rem;cursor:pointer;letter-spacing:0.01em;
+  transition:filter 0.15s,transform 0.1s;margin-bottom:0.75rem;
+}
+.btn:hover{filter:brightness(1.07);}
+.btn:active{transform:scale(0.98);}
+.btn-main{background:var(--sage);color:white;}
+
+/* results */
+.res{display:none;border-radius:10px;padding:0.9rem;border:1.5px solid;}
+.res.show{display:block;animation:ri 0.2s ease;}
+@keyframes ri{from{opacity:0;transform:scale(0.97);}to{opacity:1;transform:scale(1);}}
+
+.rg{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;}
+.rg.s1{grid-template-columns:1fr;}
+.rg.s3{grid-template-columns:repeat(3,1fr);}
+.rg.s4{grid-template-columns:repeat(4,1fr);}
+.rg.s5{grid-template-columns:repeat(5,1fr);}
+
+.ri{
+  background:rgba(255,255,255,0.7);
+  border:1px solid rgba(0,0,0,0.06);
+  border-radius:8px;padding:0.6rem 0.75rem;
+}
+.rl{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.52rem;letter-spacing:0.14em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:0.2rem;
+}
+.rv{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:1rem;font-weight:600;line-height:1;color:var(--text);
+}
+.rv.big{font-size:1.3rem;}
+.rv.xl{font-size:1.6rem;}
+.rn{font-size:0.62rem;color:var(--muted);margin-top:0.2rem;line-height:1.45;}
+
+.ralert{
+  border-radius:8px;padding:0.7rem 0.9rem;
+  font-size:0.77rem;line-height:1.8;
+  border:1.5px solid;margin-top:0.55rem;
+}
+
+.rwarn{
+  margin-top:0.5rem;border-radius:7px;
+  padding:0.4rem 0.65rem;font-size:0.7rem;line-height:1.55;
+  display:flex;gap:0.4rem;align-items:flex-start;
+}
+
+/* info box */
+.ibox{
+  background:rgba(168,213,181,0.12);
+  border:1px solid rgba(74,124,89,0.2);
+  border-left:3px solid var(--sage);
+  border-radius:0 8px 8px 0;
+  padding:0.65rem 0.85rem;
+  font-size:0.72rem;line-height:1.75;color:var(--muted);
+  margin-bottom:0.75rem;
+}
+.ibox strong{color:var(--forest);font-weight:600;}
+
+/* section label */
+.slbl{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.55rem;letter-spacing:0.22em;
+  text-transform:uppercase;color:var(--light);
+  margin:1.2rem 0 0.75rem;
+  display:flex;align-items:center;gap:0.6rem;
+}
+.slbl::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* table */
+.rtbl{
+  width:100%;border-collapse:collapse;
+  font-size:0.73rem;
+  border:1px solid var(--border);border-radius:9px;overflow:hidden;
+}
+.rtbl th{
+  background:var(--warm);font-family:'IBM Plex Mono',monospace;
+  font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--muted);padding:0.5rem 0.75rem;text-align:left;
+  border-bottom:1px solid var(--border);
+}
+.rtbl td{padding:0.48rem 0.75rem;border-bottom:1px solid rgba(0,0,0,0.04);line-height:1.5;}
+.rtbl tr:last-child td{border-bottom:none;}
+.rtbl tr:hover td{background:var(--warm);}
+
+/* progress / gauge */
+.prog-wrap{background:var(--border);border-radius:999px;height:10px;overflow:hidden;margin:0.3rem 0;}
+.prog-bar{height:100%;border-radius:999px;transition:width 0.5s cubic-bezier(.4,0,.2,1);}
+
+/* disc */
+.disc{
+  background:#fff8e8;border:1px solid #e8d48a;
+  border-radius:10px;padding:0.7rem 1rem;
+  font-size:0.72rem;color:#6b5000;line-height:1.65;margin-bottom:1rem;
+}
+
+/* status */
+.c-ok{color:var(--sage);}
+.c-warn{color:var(--gold);}
+.c-bad{color:var(--red);}
+.c-info{color:var(--blue);}
+
+/* nutrient wheel display */
+.macro-bar{display:flex;height:14px;border-radius:999px;overflow:hidden;margin:0.4rem 0;}
+.macro-seg{height:100%;transition:width 0.5s;}
+
+/* zebra table rows */
+.rtbl tr:nth-child(even) td{background:rgba(168,213,181,0.05);}
+
+@media(max-width:600px){
+  .grid,.grid-w{grid-template-columns:1fr;}
+  .ir.s3,.ir.s4{grid-template-columns:1fr 1fr;}
+  .rg.s3,.rg.s4,.rg.s5{grid-template-columns:1fr 1fr;}
+}
+
+/* PWA UI */
+#pwa-install-banner{display:none;position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);z-index:9999;width:calc(100% - 2rem);max-width:400px;background:var(--forest);border:1px solid rgba(168,213,181,0.3);border-radius:16px;padding:1rem 1.1rem;box-shadow:0 8px 32px rgba(0,0,0,0.35);animation:slideUp 0.4s cubic-bezier(.4,0,.2,1);}
+#pwa-install-banner.visible{display:flex;align-items:center;gap:0.85rem;}
+@keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(20px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+.pwa-icon{width:48px;height:48px;border-radius:12px;flex-shrink:0;background:linear-gradient(135deg,var(--moss),var(--fern));display:flex;align-items:center;justify-content:center;font-size:1.5rem;}
+.pwa-text{flex:1;}
+.pwa-title{font-family:'DM Serif Display',serif;font-size:0.9rem;color:var(--cream);margin-bottom:0.15rem;}
+.pwa-sub{font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:var(--mint);letter-spacing:0.05em;line-height:1.4;}
+.pwa-acts{display:flex;flex-direction:column;gap:0.4rem;flex-shrink:0;}
+.pwa-install{background:var(--sage);color:white;border:none;border-radius:8px;padding:0.45rem 0.85rem;font-family:'Literata',serif;font-size:0.75rem;font-weight:500;cursor:pointer;white-space:nowrap;transition:filter 0.15s;}
+.pwa-install:hover{filter:brightness(1.1);}
+.pwa-dismiss{background:transparent;color:var(--mint);border:1px solid rgba(168,213,181,0.3);border-radius:8px;padding:0.35rem 0.85rem;font-family:'IBM Plex Mono',monospace;font-size:0.65rem;cursor:pointer;transition:all 0.15s;}
+.pwa-dismiss:hover{background:rgba(168,213,181,0.1);}
+#pwa-toast,#pwa-update{display:none;position:fixed;top:1rem;right:1rem;z-index:9998;border-radius:10px;padding:0.7rem 1rem;font-family:'IBM Plex Mono',monospace;font-size:0.72rem;box-shadow:0 4px 20px rgba(0,0,0,0.25);animation:slideR 0.3s ease;max-width:280px;line-height:1.5;}
+#pwa-toast.v,#pwa-update.v{display:flex;gap:0.6rem;align-items:flex-start;}
+#pwa-toast{background:#3a1a1a;border:1px solid rgba(200,50,50,0.4);color:#ffb3b3;}
+#pwa-update{background:#1a2e1a;border:1px solid rgba(74,124,89,0.4);color:var(--mint);}
+@keyframes slideR{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
+.pwa-dot{width:7px;height:7px;border-radius:50%;background:var(--mint);transition:background 0.3s;flex-shrink:0;}
+.pwa-dot.offline{background:#ff6b6b;animation:blink 1.5s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+body{padding-bottom:env(safe-area-inset-bottom);}
+.hdr{padding-top:env(safe-area-inset-top);}
+</style>
+</head>
+<body>
+
+<!-- Install Banner -->
+<div id="pwa-install-banner">
+  <div class="pwa-icon">🌿</div>
+  <div class="pwa-text"><div class="pwa-title">Install Kalkulator Gizi</div><div class="pwa-sub">Gunakan offline · Akses cepat dari<br>layar utama HP / tablet Anda</div></div>
+  <div class="pwa-acts">
+    <button class="pwa-install" onclick="installPWA()">⬇ Install</button>
+    <button class="pwa-dismiss" onclick="dismissInstall()">Nanti</button>
+  </div>
+</div>
+<!-- Offline Toast -->
+<div id="pwa-toast"><span>📡</span><div><strong>Mode Offline</strong><br>Koneksi tidak tersedia. Kalkulasi tetap berjalan.</div></div>
+<!-- Update Toast -->
+<div id="pwa-update"><span>✨</span><div><strong>Update Tersedia</strong><br>Muat ulang untuk versi terbaru.<br><button onclick="location.reload()" style="background:var(--sage);color:white;border:none;border-radius:5px;padding:0.25rem 0.6rem;font-size:0.65rem;margin-top:0.4rem;cursor:pointer;font-family:monospace;">Muat Ulang</button></div></div>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-mark">🌿</div>
+    <div>
+      <div class="hdr-title">Kalkulator Gizi & Nutrisi Anak</div>
+      <div class="hdr-sub">Pediatric Nutrition · Dietetics · Clinical Assessment</div>
+    </div>
+  </div>
+  <div class="pt-strip">
+    <div class="pf"><span class="pf-lbl">BB (kg)</span><input class="pf-inp" id="ptW" type="number" value="15" min="1" max="150" step="0.1" oninput="syncAll()"></div>
+    <div class="pf"><span class="pf-lbl">TB (cm)</span><input class="pf-inp" id="ptH" type="number" value="100" min="30" max="200" step="0.5" oninput="syncAll()"></div>
+    <div class="pf"><span class="pf-lbl">Usia</span><input class="pf-inp w60" id="ptAge" type="number" value="3" min="0" max="18" step="0.5" oninput="syncAll()"></div>
+    <div class="pf"><span class="pf-lbl">Jenis Kelamin</span>
+      <select class="pf-inp w100" id="ptSex" oninput="syncAll()">
+        <option value="m">Laki-laki</option>
+        <option value="f">Perempuan</option>
+      </select>
+    </div>
+    <div class="pt-sep"></div>
+    <div class="pt-badge" id="bBMI">BMI: —</div>
+    <div class="pt-badge" id="bStatus">Status: —</div>
+    <div class="pt-badge" id="bWFA">WAZ: —</div>
+    <div class="pt-badge" id="bHFA">HAZ: —</div>
+  </div>
+</div>
+
+<!-- TABS -->
+<nav class="tab-nav">
+  <button class="tb active" onclick="showTab('status',this)">📊 Status Gizi</button>
+  <button class="tb" onclick="showTab('energy',this)">⚡ Kebutuhan Energi</button>
+  <button class="tb" onclick="showTab('macro',this)">🥩 Makronutrien</button>
+  <button class="tb" onclick="showTab('micro',this)">💊 Mikronutrien</button>
+  <button class="tb" onclick="showTab('enteral',this)">🥛 Nutrisi Enteral</button>
+  <button class="tb" onclick="showTab('parenteral',this)">💉 Nutrisi Parenteral</button>
+  <button class="tb" onclick="showTab('special',this)">🏥 Kondisi Khusus</button>
+  <button class="tb" onclick="showTab('food',this)">🍽️ Bahan Makanan</button>
+</nav>
+
+<!-- ══════════════ STATUS GIZI ══════════════ -->
+<div class="tc active" id="tab-status">
+  <div class="disc">⚠️ Penilaian status gizi menggunakan referensi WHO 2006 (0–5 tahun) dan WHO 2007 (5–18 tahun). Gunakan sebagai panduan — penilaian klinis tetap diperlukan.</div>
+  <div class="grid">
+
+    <!-- ANTHROPOMETRI LENGKAP -->
+    <div class="card">
+      <div class="ch" style="background:rgba(74,124,89,0.06)">
+        <div class="cico" style="background:rgba(74,124,89,0.12)">📏</div>
+        <div><div class="ct">Antropometri Lengkap</div><div class="cs">WHO Z-score: WAZ, HAZ, WHZ, BAZ</div></div>
+      </div>
+      <div class="cb">
+        <div class="ir s3">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="an-w" type="number" value="15" step="0.1" oninput="calcAntro()"></div>
+          <div class="ig"><label class="il">TB/PB (cm)</label><input class="ii" id="an-h" type="number" value="100" step="0.5" oninput="calcAntro()"></div>
+          <div class="ig"><label class="il">Usia (bulan)</label><input class="ii" id="an-age-mo" type="number" value="36" oninput="calcAntro()"></div>
+        </div>
+        <div class="ir s4">
+          <div class="ig"><label class="il">Jenis Kelamin</label>
+            <select class="ii" id="an-sex" oninput="calcAntro()">
+              <option value="m">Laki-laki</option>
+              <option value="f">Perempuan</option>
+            </select>
+          </div>
+          <div class="ig"><label class="il">LiLA (cm)</label><input class="ii" id="an-muac" type="number" value="14" step="0.1" oninput="calcAntro()"></div>
+          <div class="ig"><label class="il">Lingkar Kepala (cm)</label><input class="ii" id="an-hc" type="number" value="50" step="0.5" oninput="calcAntro()"></div>
+          <div class="ig"><label class="il">Posisi ukur</label>
+            <select class="ii" id="an-pos" oninput="calcAntro()">
+              <option value="standing">Berdiri (≥2 thn)</option>
+              <option value="lying">Telentang (&lt;2 thn)</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-main" onclick="calcAntro()">Hitung Z-score & Status Gizi</button>
+        <div class="res show" id="res-an" style="background:rgba(74,124,89,0.06);border-color:var(--border)">
+          <div class="rg s4">
+            <div class="ri"><div class="rl">WAZ (BB/U)</div><div class="rv big" id="an-waz" style="color:var(--sage)">—</div><div class="rn" id="an-waz-s">—</div></div>
+            <div class="ri"><div class="rl">HAZ (TB/U)</div><div class="rv big" id="an-haz">—</div><div class="rn" id="an-haz-s">—</div></div>
+            <div class="ri"><div class="rl">WHZ (BB/TB)</div><div class="rv big" id="an-whz">—</div><div class="rn" id="an-whz-s">—</div></div>
+            <div class="ri"><div class="rl">BAZ (IMT/U)</div><div class="rv big" id="an-baz">—</div><div class="rn" id="an-baz-s">—</div></div>
+          </div>
+          <div class="rg s3" style="margin-top:0.5rem">
+            <div class="ri"><div class="rl">LiLA</div><div class="rv" id="an-muac-s">—</div></div>
+            <div class="ri"><div class="rl">IMT (kg/m²)</div><div class="rv" id="an-bmi">—</div></div>
+            <div class="ri"><div class="rl">Status Gizi</div><div class="rv big" id="an-status">—</div></div>
+          </div>
+          <div class="ralert" id="an-notes" style="background:rgba(255,255,255,0.6);border-color:rgba(0,0,0,0.08);font-size:0.77rem;line-height:1.8"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MALNUTRISI AKUT / SCREENING -->
+    <div class="card">
+      <div class="ch" style="background:rgba(192,57,43,0.05)">
+        <div class="cico" style="background:rgba(192,57,43,0.1)">⚠️</div>
+        <div><div class="ct">Skrining Malnutrisi — STRONGkids</div><div class="cs">Pediatric Nutrition Risk Score</div></div>
+      </div>
+      <div class="cb">
+        <div class="ibox"><strong>STRONGkids:</strong> 0 = risiko rendah; 1–3 = risiko sedang; 4–5 = risiko tinggi. Digunakan untuk pasien rawat inap.</div>
+        <div style="display:grid;gap:0.45rem;margin-bottom:0.7rem">
+          <label style="display:flex;align-items:flex-start;gap:0.6rem;font-size:0.78rem;cursor:pointer;line-height:1.5">
+            <input type="checkbox" id="sk-1" onchange="calcSTRONG()" style="margin-top:3px;accent-color:var(--sage)">
+            <span><strong>Status nutrisi subjektif:</strong> tampak kurus/sangat kurus (skor 1)</span>
+          </label>
+          <label style="display:flex;align-items:flex-start;gap:0.6rem;font-size:0.78rem;cursor:pointer;line-height:1.5">
+            <input type="checkbox" id="sk-2" onchange="calcSTRONG()" style="margin-top:3px;accent-color:var(--sage)">
+            <span><strong>Penyakit dasar berisiko tinggi:</strong> kanker, penyakit jantung/ginjal/hati/GI kronis (skor 2)</span>
+          </label>
+          <label style="display:flex;align-items:flex-start;gap:0.6rem;font-size:0.78rem;cursor:pointer;line-height:1.5">
+            <input type="checkbox" id="sk-3" onchange="calcSTRONG()" style="margin-top:3px;accent-color:var(--sage)">
+            <span><strong>Asupan gizi berkurang / diare persisten:</strong> ≥5 hari atau tidak makan ≥3 hari (skor 1)</span>
+          </label>
+          <label style="display:flex;align-items:flex-start;gap:0.6rem;font-size:0.78rem;cursor:pointer;line-height:1.5">
+            <input type="checkbox" id="sk-4" onchange="calcSTRONG()" style="margin-top:3px;accent-color:var(--sage)">
+            <span><strong>BB turun atau tidak naik:</strong> bayi &lt;1 thn: BB turun; anak: BB turun dalam beberapa minggu (skor 1)</span>
+          </label>
+        </div>
+        <button class="btn btn-main" onclick="calcSTRONG()">Hitung STRONGkids</button>
+        <div class="res" id="res-sk" style="background:rgba(74,124,89,0.06);border-color:var(--border)">
+          <div class="rg">
+            <div class="ri"><div class="rl">Skor STRONGkids</div><div class="rv xl" id="sk-score" style="color:var(--sage)">—</div></div>
+            <div class="ri"><div class="rl">Risiko Malnutrisi</div><div class="rv big" id="sk-risk">—</div><div class="rn" id="sk-action">—</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WATERLOW CLASSIFICATION -->
+    <div class="card">
+      <div class="ch" style="background:rgba(26,90,138,0.05)">
+        <div class="cico" style="background:rgba(26,90,138,0.1)">📐</div>
+        <div><div class="ct">Klasifikasi Waterlow</div><div class="cs">Malnutrisi akut (wasting) & kronik (stunting)</div></div>
+      </div>
+      <div class="cb">
+        <div class="ibox"><strong>Waterlow:</strong> Membedakan wasting (kurus akut) vs stunting (pendek kronik). Diperlukan BB/TB dan TB/U.</div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">BB aktual (kg)</label><input class="ii" id="wl-w" type="number" value="15" oninput="calcWaterlow()"></div>
+          <div class="ig"><label class="il">TB aktual (cm)</label><input class="ii" id="wl-h" type="number" value="100" oninput="calcWaterlow()"></div>
+          <div class="ig"><label class="il">Usia (thn)</label><input class="ii" id="wl-age" type="number" value="4" oninput="calcWaterlow()"></div>
+        </div>
+        <div class="ir">
+          <div class="ig"><label class="il">Jenis Kelamin</label>
+            <select class="ii" id="wl-sex" oninput="calcWaterlow()">
+              <option value="m">Laki-laki</option><option value="f">Perempuan</option>
+            </select>
+          </div>
+          <div class="ig"><label class="il">BB ideal untuk TB (kg)</label><input class="ii" id="wl-ibwfh" type="number" value="15" step="0.1" placeholder="otomatis / isi manual" oninput="calcWaterlow()"></div>
+        </div>
+        <button class="btn btn-main" onclick="calcWaterlow()">Klasifikasi Waterlow</button>
+        <div class="res" id="res-wl" style="background:rgba(26,90,138,0.05);border-color:var(--border)">
+          <div class="rg s4">
+            <div class="ri"><div class="rl">BB/TB (%median)</div><div class="rv big" id="wl-pct-wfh" style="color:var(--blue)">—</div></div>
+            <div class="ri"><div class="rl">Wasting</div><div class="rv" id="wl-wasting">—</div></div>
+            <div class="ri"><div class="rl">TB/U (%median)</div><div class="rv big" id="wl-pct-hfa">—</div></div>
+            <div class="ri"><div class="rl">Stunting</div><div class="rv" id="wl-stunting">—</div></div>
+          </div>
+          <div class="ralert" id="wl-notes" style="background:rgba(255,255,255,0.6);border-color:rgba(0,0,0,0.08);font-size:0.77rem;line-height:1.8;margin-top:0.5rem"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NUTRITIONAL RECOVERY -->
+    <div class="card">
+      <div class="ch" style="background:rgba(184,134,11,0.06)">
+        <div class="cico" style="background:rgba(184,134,11,0.12)">🎯</div>
+        <div><div class="ct">Target Berat Badan & Catch-up</div><div class="cs">IBW, catch-up growth, persen deficit</div></div>
+      </div>
+      <div class="cb">
+        <div class="ir s3">
+          <div class="ig"><label class="il">BB aktual (kg)</label><input class="ii" id="cu-w" type="number" value="10" oninput="calcCatchup()"></div>
+          <div class="ig"><label class="il">TB (cm)</label><input class="ii" id="cu-h" type="number" value="90" oninput="calcCatchup()"></div>
+          <div class="ig"><label class="il">Usia (thn)</label><input class="ii" id="cu-age" type="number" value="3" oninput="calcCatchup()"></div>
+        </div>
+        <div class="ig" style="margin-bottom:0.6rem">
+          <label class="il">Jenis Kelamin</label>
+          <select class="ii" id="cu-sex" oninput="calcCatchup()">
+            <option value="m">Laki-laki</option><option value="f">Perempuan</option>
+          </select>
+        </div>
+        <button class="btn btn-main" onclick="calcCatchup()">Hitung Target BB & Catch-up</button>
+        <div class="res" id="res-cu" style="background:rgba(184,134,11,0.06);border-color:var(--border)">
+          <div class="rg s4">
+            <div class="ri"><div class="rl">IBW for Height (kg)</div><div class="rv big" style="color:var(--gold)" id="cu-ibwfh">—</div></div>
+            <div class="ri"><div class="rl">Deficit BB (%)</div><div class="rv big" id="cu-deficit">—</div></div>
+            <div class="ri"><div class="rl">Target BB 1 bulan</div><div class="rv" id="cu-target1m">—</div><div class="rn">kg</div></div>
+            <div class="ri"><div class="rl">Kenaikan/minggu target</div><div class="rv" id="cu-per-week">—</div><div class="rn">gram</div></div>
+          </div>
+          <div class="ralert" id="cu-notes" style="background:rgba(255,255,255,0.6);border-color:rgba(0,0,0,0.08);font-size:0.77rem;line-height:1.8;margin-top:0.5rem"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════ KEBUTUHAN ENERGI ══════════════ -->
+<div class="tc" id="tab-energy">
+  <div class="grid">
+
+    <!-- REE / BMR -->
+    <div class="card">
+      <div class="ch" style="background:rgba(224,112,32,0.06)">
+        <div class="cico" style="background:rgba(224,112,32,0.12)">🔥</div>
+        <div><div class="ct">Kebutuhan Energi Total (TEE)</div><div class="cs">REE/BMR multi-formula + Faktor Stres</div></div>
+      </div>
+      <div class="cb">
+        <div class="ibox"><strong>REE Pediatrik:</strong> Schofield (1985) = formula paling sering dipakai PICU. WHO (1985) = standar internasional. DRI (2005) = anak sehat. Tambahkan faktor aktivitas & penyakit.</div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="ee-w" type="number" value="15" oninput="calcEnergy()"></div>
+          <div class="ig"><label class="il">TB (cm)</label><input class="ii" id="ee-h" type="number" value="100" oninput="calcEnergy()"></div>
+          <div class="ig"><label class="il">Usia (thn)</label><input class="ii" id="ee-age" type="number" value="3" oninput="calcEnergy()"></div>
+        </div>
+        <div class="ir">
+          <div class="ig"><label class="il">Jenis Kelamin</label>
+            <select class="ii" id="ee-sex" oninput="calcEnergy()">
+              <option value="m">Laki-laki</option><option value="f">Perempuan</option>
+            </select>
+          </div>
+          <div class="ig"><label class="il">Kondisi klinis</label>
+            <select class="ii" id="ee-cond" oninput="calcEnergy()">
+              <option value="healthy">Sehat / ambulan</option>
+              <option value="sedentary">Bed-rest (tirah baring)</option>
+              <option value="surgery">Pasca operasi ringan</option>
+              <option value="infection">Infeksi sedang (1.2×)</option>
+              <option value="sepsis">Sepsis / PICU (1.3×)</option>
+              <option value="burn30">Luka bakar 30% (1.5×)</option>
+              <option value="burn50">Luka bakar 50%+ (1.75×)</option>
+              <option value="catchup">Catch-up growth (malnourished)</option>
+            </select>
+          </div>
+        </div>
+        <div class="ig" style="margin-bottom:0.6rem">
+          <label class="il">Tingkat aktivitas fisik (PAL)</label>
+          <select class="ii" id="ee-pal" oninput="calcEnergy()">
+            <option value="1.2">1.2 — Bed rest / ICU</option>
+            <option value="1.4" selected>1.4 — Ringan (anak kecil rawat jalan)</option>
+            <option value="1.6">1.6 — Sedang (aktif bermain)</option>
+            <option value="1.8">1.8 — Tinggi (olahraga rutin)</option>
+            <option value="2.0">2.0 — Sangat aktif / atlet</option>
+          </select>
+        </div>
+        <button class="btn btn-main" onclick="calcEnergy()">Hitung Kebutuhan Energi</button>
+        <div class="res" id="res-ee" style="background:rgba(224,112,32,0.06);border-color:var(--border)">
+          <div class="rg s4">
+            <div class="ri"><div class="rl">Schofield REE</div><div class="rv big" style="color:var(--orange)" id="ee-schof">—</div><div class="rn">kcal/hari</div></div>
+            <div class="ri"><div class="rl">WHO REE</div><div class="rv big" id="ee-who">—</div><div class="rn">kcal/hari</div></div>
+            <div class="ri"><div class="rl">DRI/EER</div><div class="rv" id="ee-dri">—</div><div class="rn">kcal/hari</div></div>
+            <div class="ri"><div class="rl">TEE (dengan faktor)</div><div class="rv big" style="color:var(--sage)" id="ee-tee">—</div><div class="rn">kcal/hari</div></div>
+          </div>
+          <div class="rg s3" style="margin-top:0.5rem">
+            <div class="ri"><div class="rl">kcal/kgBB/hari</div><div class="rv" id="ee-per-kg">—</div></div>
+            <div class="ri"><div class="rl">Faktor stres</div><div class="rv" id="ee-stress">—</div></div>
+            <div class="ri"><div class="rl">Faktor PAL</div><div class="rv" id="ee-pal-out">—</div></div>
+          </div>
+          <div class="ralert" id="ee-notes" style="background:rgba(255,255,255,0.6);border-color:rgba(0,0,0,0.08);font-size:0.77rem;line-height:1.8;margin-top:0.5rem"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AKG / DRI REFERENCE -->
+    <div class="card">
+      <div class="ch" style="background:rgba(26,90,138,0.05)">
+        <div class="cico" style="background:rgba(26,90,138,0.1)">📋</div>
+        <div><div class="ct">AKG Indonesia 2019</div><div class="cs">Angka Kecukupan Gizi per kelompok usia</div></div>
+      </div>
+      <div class="cb">
+        <div class="ig" style="margin-bottom:0.6rem">
+          <label class="il">Kelompok Usia</label>
+          <select class="ii" id="akg-age" oninput="calcAKG()">
+            <option value="0-5mo">0–5 bulan (bayi ASI)</option>
+            <option value="6-11mo">6–11 bulan</option>
+            <option value="1-3yr">1–3 tahun</option>
+            <option value="4-6yr">4–6 tahun</option>
+            <option value="7-9yr">7–9 tahun</option>
+            <option value="10-12m">10–12 tahun (L)</option>
+            <option value="10-12f">10–12 tahun (P)</option>
+            <option value="13-15m">13–15 tahun (L)</option>
+            <option value="13-15f">13–15 tahun (P)</option>
+            <option value="16-18m">16–18 tahun (L)</option>
+            <option value="16-18f">16–18 tahun (P)</option>
+          </select>
+        </div>
+        <button class="btn btn-main" onclick="calcAKG()">Tampilkan AKG</button>
+        <div class="res" id="res-akg" style="background:rgba(26,90,138,0.05);border-color:var(--border)">
+          <table class="rtbl" id="akg-table" style="font-size:0.72rem"></table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════ MAKRONUTRIEN ══════════════ -->
+<div class="tc" id="tab-macro">
+  <div class="grid">
+
+    <!-- PROTEIN REQUIREMENT -->
+    <div class="card">
+      <div class="ch" style="background:rgba(90,48,128,0.05)">
+        <div class="cico" style="background:rgba(90,48,128,0.1)">🥩</div>
+        <div><div class="ct">Kebutuhan Protein</div><div class="cs">Per kondisi klinis & usia</div></div>
+      </div>
+      <div class="cb">
+        <div class="ibox"><strong>Protein energi ratio:</strong> 8–12% kalori dari protein = 0.8–2.5 g/kgBB/hari tergantung usia & kondisi.</div>
+        <div class="ir">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="pro-w" type="number" value="15" oninput="calcProtein()"></div>
+          <div class="ig"><label class="il">Usia (thn)</label><input class="ii" id="pro-age" type="number" value="3" oninput="calcProtein()"></div>
+        </div>
+        <div class="ig" style="margin-bottom:0.6rem">
+          <label class="il">Kondisi / Indikasi</label>
+          <select class="ii" id="pro-cond" oninput="calcProtein()">
+            <option value="healthy">Anak sehat (0.85–1.1 g/kg)</option>
+            <option value="preterm">Prematur (3.5–4.5 g/kg)</option>
+            <option value="infant">Bayi 0–6 bulan (1.52 g/kg)</option>
+            <option value="infant2">Bayi 6–12 bulan (1.2 g/kg)</option>
+            <option value="catchup">Catch-up / malnutrisi (2–3 g/kg)</option>
+            <option value="sepsis">Sepsis / katabolik (2–3 g/kg)</option>
+            <option value="burn">Luka bakar (3–4 g/kg)</option>
+            <option value="ckd">CKD (0.6–0.8 g/kg)</option>
+            <option value="dialysis">Dialisis (1.2–2 g/kg)</option>
+            <option value="liver">Penyakit hati berat (1.2 g/kg)</option>
+          </select>
+        </div>
+        <div class="ig" style="margin-bottom:0.6rem">
+          <label class="il">Total energi target (kcal/hari)</label>
+          <input class="ii" id="pro-kcal" type="number" value="1200" oninput="calcProtein()">
+        </div>
+        <button class="btn btn-main" onclick="calcProtein()">Hitung Kebutuhan Protein</button>
+        <div class="res" id="res-pro" style="background:rgba(90,48,128,0.05);border-color:var(--border)">
+          <div class="rg s3">
+            <div class="ri"><div class="rl">Min (g/hari)</div><div class="rv big" style="color:var(--purple)" id="pro-min">—</div></div>
+            <div class="ri"><div class="rl">Maks (g/hari)</div><div class="rv big" style="color:var(--purple)" id="pro-max">—</div></div>
+            <div class="ri"><div class="rl">% dari Energi</div><div class="rv" id="pro-pct">—</div></div>
+          </div>
+          <div class="rg s3" style="margin-top:0.5rem">
+            <div class="ri"><div class="rl">NPC:N Ratio</div><div class="rv" id="pro-npc">—</div><div class="rn">N = protein/6.25</div></div>
+            <div class="ri"><div class="rl">Non-protein kcal</div><div class="rv" id="pro-npc-kcal">—</div><div class="rn">kcal/hari</div></div>
+            <div class="ri"><div class="rl">Rekomendasi</div><div class="rv" id="pro-rec" style="font-size:0.72rem;line-height:1.35">—</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DISTRIBUSI MAKRONUTRIEN -->
+    <div class="card">
+      <div class="ch" style="background:rgba(224,112,32,0.06)">
+        <div class="cico" style="background:rgba(224,112,32,0.12)">🍽️</div>
+        <div><div class="ct">Distribusi Makronutrien</div><div class="cs">Karbohidrat, Protein, Lemak — harian</div></div>
+      </div>
+      <div class="cb">
+        <div class="ir">
+          <div class="ig"><label class="il">Energi total (kcal/hari)</label><input class="ii" id="mac-kcal" type="number" value="1200" oninput="calcMacro()"></div>
+          <div class="ig"><label class="il">Usia (thn)</label><input class="ii" id="mac-age" type="number" value="4" oninput="calcMacro()"></div>
+        </div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">Protein (%)</label><input class="ii" id="mac-pro-pct" type="number" value="15" min="8" max="25" oninput="calcMacro()"></div>
+          <div class="ig"><label class="il">Lemak (%)</label><input class="ii" id="mac-fat-pct" type="number" value="30" min="20" max="45" oninput="calcMacro()"></div>
+          <div class="ig"><label class="il">KH (%)</label><input class="ii" id="mac-cho-pct" type="number" value="55" min="40" max="65" oninput="calcMacro()"></div>
+        </div>
+        <button class="btn btn-main" onclick="calcMacro()">Hitung Distribusi</button>
+        <div class="res" id="res-mac" style="background:rgba(224,112,32,0.06);border-color:var(--border)">
+          <!-- macro bar -->
+          <div style="margin-bottom:0.6rem">
+            <div class="rl" style="margin-bottom:0.3rem">Distribusi Makronutrien</div>
+            <div class="macro-bar" id="mac-visual"></div>
+            <div style="display:flex;gap:1rem;margin-top:0.3rem">
+              <span style="font-size:0.6rem;display:flex;align-items:center;gap:0.3rem;font-family:'IBM Plex Mono',monospace"><span style="width:10px;height:10px;background:#6b9e7a;border-radius:2px;display:inline-block"></span>KH</span>
+              <span style="font-size:0.6rem;display:flex;align-items:center;gap:0.3rem;font-family:'IBM Plex Mono',monospace"><span style="width:10px;height:10px;background:#e07020;border-radius:2px;display:inline-block"></span>Lemak</span>
+              <span style="font-size:0.6rem;display:flex;align-items:center;gap:0.3rem;font-family:'IBM Plex Mono',monospace"><span style="width:10px;height:10px;background:#5a3080;border-radius:2px;display:inline-block"></span>Protein</span>
+            </div>
+          </div>
+          <div class="rg s3">
+            <div class="ri"><div class="rl">Protein (g/hari)</div><div class="rv big" style="color:var(--purple)" id="mac-pro-g">—</div></div>
+            <div class="ri"><div class="rl">Lemak (g/hari)</div><div class="rv big" style="color:var(--orange)" id="mac-fat-g">—</div></div>
+            <div class="ri"><div class="rl">Karbohidrat (g/hari)</div><div class="rv big" style="color:var(--sage)" id="mac-cho-g">—</div></div>
+          </div>
+          <div class="ralert" id="mac-notes" style="background:rgba(255,255,255,0.6);border-color:rgba(0,0,0,0.08);font-size:0.77rem;line-height:1.8;margin-top:0.5rem"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GIR -->
+    <div class="card">
+      <div class="ch" style="background:rgba(26,90,138,0.05)">
+        <div class="cico" style="background:rgba(26,90,138,0.1)">🍬</div>
+        <div><div class="ct">Glucose Infusion Rate (GIR)</div><div class="cs">Target GIR & konversi konsentrasi</div></div>
+      </div>
+      <div class="cb">
+        <div class="ibox">GIR = (Konsentrasi% × Rate mL/jam) ÷ (BB kg × 6). Target neonatus: 4–8 mg/kg/mnt. Anak: 2–5 mg/kg/mnt.</div>
+        <div class="ir">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="gir-w" type="number" value="15" oninput="calcGIRnutri()"></div>
+          <div class="ig"><label class="il">Konsentrasi glukosa (%)</label>
+            <select class="ii" id="gir-conc" oninput="calcGIRnutri()">
+              <option value="5">D5%</option><option value="7.5">D7.5%</option>
+              <option value="10" selected>D10%</option><option value="12.5">D12.5%</option>
+              <option value="15">D15%</option><option value="20">D20%</option>
+              <option value="25">D25%</option><option value="50">D50%</option>
+            </select>
+          </div>
+        </div>
+        <div class="ir">
+          <div class="ig"><label class="il">Rate infus (mL/jam)</label><input class="ii" id="gir-rate" type="number" value="40" step="0.5" oninput="calcGIRnutri()"></div>
+          <div class="ig"><label class="il">Target GIR (mg/kg/mnt)</label><input class="ii" id="gir-target" type="number" value="5" step="0.5" oninput="calcGIRrev()"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.7rem">
+          <button class="btn" style="background:var(--blue);color:white;margin:0" onclick="calcGIRnutri()">Rate → GIR</button>
+          <button class="btn" style="background:var(--sage);color:white;margin:0" onclick="calcGIRrev()">Target GIR → Rate</button>
+        </div>
+        <div class="res" id="res-gir" style="background:rgba(26,90,138,0.05);border-color:var(--border)">
+          <div class="rg s3">
+            <div class="ri"><div class="rl">GIR aktual</div><div class="rv big" style="color:var(--blue)" id="gir-actual">—</div><div class="rn">mg/kg/mnt</div></div>
+            <div class="ri"><div class="rl">Rate untuk target</div><div class="rv big" style="color:var(--sage)" id="gir-needed">—</div><div class="rn">mL/jam</div></div>
+            <div class="ri"><div class="rl">Status</div><div class="rv" id="gir-status">—</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════ MIKRONUTRIEN ══════════════ -->
+<div class="tc" id="tab-micro">
+  <div class="grid-w">
+
+    <!-- VITAMIN & MINERAL PENTING -->
+    <div class="card">
+      <div class="ch" style="background:rgba(158,48,80,0.05)">
+        <div class="cico" style="background:rgba(158,48,80,0.1)">💊</div>
+        <div><div class="ct">Vitamin & Mineral — Kebutuhan Harian</div><div class="cs">AKG 2019 / DRI per usia & jenis kelamin</div></div>
+      </div>
+      <div class="cb">
+        <div class="ir">
+          <div class="ig"><label class="il">Usia (thn)</label><input class="ii" id="mic-age" type="number" value="4" oninput="calcMicro()"></div>
+          <div class="ig"><label class="il">Jenis Kelamin</label>
+            <select class="ii" id="mic-sex" oninput="calcMicro()">
+              <option value="m">Laki-laki</option><option value="f">Perempuan</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-main" onclick="calcMicro()">Tampilkan Kebutuhan Mikronutrien</button>
+        <div class="res" id="res-mic" style="background:rgba(158,48,80,0.05);border-color:var(--border)">
+          <div class="rg" style="margin-bottom:0.5rem">
+            <div>
+              <div class="rl" style="margin-bottom:0.4rem">Vitamin</div>
+              <table class="rtbl" id="mic-vit-table" style="font-size:0.72rem"></table>
+            </div>
+            <div>
+              <div class="rl" style="margin-bottom:0.4rem">Mineral</div>
+              <table class="rtbl" id="mic-min-table" style="font-size:0.72rem"></table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEFISIENSI UMUM -->
+    <div class="card">
+      <div class="ch" style="background:rgba(184,134,11,0.06)">
+        <div class="cico" style="background:rgba(184,134,11,0.12)">🔍</div>
+        <div><div class="ct">Suplementasi Defisiensi Umum</div><div class="cs">Fe, Zn, Vit A, Vit D, Vit B12, folat</div></div>
+      </div>
+      <div class="cb">
+        <div class="ir">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="sup-w" type="number" value="15" oninput="calcSupp()"></div>
+          <div class="ig"><label class="il">Usia (thn)</label><input class="ii" id="sup-age" type="number" value="4" oninput="calcSupp()"></div>
+        </div>
+        <div class="ig" style="margin-bottom:0.6rem">
+          <label class="il">Defisiensi / Kondisi</label>
+          <select class="ii" id="sup-type" oninput="calcSupp()">
+            <option value="fe-def">Anemia Defisiensi Besi</option>
+            <option value="fe-ppx">Profilaksis Fe (Prematur/BBLR)</option>
+            <option value="zn-def">Defisiensi Zinc</option>
+            <option value="zn-diarrhea">Zinc Diare Akut (WHO)</option>
+            <option value="vita">Defisiensi Vit A (xeroftalmia)</option>
+            <option value="vitd-def">Defisiensi Vitamin D</option>
+            <option value="vitd-ppx">Profilaksis Vit D (bayi)</option>
+            <option value="b12">Defisiensi Vit B12</option>
+            <option value="folat">Defisiensi Folat</option>
+            <option value="kwash">Kwashiorkor — Paket suplementasi</option>
+          </select>
+        </div>
+        <button class="btn btn-main" onclick="calcSupp()">Tampilkan Dosis Suplementasi</button>
+        <div class="res" id="res-sup" style="background:rgba(184,134,11,0.06);border-color:var(--border)">
+          <div class="ralert" id="sup-output" style="background:rgba(255,255,255,0.6);border-color:rgba(0,0,0,0.08);font-size:0.78rem;line-height:1.9"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════ NUTRISI ENTERAL ══════════════ -->
+<div class="tc" id="tab-enteral">
+  <div class="grid">
+
+    <!-- FORMULA SELECTION & VOLUME -->
+    <div class="card">
+      <div class="ch" style="background:rgba(74,124,89,0.06)">
+        <div class="cico" style="background:rgba(74,124,89,0.12)">🥛</div>
+        <div><div class="ct">Nutrisi Enteral — Volume & Rate</div><div class="cs">Formula, bolus/kontinyu, advancement</div></div>
+      </div>
+      <div class="cb">
+        <div class="ibox"><strong>Early Enteral Nutrition:</strong> Mulai dalam 24–48 jam. Mulai trofik → naikkan 10–25 mL/kg/hari hingga target.</div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="en-w" type="number" value="15" oninput="calcEnteral()"></div>
+          <div class="ig"><label class="il">Target kalori (kcal/kg/hr)</label><input class="ii" id="en-kcal" type="number" value="80" oninput="calcEnteral()"></div>
+          <div class="ig"><label class="il">Kalori formula (kcal/mL)</label>
+            <select class="ii" id="en-density" oninput="calcEnteral()">
+              <option value="0.67">0.67 — ASI/formula bayi standar</option>
+              <option value="0.8">0.8 — Formula prematur</option>
+              <option value="1.0" selected>1.0 — Standar (Peptamen, Ensure Junior)</option>
+              <option value="1.2">1.2 — Semi-dense</option>
+              <option value="1.5">1.5 — Kalori tinggi (Pediasure 1.5)</option>
+            </select>
+          </div>
+        </div>
+        <div class="ir">
+          <div class="ig"><label class="il">Cara pemberian</label>
+            <select class="ii" id="en-method" oninput="calcEnteral()">
+              <option value="bolus">Bolus q3h</option>
+              <option value="bolus4">Bolus q4h</option>
+              <option value="cont">Kontinyu 24 jam</option>
+              <option value="cyclic">Siklus nokturnal 12–16 jam</option>
+            </select>
+          </div>
+          <div class="ig"><label class="il">Hari rawat/fase</label>
+            <select class="ii" id="en-phase" oninput="calcEnteral()">
+              <option value="trophic">Trofik (10–20 mL/kg)</option>
+              <option value="half">½ target</option>
+              <option value="full" selected>Target penuh</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-main" onclick="calcEnteral()">Hitung Volume Enteral</button>
+        <div class="res" id="res-en" style="background:rgba(74,124,89,0.06);border-color:var(--border)">
+          <div class="rg s4">
+            <div class="ri"><div class="rl">Total/hari (mL)</div><div class="rv big" style="color:var(--sage)" id="en-total">—</div></div>
+            <div class="ri"><div class="rl">Rate/jam (mL/jam)</div><div class="rv big" id="en-rate">—</div></div>
+            <div class="ri"><div class="rl">Per bolus (mL)</div><div class="rv" id="en-bolus">—</div></div>
+            <div class="ri"><div class="rl">Kalori terpenuhi (kcal)</div><div class="rv" id="en-kcal-out">—</div></div>
+          </div>
+          <div class="ralert" id="en-notes" style="background:rgba(255,255,255,0.6);border-color:rgba(0,0,0,0.08);font-size:0.77rem;line-height:1.8;margin-top:0.5rem"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ASI & FORTIFIKASI -->
+    <div class="card">
+      <div class="ch" style="background:rgba(158,48,80,0.05)">
+        <div class="cico" style="background:rgba(158,48,80,0.1)">🤱</div>
+        <div><div class="ct">ASI & Fortifikasi</div><div class="cs">BBLR, prematur, kebutuhan energi ASI</div></div>
+      </div>
+      <div class="cb">
+        <div class="ibox"><strong>ASI:</strong> ~67 kcal/100 mL. <strong>HMF (Human Milk Fortifier):</strong> Tambahkan bila BB &lt;1500g atau &gt;100 mL/kg/hari EN. Target: 120–150 kcal/kgBB/hari.</div>
+        <div class="ir">
+          <div class="ig"><label class="il">BB bayi (gram)</label><input class="ii" id="asi-w" type="number" value="1200" oninput="calcASI()"></div>
+          <div class="ig"><label class="il">GA saat lahir (minggu)</label><input class="ii" id="asi-ga" type="number" value="30" oninput="calcASI()"></div>
+        </div>
+        <div class="ir">
+          <div class="ig"><label class="il">Volume ASI saat ini (mL/hari)</label><input class="ii" id="asi-vol" type="number" value="80" oninput="calcASI()"></div>
+          <div class="ig"><label class="il">Formula tambahan (mL/hari)</label><input class="ii" id="asi-formula" type="number" value="0" oninput="calcASI()"></div>
+        </div>
+        <button class="btn btn-main" onclick="calcASI()">Evaluasi Nutrisi ASI</button>
+        <div class="res" id="res-asi" style="background:rgba(158,48,80,0.05);border-color:var(--border)">
+          <div class="rg s4">
+            <div class="ri"><div class="rl">Kalori ASI (kcal)</div><div class="rv big" style="color:var(--rose)" id="asi-kcal">—</div></div>
+            <div class="ri"><div class="rl">mL/kgBB/hr</div><div class="rv big" id="asi-per-kg">—</div></div>
+            <div class="ri"><div class="rl">Perlu HMF?</div><div class="rv" id="asi-hmf">—</div></div>
+            <div class="ri"><div class="rl">Tambahan EN</div><div class="rv" id="asi-add">—</div><div class="rn">mL/hari</div></div>
+          </div>
+          <div class="ralert" id="asi-notes" style="background:rgba(255,255,255,0.6);border-color:rgba(0,0,0,0.08);font-size:0.77rem;line-height:1.8;margin-top:0.5rem"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MPASI GUIDELINES -->
+    <div class="card">
+      <div class="ch" style="background:rgba(184,134,11,0.06)">
+        <div class="cico" style="background:rgba(184,134,11,0.12)">🥣</div>
+        <div><div class="ct">MPASI — Panduan Makanan Pendamping ASI</div><div class="cs">WHO 2023 · Tekstur, frekuensi, porsi</div></div>
+      </div>
+      <div class="cb">
+        <div class="ig" style="margin-bottom:0.6rem">
+          <label class="il">Usia bayi</label>
+          <select class="ii" id="mp-age" oninput="calcMPASI()">
+            <option value="6">6 bulan (awal MPASI)</option>
+            <option value="7">7–8 bulan</option>
+            <option value="9">9–11 bulan</option>
+            <option value="12">12–23 bulan</option>
+            <option value="24">24+ bulan (makan keluarga)</option>
+          </select>
+        </div>
+        <button class="btn btn-main" onclick="calcMPASI()">Panduan MPASI</button>
+        <div class="res" id="res-mp" style="background:rgba(184,134,11,0.06);border-color:var(--border)">
+          <div class="ralert" id="mp-output" style="background:rgba(255,255,255,0.6);border-color:rgba(0,0,0,0.08);font-size:0.78rem;line-height:1.9"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════ NUTRISI PARENTERAL ══════════════ -->
+<div class="tc" id="tab-parenteral">
+  <div class="grid">
+
+    <!-- TPN FULL CALCULATOR -->
+    <div class="card">
+      <div class="ch" style="background:rgba(26,90,138,0.05)">
+        <div class="cico" style="background:rgba(26,90,138,0.1)">💉</div>
+        <div><div class="ct">TPN — Total Parenteral Nutrition</div><div class="cs">Kalkulasi lengkap komponen PN pediatrik</div></div>
+      </div>
+      <div class="cb">
+        <div class="ir s3">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="tpn-w" type="number" value="15" oninput="calcTPN()"></div>
+          <div class="ig"><label class="il">TB (cm)</label><input class="ii" id="tpn-h" type="number" value="100" oninput="calcTPN()"></div>
+          <div class="ig"><label class="il">Usia (thn)</label><input class="ii" id="tpn-age" type="number" value="3" oninput="calcTPN()"></div>
+        </div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">TFI target (mL/kg/hr)</label><input class="ii" id="tpn-tfi" type="number" value="100" oninput="calcTPN()"></div>
+          <div class="ig"><label class="il">Kalori enteral (kcal/hr)</label><input class="ii" id="tpn-en" type="number" value="0" oninput="calcTPN()"></div>
+          <div class="ig"><label class="il">GIR target (mg/kg/mnt)</label><input class="ii" id="tpn-gir" type="number" value="6" oninput="calcTPN()"></div>
+        </div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">Protein (g/kg/hr)</label><input class="ii" id="tpn-pro" type="number" value="2" step="0.5" oninput="calcTPN()"></div>
+          <div class="ig"><label class="il">Lipid (g/kg/hr)</label><input class="ii" id="tpn-lip" type="number" value="2" step="0.5" oninput="calcTPN()"></div>
+          <div class="ig"><label class="il">Glukosa (%)</label>
+            <select class="ii" id="tpn-glu" oninput="calcTPN()">
+              <option value="10">D10%</option><option value="12.5">D12.5%</option>
+              <option value="15">D15%</option><option value="20">D20%</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-main" onclick="calcTPN()">Hitung TPN Lengkap</button>
+        <div class="res" id="res-tpn" style="background:rgba(26,90,138,0.05);border-color:var(--border)">
+          <div class="rg s4">
+            <div class="ri"><div class="rl">IV cairan (mL/jam)</div><div class="rv big" style="color:var(--blue)" id="tpn-iv">—</div></div>
+            <div class="ri"><div class="rl">GIR aktual</div><div class="rv big" id="tpn-gir-act">—</div><div class="rn">mg/kg/mnt</div></div>
+            <div class="ri"><div class="rl">Kalori total (kcal/kg)</div><div class="rv big" style="color:var(--sage)" id="tpn-cal">—</div></div>
+            <div class="ri"><div class="rl">NPC:N ratio</div><div class="rv" id="tpn-npc">—</div></div>
+          </div>
+          <div class="rg s4" style="margin-top:0.5rem">
+            <div class="ri"><div class="rl">Protein (g/hr)</div><div class="rv" id="tpn-pro-g">—</div></div>
+            <div class="ri"><div class="rl">Lipid 20% (mL/jam)</div><div class="rv" id="tpn-lip-ml">—</div></div>
+            <div class="ri"><div class="rl">Cal. protein (kcal)</div><div class="rv" id="tpn-pro-cal">—</div></div>
+            <div class="ri"><div class="rl">Cal. lipid (kcal)</div><div class="rv" id="tpn-lip-cal">—</div></div>
+          </div>
+          <div class="ralert" id="tpn-notes" style="background:rgba(255,255,255,0.6);border-color:rgba(0,0,0,0.08);font-size:0.77rem;line-height:1.8;margin-top:0.5rem"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ELEKTROLIT TPN -->
+    <div class="card">
+      <div class="ch" style="background:rgba(74,124,89,0.06)">
+        <div class="cico" style="background:rgba(74,124,89,0.12)">⚡</div>
+        <div><div class="ct">Elektrolit dalam TPN</div><div class="cs">Na, K, Ca, P, Mg — kebutuhan harian</div></div>
+      </div>
+      <div class="cb">
+        <div class="ir">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="elec-w" type="number" value="15" oninput="calcElecTPN()"></div>
+          <div class="ig"><label class="il">Usia (thn)</label><input class="ii" id="elec-age" type="number" value="3" oninput="calcElecTPN()"></div>
+        </div>
+        <button class="btn btn-main" onclick="calcElecTPN()">Hitung Elektrolit TPN</button>
+        <div class="res" id="res-elec" style="background:rgba(74,124,89,0.06);border-color:var(--border)">
+          <table class="rtbl" style="font-size:0.72rem">
+            <thead><tr><th>Elektrolit</th><th>Kebutuhan</th><th>Total/hari</th><th>Sediaan</th></tr></thead>
+            <tbody id="elec-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════ KONDISI KHUSUS ══════════════ -->
+<div class="tc" id="tab-special">
+  <div class="grid">
+
+    <!-- SAM / MALNUTRISI BERAT -->
+    <div class="card">
+      <div class="ch" style="background:rgba(192,57,43,0.05)">
+        <div class="cico" style="background:rgba(192,57,43,0.1)">🏥</div>
+        <div><div class="ct">SAM — Severe Acute Malnutrition</div><div class="cs">Protokol WHO F-75, F-100, RUTF</div></div>
+      </div>
+      <div class="cb">
+        <div class="ibox"><strong>WHO SAM Management:</strong> Fase stabilisasi (F-75) → Fase transisi (F-100) → Fase rehabilitasi (RUTF/F-100). Hindari overfeeding pada fase awal!</div>
+        <div class="ir">
+          <div class="ig"><label class="il">BB aktual (kg)</label><input class="ii" id="sam-w" type="number" value="7" step="0.1" oninput="calcSAM()"></div>
+          <div class="ig"><label class="il">Fase Terapi</label>
+            <select class="ii" id="sam-phase" oninput="calcSAM()">
+              <option value="stabilize">Stabilisasi — F-75 (hari 1–7)</option>
+              <option value="transition">Transisi — F-100 (hari 8–14)</option>
+              <option value="rehab">Rehabilitasi — RUTF / F-100</option>
+            </select>
+          </div>
+        </div>
+        <div class="ig" style="margin-bottom:0.6rem">
+          <label class="il">Kondisi komplikasi</label>
+          <select class="ii" id="sam-comp" oninput="calcSAM()">
+            <option value="none">Tidak ada komplikasi</option>
+            <option value="edema">Edema (Kwashiorkor)</option>
+            <option value="infection">Infeksi berat / sepsis</option>
+            <option value="hypoglycemia">Hipoglikemia (GDS &lt;54 mg/dL)</option>
+          </select>
+        </div>
+        <button class="btn btn-main" onclick="calcSAM()">Generate Protokol SAM</button>
+        <div class="res" id="res-sam" style="background:rgba(192,57,43,0.05);border-color:var(--border)">
+          <div class="ralert" id="sam-output" style="background:rgba(255,255,255,0.6);border-color:rgba(0,0,0,0.08);font-size:0.77rem;line-height:1.9"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NUTRISI KONDISI KLINIS SPESIFIK -->
+    <div class="card">
+      <div class="ch" style="background:rgba(90,48,128,0.05)">
+        <div class="cico" style="background:rgba(90,48,128,0.1)">🩺</div>
+        <div><div class="ct">Nutrisi — Kondisi Klinis Khusus</div><div class="cs">Panduan per penyakit</div></div>
+      </div>
+      <div class="cb">
+        <div class="ir">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="sp-w" type="number" value="15" oninput="calcSpecial()"></div>
+          <div class="ig"><label class="il">Kondisi</label>
+            <select class="ii" id="sp-cond" oninput="calcSpecial()">
+              <option value="chd">Penyakit Jantung Bawaan (CHD)</option>
+              <option value="cf">Fibrosis Kistik (CF)</option>
+              <option value="ibd">IBD / Kolitis Ulseratif</option>
+              <option value="ckd-child">CKD Pediatrik</option>
+              <option value="cancer">Onkologi / Kemoterapi</option>
+              <option value="cp">Cerebral Palsy</option>
+              <option value="liver">Penyakit Hati Kronik</option>
+              <option value="short-bowel">Short Bowel Syndrome</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-main" onclick="calcSpecial()">Panduan Nutrisi</button>
+        <div class="res" id="res-sp" style="background:rgba(90,48,128,0.05);border-color:var(--border)">
+          <div class="ralert" id="sp-output" style="background:rgba(255,255,255,0.6);border-color:rgba(0,0,0,0.08);font-size:0.78rem;line-height:1.9"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REFEEDING SYNDROME -->
+    <div class="card">
+      <div class="ch" style="background:rgba(184,134,11,0.06)">
+        <div class="cico" style="background:rgba(184,134,11,0.12)">⚠️</div>
+        <div><div class="ct">Refeeding Syndrome — Pencegahan</div><div class="cs">Risiko, protokol pengenalan kembali makan</div></div>
+      </div>
+      <div class="cb">
+        <div class="ibox"><strong>Risiko tinggi refeeding:</strong> BB turun &gt;15–20%, puasa &gt;5 hari, anoreksia nervosa, alkoholisme, TPN jangka panjang.</div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">BB aktual (kg)</label><input class="ii" id="rf-w" type="number" value="12" oninput="calcRefeeding()"></div>
+          <div class="ig"><label class="il">% penurunan BB</label><input class="ii" id="rf-loss" type="number" value="20" oninput="calcRefeeding()"></div>
+          <div class="ig"><label class="il">Durasi puasa (hari)</label><input class="ii" id="rf-days" type="number" value="7" oninput="calcRefeeding()"></div>
+        </div>
+        <button class="btn btn-main" onclick="calcRefeeding()">Evaluasi Risiko Refeeding</button>
+        <div class="res" id="res-rf" style="background:rgba(184,134,11,0.06);border-color:var(--border)">
+          <div class="ralert" id="rf-output" style="background:rgba(255,255,255,0.6);border-color:rgba(0,0,0,0.08);font-size:0.78rem;line-height:1.9"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════ BAHAN MAKANAN ══════════════ -->
+<div class="tc" id="tab-food">
+  <div class="grid">
+
+    <!-- FOOD COMPOSITION -->
+    <div class="card">
+      <div class="ch" style="background:rgba(74,124,89,0.06)">
+        <div class="cico" style="background:rgba(74,124,89,0.12)">🍎</div>
+        <div><div class="ct">Komposisi Bahan Makanan</div><div class="cs">Kalori, protein, lemak, KH per porsi</div></div>
+      </div>
+      <div class="cb">
+        <div class="ig" style="margin-bottom:0.6rem">
+          <label class="il">Kategori</label>
+          <select class="ii" id="food-cat" oninput="showFoodTable()">
+            <option value="grain">Serealia & Umbi</option>
+            <option value="protein">Sumber Protein</option>
+            <option value="dairy">Susu & Produk Susu</option>
+            <option value="veg">Sayuran</option>
+            <option value="fruit">Buah</option>
+            <option value="fat">Lemak & Minyak</option>
+            <option value="formula">Formula Pediatrik</option>
+          </select>
+        </div>
+        <div class="res show" id="res-food" style="background:rgba(74,124,89,0.06);border-color:var(--border)">
+          <table class="rtbl" id="food-table" style="font-size:0.72rem"></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- MEAL PLAN GENERATOR -->
+    <div class="card">
+      <div class="ch" style="background:rgba(224,112,32,0.06)">
+        <div class="cico" style="background:rgba(224,112,32,0.12)">🗓️</div>
+        <div><div class="ct">Estimasi Menu Harian</div><div class="cs">Distribusi kalori per waktu makan</div></div>
+      </div>
+      <div class="cb">
+        <div class="ir">
+          <div class="ig"><label class="il">Target Kalori/hari (kcal)</label><input class="ii" id="mp2-kcal" type="number" value="1200" oninput="calcMealPlan()"></div>
+          <div class="ig"><label class="il">Usia (thn)</label><input class="ii" id="mp2-age" type="number" value="4" oninput="calcMealPlan()"></div>
+        </div>
+        <div class="ig" style="margin-bottom:0.6rem">
+          <label class="il">Pola Makan</label>
+          <select class="ii" id="mp2-pattern" oninput="calcMealPlan()">
+            <option value="3meal">3 makan utama + 2 selingan</option>
+            <option value="5meal">5 kali makan kecil</option>
+            <option value="6meal">6 kali (bayi/sakit)</option>
+            <option value="2main">2 makan utama + 3 selingan</option>
+          </select>
+        </div>
+        <button class="btn btn-main" onclick="calcMealPlan()">Generate Estimasi Menu</button>
+        <div class="res" id="res-mp2" style="background:rgba(224,112,32,0.06);border-color:var(--border)">
+          <div class="ralert" id="mp2-output" style="background:rgba(255,255,255,0.6);border-color:rgba(0,0,0,0.08);font-size:0.78rem;line-height:1.85"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── core helpers ──
+const $=id=>document.getElementById(id);
+const r2=n=>Math.round(n*100)/100;
+const r1=n=>Math.round(n*10)/10;
+const r0=n=>Math.round(n);
+const bsa=(w,h)=>r2(Math.sqrt(w*h/3600));
+function show(id,on=true){const e=$(id);if(e)e.classList.toggle('show',on);}
+function showTab(id,btn){
+  document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('active'));
+  $('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── WHO Z-score helper (simplified LMS) ──
+// Mean height (cm) by age in months, sex (simplified CDC/WHO)
+function getMeanHeight(ageMonth,sex){
+  const m_m=[49.9,53.7,57.1,60.0,62.5,64.7,66.7,68.5,70.2,71.8,73.3,74.7,76.1,77.4,78.6,79.8,81.0,82.1,83.2,84.2,85.2,86.2,87.1,88.0,89.1,90.1,91.1,92.0,92.9,93.8,94.7,95.6,96.4,97.3,98.1,98.9,99.7,100.4,101.2,101.9,102.7,103.4,104.1,104.8,105.5,106.2,106.9,107.6,108.2,108.9,109.5,110.2,110.8,111.4,112.0,112.6,113.2,113.7,114.3,114.9,115.4];
+  const m_f=[49.1,52.8,56.1,58.9,61.4,63.5,65.4,67.2,68.8,70.4,71.9,73.3,74.7,76.0,77.2,78.4,79.5,80.7,81.7,82.7,83.7,84.6,85.5,86.4,87.4,88.3,89.2,90.1,90.9,91.8,92.6,93.4,94.2,95.0,95.7,96.5,97.2,97.9,98.6,99.3,100.0,100.6,101.3,101.9,102.6,103.2,103.8,104.4,105.0,105.6,106.2,106.8,107.3,107.9,108.4,109.0,109.5,110.0,110.6,111.1,111.6];
+  const tbl=sex==='m'?m_m:m_f;
+  const idx=Math.min(Math.max(0,Math.round(ageMonth)),tbl.length-1);
+  return tbl[idx]||100;
+}
+function getMeanWeight(ageMonth,sex){
+  const m_m=[3.3,4.5,5.6,6.4,7.0,7.5,7.9,8.3,8.6,8.9,9.2,9.4,9.6,9.9,10.1,10.3,10.5,10.7,10.9,11.1,11.3,11.5,11.7,11.9,12.1,12.3,12.5,12.7,12.9,13.1,13.3,13.5,13.7,13.9,14.1,14.3,14.5,14.7,14.9,15.1,15.3,15.5,15.7,15.9,16.1,16.3,16.5,16.7,16.9,17.1,17.3,17.5,17.7,17.9,18.1,18.3,18.5,18.7,18.9,19.1,19.3];
+  const m_f=[3.2,4.2,5.1,5.8,6.4,6.9,7.3,7.6,7.9,8.2,8.5,8.7,9.0,9.2,9.4,9.6,9.8,10.0,10.2,10.4,10.6,10.8,11.0,11.2,11.4,11.6,11.8,12.0,12.2,12.4,12.6,12.8,13.0,13.2,13.4,13.6,13.8,14.0,14.2,14.4,14.6,14.8,15.0,15.2,15.4,15.6,15.8,16.0,16.2,16.4,16.6,16.8,17.0,17.2,17.4,17.6,17.8,18.0,18.2,18.4,18.6];
+  const tbl=sex==='m'?m_m:m_f;
+  const idx=Math.min(Math.max(0,Math.round(ageMonth)),tbl.length-1);
+  return tbl[idx]||15;
+}
+const htSD={m:3.5,f:3.4}; // simplified SD
+const wtSD={m:1.2,f:1.1};
+
+function syncAll(){
+  const w=parseFloat($('ptW').value)||15;
+  const h=parseFloat($('ptH').value)||100;
+  const age=parseFloat($('ptAge').value)||3;
+  const sex=$('ptSex').value;
+  const bmi=r1(w/(h/100)**2);
+  $('bBMI').textContent=`BMI: ${bmi}`;
+  // Simplified WAZ/HAZ
+  const ageMo=Math.round(age*12);
+  const mW=getMeanWeight(ageMo,sex);
+  const mH=getMeanHeight(ageMo,sex);
+  const waz=r2((w-mW)/wtSD[sex]);
+  const haz=r2((h-mH)/htSD[sex]);
+  const bmiZ=r2((bmi-(bmi*0.95))/1.5); // very simplified
+  $('bWFA').textContent=`WAZ: ${waz}`;
+  $('bHFA').textContent=`HAZ: ${haz}`;
+  let st=waz<-3?'Gizi Buruk':waz<-2?'Gizi Kurang':waz>2?'Lebih':'Baik';
+  $('bStatus').textContent=`Status: ${st}`;
+  // sync all weight/height inputs
+  [['ptW',['an-w','wl-w','cu-w','ee-w','en-w','tpn-w','elec-w','sam-w','sp-w','pro-w','mac-kcal','gir-w','asi-w','rf-w','sup-w','mic-age']],
+   ['ptH',['an-h','wl-h','ee-h','tpn-h']],
+   ['ptAge',['an-age-mo','wl-age','cu-age','ee-age','pro-age','mac-age','tpn-age','elec-age','sup-age']],
+   ['ptSex',['an-sex','wl-sex','cu-sex','ee-sex']]
+  ].forEach(([src,dests])=>{
+    const v=$(src)?.value;
+    if(v) dests.forEach(d=>{const e=$(d);if(e&&document.activeElement!==e){
+      if(d==='an-age-mo') e.value=r0(parseFloat(v)*12);
+      else e.value=v;
+    }});
+  });
+}
+
+// ── STATUS GIZI ──
+function calcAntro(){
+  const w=parseFloat($('an-w').value)||15;
+  const h=parseFloat($('an-h').value)||100;
+  const ageMo=parseFloat($('an-age-mo').value)||36;
+  const sex=$('an-sex').value;
+  const muac=parseFloat($('an-muac').value)||14;
+  const ageYr=ageMo/12;
+  const mW=getMeanWeight(Math.min(ageMo,60),sex);
+  const mH=getMeanHeight(Math.min(ageMo,60),sex);
+  const sdW=wtSD[sex]; const sdH=htSD[sex];
+  const bmi=r2(w/(h/100)**2);
+  const waz=r2((w-mW)/sdW);
+  const haz=r2((h-mH)/sdH);
+  // WHZ: expected weight for height
+  const expectedWfH=mW*(h/mH);
+  const whz=r2((w-expectedWfH)/sdW);
+  const baz=r2((bmi-15.5)/2.0);
+  function zscore2pct(z){const p=z<-2?'<3rd':z<-1?'3–15th':z<0?'15–50th':z<1?'50–85th':z<2?'85–97th':'>97th';return p;}
+  function zscore2status_waz(z){return z<-3?'Gizi Buruk':z<-2?'Gizi Kurang':z>2?'Gizi Lebih':'Gizi Baik';}
+  function zscore2status_haz(z){return z<-3?'Sangat Pendek':z<-2?'Pendek (Stunting)':z>2?'Tinggi':'Normal';}
+  function zscore2status_whz(z){return z<-3?'Sangat Kurus':z<-2?'Kurus (Wasting)':z>2?'Obesitas':z>1?'Berisiko':'Normal';}
+  $('an-waz').textContent=waz;$('an-waz-s').textContent=zscore2pct(waz);
+  $('an-waz').style.color=waz<-2?'var(--red)':waz<-1?'var(--gold)':waz>2?'var(--orange)':'var(--sage)';
+  $('an-haz').textContent=haz;$('an-haz-s').textContent=zscore2pct(haz);
+  $('an-haz').style.color=haz<-2?'var(--red)':haz<-1?'var(--gold)':'var(--sage)';
+  $('an-whz').textContent=whz;$('an-whz-s').textContent=zscore2pct(whz);
+  $('an-whz').style.color=whz<-2?'var(--red)':whz>2?'var(--orange)':'var(--sage)';
+  $('an-baz').textContent=baz;$('an-baz-s').textContent=zscore2pct(baz);
+  const muacStatus=muac<11.5?'🔴 SAM (<11.5cm)':muac<12.5?'🟡 MAM (11.5–12.5cm)':'🟢 Normal (≥12.5cm)';
+  $('an-muac-s').textContent=muacStatus;
+  $('an-bmi').textContent=bmi;
+  const overallStatus=whz<-3?'GIZI BURUK':whz<-2?'GIZI KURANG':whz>2?'GEMUK/OBESITAS':'GIZI BAIK';
+  $('an-status').textContent=overallStatus;
+  $('an-status').style.color=whz<-2?'var(--red)':whz>2?'var(--orange)':'var(--sage)';
+  $('an-notes').innerHTML=`
+  <strong>WAZ:</strong> ${waz} → ${zscore2status_waz(waz)}<br>
+  <strong>HAZ:</strong> ${haz} → ${zscore2status_haz(haz)}<br>
+  <strong>WHZ:</strong> ${whz} → ${zscore2status_whz(whz)}<br>
+  ${haz<-2&&whz>=-2?'⚠️ Stunting tanpa wasting — malnutrisi kronik':''}
+  ${whz<-2&&haz>=-2?'⚠️ Wasting tanpa stunting — malnutrisi akut':''}
+  ${whz<-2&&haz<-2?'🔴 Stunting + Wasting (wasted-stunted) — malnutrisi kronik eksaserbasi akut!':''}
+  Usia: ${ageYr.toFixed(1)} thn (${ageMo} bulan) | Referensi: WHO ${ageMo<=60?'2006':'2007'}`;
+  show('res-an');
+}
+
+function calcSTRONG(){
+  let sc=0;
+  if($('sk-1').checked) sc+=1;
+  if($('sk-2').checked) sc+=2;
+  if($('sk-3').checked) sc+=1;
+  if($('sk-4').checked) sc+=1;
+  $('sk-score').textContent=sc;
+  let risk,action,color;
+  if(sc===0){risk='Rendah';action='Skrining ulang tiap minggu';color='var(--sage)';}
+  else if(sc<=3){risk='Sedang';action='Konsul dietisien; pantau asupan 3 hari';color='var(--gold)';}
+  else{risk='Tinggi';action='Intervensi nutrisi SEGERA — konsul ahli gizi klinik';color='var(--red)';}
+  $('sk-risk').textContent=risk;$('sk-risk').style.color=color;
+  $('sk-action').textContent=action;
+  show('res-sk');
+}
+
+function calcWaterlow(){
+  const w=parseFloat($('wl-w').value)||15;
+  const h=parseFloat($('wl-h').value)||100;
+  const age=parseFloat($('wl-age').value)||4;
+  const sex=$('wl-sex').value;
+  const ageMo=Math.min(Math.round(age*12),60);
+  const mW=getMeanWeight(ageMo,sex);
+  const mH=getMeanHeight(ageMo,sex);
+  // Expected weight for height = median weight for this height
+  const ibwfh=r1(mW*(h/mH));
+  const autoEl=$('wl-ibwfh');
+  if(autoEl&&document.activeElement!==autoEl) autoEl.value=ibwfh;
+  const manualIbw=parseFloat($('wl-ibwfh').value)||ibwfh;
+  const pctWfH=r1(w/manualIbw*100);
+  const pctHfA=r1(h/mH*100);
+  let wasting='',stunting='';
+  let wastSev='',stunSev='';
+  if(pctWfH>=90){wasting='Normal';wastSev='var(--sage)';}
+  else if(pctWfH>=80){wasting='Ringan (80–89%)';wastSev='var(--gold)';}
+  else if(pctWfH>=70){wasting='Sedang (70–79%)';wastSev='var(--orange)';}
+  else{wasting='Berat (<70%)';wastSev='var(--red)';}
+  if(pctHfA>=95){stunting='Normal';stunSev='var(--sage)';}
+  else if(pctHfA>=90){stunting='Ringan (90–94%)';stunSev='var(--gold)';}
+  else if(pctHfA>=85){stunting='Sedang (85–89%)';stunSev='var(--orange)';}
+  else{stunting='Berat (<85%)';stunSev='var(--red)';}
+  $('wl-pct-wfh').textContent=pctWfH+'%';$('wl-pct-wfh').style.color=wastSev;
+  $('wl-wasting').textContent=wasting;$('wl-wasting').style.color=wastSev;
+  $('wl-pct-hfa').textContent=pctHfA+'%';$('wl-stunting').textContent=stunting;$('wl-stunting').style.color=stunSev;
+  $('wl-notes').innerHTML=`<strong>BB/TB:</strong> ${pctWfH}% → ${wasting}<br>
+  <strong>TB/U:</strong> ${pctHfA}% → ${stunting}<br>
+  IBW for Height (median): ${manualIbw} kg | BB aktual: ${w} kg<br>
+  ${pctWfH<80&&pctHfA<90?'🔴 Malnutrisi campuran (wasting + stunting)':''}`;
+  show('res-wl');
+}
+
+function calcCatchup(){
+  const w=parseFloat($('cu-w').value)||10;
+  const h=parseFloat($('cu-h').value)||90;
+  const age=parseFloat($('cu-age').value)||3;
+  const sex=$('cu-sex').value;
+  const ageMo=Math.min(Math.round(age*12),60);
+  const mW=getMeanWeight(ageMo,sex);
+  const mH=getMeanHeight(ageMo,sex);
+  const ibwfh=r1(mW*(h/mH));
+  const deficit=r1((ibwfh-w)/ibwfh*100);
+  const vel=deficit>20?200:deficit>10?150:100;
+  const target1m=r2(w+vel/1000*30);
+  $('cu-ibwfh').textContent=ibwfh+' kg';
+  $('cu-deficit').textContent=deficit+'%';$('cu-deficit').style.color=deficit>20?'var(--red)':deficit>10?'var(--gold)':'var(--sage)';
+  $('cu-target1m').textContent=target1m;
+  $('cu-per-week').textContent=r0(vel/4);
+  $('cu-notes').innerHTML=`IBW for Height: <strong>${ibwfh} kg</strong> (median BB untuk TB ${h} cm)<br>
+  Deficit: <strong>${deficit}%</strong> → ${deficit>20?'🔴 Malnutrisi Berat — catch-up intensif':deficit>10?'🟡 Malnutrisi Sedang':'🟢 Ringan'}<br>
+  Target kenaikan BB: ${vel} g/bulan (${r0(vel/4)} g/minggu)<br>
+  Energi catch-up ≈ ${r0(ibwfh*100+deficit*5)} kcal/hari (gunakan IBW untuk target kalori)`;
+  show('res-cu');
+}
+
+// ── ENERGI ──
+function calcEnergy(){
+  const w=parseFloat($('ee-w').value)||15;
+  const h=parseFloat($('ee-h').value)||100;
+  const age=parseFloat($('ee-age').value)||3;
+  const sex=$('ee-sex').value;
+  const cond=$('ee-cond').value;
+  const pal=parseFloat($('ee-pal').value)||1.4;
+  // Schofield (1985)
+  let schof;
+  if(sex==='m'){if(age<3)schof=r0(59.512*w-30.4);else if(age<10)schof=r0(22.706*w+504.3);else if(age<18)schof=r0(17.686*w+658.2);else schof=r0(15.057*w+692.2);}
+  else{if(age<3)schof=r0(58.317*w-31.1);else if(age<10)schof=r0(20.315*w+485.9);else if(age<18)schof=r0(13.384*w+692.6);else schof=r0(14.818*w+486.6);}
+  // WHO (1985) — similar but different coefficients
+  let who;
+  if(sex==='m'){if(age<3)who=r0((60.9*w-54));else if(age<10)who=r0((22.7*w+495));else if(age<18)who=r0((17.5*w+651));else who=r0((15.3*w+679));}
+  else{if(age<3)who=r0((61.0*w-51));else if(age<10)who=r0((22.5*w+499));else if(age<18)who=r0((12.2*w+746));else who=r0((14.7*w+496));}
+  // DRI/EER (simplified)
+  let dri;
+  if(age<3)dri=r0(89*w-100);
+  else if(age<9)dri=sex==='m'?r0(88.5-61.9*age/age+26.7*w+903*(h/100)):r0(135.3-30.8*age+10.0*w+934*(h/100));
+  else dri=sex==='m'?r0(88.5-61.9*age+26.7*w+903*(h/100)):r0(135.3-30.8*age+10.0*w+934*(h/100));
+  const stressMap={healthy:1.0,sedentary:0.9,surgery:1.1,infection:1.2,sepsis:1.3,burn30:1.5,burn50:1.75,catchup:1.3};
+  const sf=stressMap[cond]||1.0;
+  const tee=r0(schof*sf*pal);
+  $('ee-schof').textContent=schof;$('ee-who').textContent=who;$('ee-dri').textContent=dri;$('ee-tee').textContent=tee;
+  $('ee-per-kg').textContent=r1(tee/w);$('ee-stress').textContent=sf+'×';$('ee-pal-out').textContent=pal+'×';
+  $('ee-notes').innerHTML=`<strong>TEE = Schofield REE (${schof} kcal) × Stres (${sf}) × PAL (${pal}) = ${tee} kcal/hari</strong><br>
+  Per kgBB: ${r1(tee/w)} kcal/kg/hari<br>
+  ${cond==='catchup'?'⚠️ Catch-up growth: gunakan IBW untuk target kalori, bukan BB aktual. Target 120–150 kcal/kg IBW.':''}
+  ${cond==='burn30'||cond==='burn50'?'⚠️ Luka bakar: Curreri formula alternatif. Monitor nitrogen balance.':''}`;
+  show('res-ee');
+}
+
+function calcAKG(){
+  const ag=$('akg-age').value;
+  const data={
+    '0-5mo':  {E:550,P:9,L:31,KH:58,Ca:200,Fe:0.3,Zn:1.5,VA:375,VC:40,VD:5},
+    '6-11mo': {E:725,P:15,L:35,KH:82,Ca:270,Fe:11,Zn:4,VA:400,VC:50,VD:5},
+    '1-3yr':  {E:1125,P:20,L:34,KH:155,Ca:650,Fe:8,Zn:4,VA:400,VC:40,VD:5},
+    '4-6yr':  {E:1600,P:25,L:45,KH:220,Ca:1000,Fe:9,Zn:5,VA:450,VC:45,VD:5},
+    '7-9yr':  {E:1850,P:40,L:52,KH:254,Ca:1000,Fe:10,Zn:7,VA:500,VC:45,VD:5},
+    '10-12m': {E:2100,P:50,L:70,KH:289,Ca:1200,Fe:13,Zn:8,VA:600,VC:50,VD:5},
+    '10-12f': {E:2000,P:50,L:67,KH:275,Ca:1200,Fe:20,Zn:8,VA:600,VC:50,VD:5},
+    '13-15m': {E:2475,P:72,L:82,KH:340,Ca:1200,Fe:19,Zn:11,VA:700,VC:75,VD:5},
+    '13-15f': {E:2125,P:69,L:71,KH:292,Ca:1200,Fe:26,Zn:9,VA:700,VC:65,VD:5},
+    '16-18m': {E:2675,P:66,L:89,KH:368,Ca:1200,Fe:15,Zn:13,VA:700,VC:90,VD:5},
+    '16-18f': {E:2125,P:59,L:71,KH:292,Ca:1200,Fe:26,Zn:9,VA:600,VC:75,VD:5}
+  };
+  const d=data[ag]||data['4-6yr'];
+  const table=$('akg-table');
+  table.innerHTML=`<thead><tr><th>Zat Gizi</th><th>AKG</th><th>Satuan</th></tr></thead>
+  <tbody>
+  <tr><td>Energi</td><td>${d.E}</td><td>kcal/hari</td></tr>
+  <tr><td>Protein</td><td>${d.P}</td><td>g/hari</td></tr>
+  <tr><td>Lemak total</td><td>${d.L}</td><td>g/hari</td></tr>
+  <tr><td>Karbohidrat</td><td>${d.KH}</td><td>g/hari</td></tr>
+  <tr><td>Kalsium</td><td>${d.Ca}</td><td>mg/hari</td></tr>
+  <tr><td>Besi</td><td>${d.Fe}</td><td>mg/hari</td></tr>
+  <tr><td>Zinc</td><td>${d.Zn}</td><td>mg/hari</td></tr>
+  <tr><td>Vitamin A</td><td>${d.VA}</td><td>mcg RE</td></tr>
+  <tr><td>Vitamin C</td><td>${d.VC}</td><td>mg/hari</td></tr>
+  <tr><td>Vitamin D</td><td>${d.VD}</td><td>mcg/hari</td></tr>
+  </tbody>`;
+  show('res-akg');
+}
+
+// ── MAKRONUTRIEN ──
+function calcProtein(){
+  const w=parseFloat($('pro-w').value)||15;
+  const age=parseFloat($('pro-age').value)||3;
+  const cond=$('pro-cond').value;
+  const kcal=parseFloat($('pro-kcal').value)||1200;
+  const ranges={healthy:[0.85,1.1],preterm:[3.5,4.5],infant:[1.52,1.52],infant2:[1.2,1.2],catchup:[2,3],sepsis:[2,3],burn:[3,4],ckd:[0.6,0.8],dialysis:[1.2,2],liver:[1.2,1.5]};
+  const [mn,mx]=ranges[cond]||[1,2];
+  const pMin=r1(mn*w); const pMax=r1(mx*w);
+  const pctMin=r1(pMin*4/kcal*100); const pctMax=r1(pMax*4/kcal*100);
+  const npcKcal=r0(kcal-pMax*4);
+  const npcN=r0(npcKcal/(pMax/6.25));
+  $('pro-min').textContent=pMin;$('pro-max').textContent=pMax;
+  $('pro-pct').textContent=pctMin+'–'+pctMax+'%';
+  $('pro-npc').textContent=r0(npcN)+':1';
+  $('pro-npc-kcal').textContent=npcKcal;
+  const recMap={preterm:'AA prematur IV (TrophAmine/Primene)',catchup:'Protein tinggi untuk catch-up. Monitor BUN.',sepsis:'Target protein 2–3 g/kg. Bolehkan >3 bila dialisis.',burn:'Curreri formula + nitrogen balance monitoring',ckd:'Batasi protein. Tingkatkan kalori non-protein.',dialysis:'Protein tinggi (kerugian dialisis)'};
+  $('pro-rec').textContent=recMap[cond]||'Sumber protein berkualitas tinggi (PDCAAS tinggi)';
+  show('res-pro');
+}
+
+function calcMacro(){
+  const kcal=parseFloat($('mac-kcal').value)||1200;
+  const proPct=parseFloat($('mac-pro-pct').value)||15;
+  const fatPct=parseFloat($('mac-fat-pct').value)||30;
+  const choPct=parseFloat($('mac-cho-pct').value)||55;
+  const total=proPct+fatPct+choPct;
+  const proG=r1(kcal*proPct/100/4);
+  const fatG=r1(kcal*fatPct/100/9);
+  const choG=r1(kcal*choPct/100/4);
+  $('mac-pro-g').textContent=proG;$('mac-fat-g').textContent=fatG;$('mac-cho-g').textContent=choG;
+  const macBar=$('mac-visual');
+  macBar.innerHTML=`
+    <div class="macro-seg" style="width:${choPct}%;background:#6b9e7a"></div>
+    <div class="macro-seg" style="width:${fatPct}%;background:#e07020"></div>
+    <div class="macro-seg" style="width:${proPct}%;background:#5a3080"></div>`;
+  let notes='';
+  if(total!==100) notes=`⚠️ Total distribusi ${total}% (seharusnya 100%)`;
+  else if(proPct<8||proPct>20) notes+='⚠️ Protein di luar range normal (8–20%)';
+  else if(fatPct<20||fatPct>40) notes+='⚠️ Lemak di luar range (20–40%)';
+  else notes='✅ Distribusi makronutrien dalam batas rekomendasi';
+  $('mac-notes').innerHTML=notes;
+  show('res-mac');
+}
+
+function calcGIRnutri(){
+  const w=parseFloat($('gir-w').value)||15;
+  const conc=parseFloat($('gir-conc').value)||10;
+  const rate=parseFloat($('gir-rate').value)||40;
+  const gir=r2((conc*rate)/(w*6));
+  const target=parseFloat($('gir-target').value)||5;
+  const needRate=r2((target*w*6)/conc);
+  $('gir-actual').textContent=gir;
+  $('gir-needed').textContent=needRate;
+  const status=gir<2?'🔴 Terlalu rendah':gir<4?'🟡 Suboptimal':gir>12?'🔴 Terlalu tinggi':gir>8?'🟡 Batas atas':'🟢 Optimal';
+  $('gir-status').textContent=status;
+  show('res-gir');
+}
+function calcGIRrev(){
+  const w=parseFloat($('gir-w').value)||15;
+  const conc=parseFloat($('gir-conc').value)||10;
+  const target=parseFloat($('gir-target').value)||5;
+  const needRate=r2((target*w*6)/conc);
+  const gir=target;
+  $('gir-actual').textContent=gir;$('gir-needed').textContent=needRate;
+  const status=gir<4?'🟡 Suboptimal':gir>12?'🔴 Terlalu tinggi':'🟢 Optimal';
+  $('gir-status').textContent=status;
+  show('res-gir');
+}
+
+// ── MIKRONUTRIEN ──
+function calcMicro(){
+  const age=parseFloat($('mic-age').value)||4;
+  const sex=$('mic-sex').value;
+  const vitData=[
+    ['Vit A (mcg RE)',age<4?400:age<9?500:age<14?600:sex==='m'?900:700],
+    ['Vit D (mcg)',5],['Vit E (mg TE)',age<4?6:age<9?7:age<14?11:15],
+    ['Vit K (mcg)',age<4?55:age<9?60:age<14?60:age<18?75:90],
+    ['Vit C (mg)',age<4?40:age<9?45:age<14?50:sex==='m'?75:65],
+    ['Vit B1 (mg)',age<4?0.5:age<9?0.6:age<14?0.9:sex==='m'?1.2:1.0],
+    ['Vit B2 (mg)',age<4?0.5:age<9?0.6:age<14?0.9:sex==='m'?1.3:1.0],
+    ['Vit B6 (mg)',age<4?0.5:age<9?0.6:age<14?1.0:1.3],
+    ['Folat (mcg DFE)',age<4?150:age<9?200:age<14?300:400],
+    ['Vit B12 (mcg)',age<4?0.9:age<9?1.2:age<14?1.8:2.4],
+    ['Niasin (mg NE)',age<4?6:age<9?8:age<14?12:sex==='m'?16:14],
+  ];
+  const minData=[
+    ['Kalsium (mg)',age<4?700:age<9?1000:1300],
+    ['Fosfor (mg)',age<4?460:age<9?500:1250],
+    ['Besi (mg)',age<4?7:age<9?10:sex==='f'?15:11],
+    ['Zinc (mg)',age<4?3:age<9?5:age<14?8:sex==='m'?11:9],
+    ['Iodium (mcg)',age<4?90:age<9?90:age<14?120:150],
+    ['Selenium (mcg)',age<4?20:age<9?30:age<14?40:55],
+    ['Magnesium (mg)',age<4?80:age<9?130:age<14?240:sex==='m'?410:360],
+    ['Tembaga (mcg)',age<4?340:age<9?440:age<14?700:890],
+    ['Natrium (mg)',1000],['Kalium (mg)',age<4?3000:4700],
+  ];
+  const vitT=$('mic-vit-table');
+  vitT.innerHTML='<thead><tr><th>Vitamin</th><th>AKG/hari</th></tr></thead><tbody>'+vitData.map(([n,v])=>`<tr><td>${n}</td><td>${v}</td></tr>`).join('')+'</tbody>';
+  const minT=$('mic-min-table');
+  minT.innerHTML='<thead><tr><th>Mineral</th><th>AKG/hari</th></tr></thead><tbody>'+minData.map(([n,v])=>`<tr><td>${n}</td><td>${v}</td></tr>`).join('')+'</tbody>';
+  show('res-mic');
+}
+
+function calcSupp(){
+  const w=parseFloat($('sup-w').value)||15;
+  const age=parseFloat($('sup-age').value)||4;
+  const type=$('sup-type').value;
+  const recs={
+    'fe-def':`<strong>Anemia Defisiensi Besi — Terapi:</strong><br>
+    💊 <strong>Besi elemental oral: ${r0(3*w)}–${r0(6*w)} mg/hari</strong> (3–6 mg elemental Fe/kgBB/hari)<br>
+    Dibagi 2–3 dosis, berikan 1 jam sebelum makan + Vit C (↑absorpsi 30%)<br>
+    Durasi: 3 bulan setelah Hb normal (isi cadangan). Monitor Hb tiap 4 minggu`,
+    'fe-ppx':`<strong>Profilaksis Fe (Prematur/BBLR):</strong><br>
+    💊 Fe elemental <strong>2–4 mg/kgBB/hari</strong> mulai usia 2–4 minggu<br>
+    Lanjutkan hingga usia 12 bulan atau makan makanan kaya Fe`,
+    'zn-def':`<strong>Defisiensi Zinc — Terapi:</strong><br>
+    💊 <strong>Zinc elemental ${r0(1*w)} mg/hari</strong> (anak: 0.5–2 mg/kg) × 3–6 bulan<br>
+    Zinc sulfat 220 mg = Zinc elemental 50 mg. Berikan jauh dari Fe`,
+    'zn-diarrhea':`<strong>Zinc untuk Diare Akut (WHO):</strong><br>
+    💊 ${age<5?'10 mg/hari':'20 mg/hari'} oral × 10–14 hari<br>
+    Terbukti kurangi durasi dan keparahan diare. Mulai dari hari pertama`,
+    'vita':`<strong>Defisiensi Vitamin A:</strong><br>
+    💊 Vit A: ${w<8?'100.000':'200.000'} IU oral dosis tunggal (VAD pada anak &gt;12 bulan)<br>
+    Ulangi hari ke-2 dan 4 minggu kemudian bila xeroftalmia<br>
+    Profilaksis: Vit A 200.000 IU oral tiap 6 bulan`,
+    'vitd-def':`<strong>Defisiensi Vitamin D:</strong><br>
+    💊 Kolecalsiferol (D3) <strong>2000–4000 IU/hari</strong> × 3 bulan → maintenance 600–1000 IU/hari<br>
+    Stoss therapy: 100.000–200.000 IU single dose (bila kepatuhan buruk)`,
+    'vitd-ppx':`<strong>Profilaksis Vitamin D (Bayi ASI):</strong><br>
+    💊 Kolecalsiferol <strong>400 IU/hari</strong> mulai hari pertama kehidupan hingga 12 bulan`,
+    'b12':`<strong>Defisiensi Vitamin B12:</strong><br>
+    💊 Sianokobalamin IM ${age<2?250:1000} mcg/hari × 7 hari → tiap minggu × 4 → tiap bulan<br>
+    Atau oral (dosis tinggi): 1000 mcg/hari (bila penyerapan baik)`,
+    'folat':`<strong>Defisiensi Folat:</strong><br>
+    💊 Asam folat <strong>1–5 mg/hari</strong> PO × 3–4 bulan<br>
+    Profilaksis pranikah/hamil: 400–800 mcg/hari (cegah NTD)`,
+    'kwash':`<strong>Kwashiorkor — Paket Suplementasi WHO:</strong><br>
+    💊 Vit A: 200.000 IU hari 1 (bila tidak diberikan sebelumnya)<br>
+    💊 Asam folat: 5 mg hari 1, lanjut 1 mg/hari<br>
+    💊 Multivitamin mineral (tanpa Fe fase awal)<br>
+    💊 Zinc: 2 mg elemental/kgBB/hari<br>
+    ⚠️ Fe TIDAK diberikan fase stabilisasi (infeksi aktif → hemosiderosis)`
+  };
+  $('sup-output').innerHTML=recs[type]||'—';
+  show('res-sup');
+}
+
+// ── ENTERAL ──
+function calcEnteral(){
+  const w=parseFloat($('en-w').value)||15;
+  const kcalPerKg=parseFloat($('en-kcal').value)||80;
+  const density=parseFloat($('en-density').value)||1;
+  const method=$('en-method').value;
+  const phase=$('en-phase').value;
+  const phaseMult={trophic:0.2,half:0.5,full:1};
+  const mult=phaseMult[phase]||1;
+  const targetVol=r0(kcalPerKg*w/density);
+  const actual=r0(targetVol*mult);
+  const rate=method==='cont'?r1(actual/24):method==='cyclic'?r1(actual/14):0;
+  const bolusQ=method==='bolus'?r0(actual/8):method==='bolus4'?r0(actual/6):0;
+  $('en-total').textContent=actual;$('en-rate').textContent=rate||r0(actual/24);
+  $('en-bolus').textContent=bolusQ||'—';
+  $('en-kcal-out').textContent=r0(actual*density);
+  $('en-notes').innerHTML=`Target kalori: ${kcalPerKg} kcal/kgBB = ${r0(kcalPerKg*w)} kcal/hari<br>
+  Volume target: ${targetVol} mL/hari (${density} kcal/mL). Fase ${phase} → ${actual} mL/hari<br>
+  ${method==='bolus'||method==='bolus4'?`Bolus ${bolusQ} mL setiap ${method==='bolus'?'3':'4'} jam`:`Rate kontinyu: ${rate} mL/jam`}<br>
+  ${phase==='trophic'?'⚠️ Trofik: tujuan motilitas GI, bukan kalori penuh. Naikkan 20–25 mL/kg/hari':''}`;
+  show('res-en');
+}
+
+function calcASI(){
+  const wG=parseFloat($('asi-w').value)||1200;
+  const ga=parseFloat($('asi-ga').value)||30;
+  const vol=parseFloat($('asi-vol').value)||80;
+  const formula=parseFloat($('asi-formula').value)||0;
+  const w=wG/1000;
+  const kcalASI=r0(vol*0.67);
+  const kcalFormula=r0(formula*0.67);
+  const totalKcal=kcalASI+kcalFormula;
+  const perKg=r1((vol+formula)/w);
+  const needHMF=wG<1500&&vol>100;
+  const targetVol=r0(150*w);
+  const gap=Math.max(0,r0(targetVol-(vol+formula)));
+  $('asi-kcal').textContent=totalKcal;$('asi-per-kg').textContent=perKg;
+  $('asi-hmf').textContent=needHMF?'✅ YA — Tambah HMF':'❌ Belum diperlukan';
+  $('asi-hmf').style.color=needHMF?'var(--sage)':'var(--muted)';
+  $('asi-add').textContent=gap;
+  $('asi-notes').innerHTML=`BB: ${wG}g (${ga} minggu GA). ASI: ${vol} mL + Formula: ${formula} mL = ${vol+formula} mL/hari<br>
+  Total kalori: ${totalKcal} kcal → ${r1(totalKcal/w)} kcal/kgBB/hari<br>
+  Target volume: ${targetVol} mL/hari (150 mL/kgBB). Kekurangan: ${gap} mL/hari<br>
+  ${needHMF?'⚠️ Tambahkan HMF (Human Milk Fortifier) untuk memenuhi protein, Ca, P, dan kalori prematur':''}`;
+  show('res-asi');
+}
+
+function calcMPASI(){
+  const age=parseInt($('mp-age').value)||6;
+  const recs={
+    6:`<strong>6 Bulan — Awal MPASI</strong><br>
+    🥣 <strong>Tekstur:</strong> Bubur halus/puree (saring halus)<br>
+    🍽️ <strong>Porsi:</strong> 2–3 sdm → tingkatkan bertahap hingga ½ mangkuk (125 mL)<br>
+    ⏰ <strong>Frekuensi:</strong> 2–3× makan utama + ASI sesering mungkin<br>
+    🌟 Mulai dengan 1 bahan makanan → tunggu 3–5 hari → tambah bahan baru<br>
+    ❌ Hindari: garam, gula, madu, susu sapi cair`,
+    7:`<strong>7–8 Bulan</strong><br>
+    🥣 <strong>Tekstur:</strong> Bubur kental, pure, cincang halus<br>
+    🍽️ <strong>Porsi:</strong> ½ mangkuk (125 mL) per makan<br>
+    ⏰ <strong>Frekuensi:</strong> 2–3× makan + 1–2 selingan + ASI<br>
+    🌟 Variasikan: sereal, sayur, buah, protein (daging, tahu, telur, ikan)`,
+    9:`<strong>9–11 Bulan</strong><br>
+    🥣 <strong>Tekstur:</strong> Cincang kasar / finger food / dipotong kecil<br>
+    🍽️ <strong>Porsi:</strong> ¾ mangkuk (175 mL) per makan<br>
+    ⏰ <strong>Frekuensi:</strong> 3× makan + 2 selingan + ASI<br>
+    🌟 Latih self-feeding. Perkenalkan anggota keluarga baru`,
+    12:`<strong>12–23 Bulan</strong><br>
+    🥣 <strong>Tekstur:</strong> Makanan keluarga yang dipotong kecil<br>
+    🍽️ <strong>Porsi:</strong> 1 mangkuk penuh (250 mL) per makan<br>
+    ⏰ <strong>Frekuensi:</strong> 3 makan + 2 selingan + ASI<br>
+    💧 Kebutuhan energi dari MPASI: 500–700 kcal/hari<br>
+    🌟 Jangan paksa makan. Buat makanan berwarna dan bervariasi`,
+    24:`<strong>24+ Bulan — Makan Bersama Keluarga</strong><br>
+    🥣 <strong>Tekstur:</strong> Makanan keluarga (perhatikan konsistensi dan rasa)<br>
+    🍽️ <strong>Porsi:</strong> Sesuai kebutuhan<br>
+    ⏰ <strong>Frekuensi:</strong> 3 makan utama + 2 selingan<br>
+    💧 Minum air putih sebagai minuman utama<br>
+    🌟 Terapkan "division of responsibility" Ellyn Satter: orang tua menyediakan WHAT & WHEN, anak memutuskan BERAPA BANYAK`
+  };
+  $('mp-output').innerHTML=recs[age]||recs[6];
+  show('res-mp');
+}
+
+// ── PARENTERAL ──
+function calcTPN(){
+  const w=parseFloat($('tpn-w').value)||15;
+  const h=parseFloat($('tpn-h').value)||100;
+  const age=parseFloat($('tpn-age').value)||3;
+  const tfi=parseFloat($('tpn-tfi').value)||100;
+  const en=parseFloat($('tpn-en').value)||0;
+  const girT=parseFloat($('tpn-gir').value)||6;
+  const pro=parseFloat($('tpn-pro').value)||2;
+  const lip=parseFloat($('tpn-lip').value)||2;
+  const glu=parseFloat($('tpn-glu').value)||10;
+  const totalVol=r0(tfi*w);
+  const ivVol=Math.max(0,r0(totalVol-en/1));
+  const ivRate=r1(ivVol/24);
+  const girAct=r2((glu*ivRate)/(w*6));
+  const proG=r1(pro*w);
+  const lipML=r1(lip*w/0.2); // 20% lipid
+  const proKcal=r0(proG*4);
+  const lipKcal=r0(lip*w*10);
+  const gluKcal=r0(girAct*w*1440*0.0057);
+  const totalKcal=r0((proKcal+lipKcal+gluKcal)/w);
+  const npc=r0((lipKcal+gluKcal)/(proG/6.25));
+  $('tpn-iv').textContent=ivRate;$('tpn-gir-act').textContent=girAct;
+  $('tpn-cal').textContent=totalKcal;$('tpn-npc').textContent=npc+':1';
+  $('tpn-pro-g').textContent=proG;$('tpn-lip-ml').textContent=r1(lip*w/5)+' mL/jam';
+  $('tpn-pro-cal').textContent=proKcal;$('tpn-lip-cal').textContent=lipKcal;
+  $('tpn-notes').innerHTML=`Total cairan: ${totalVol} mL/hari (${tfi} mL/kgBB). IV: ${ivVol} mL/hari (${ivRate} mL/jam)<br>
+  GIR aktual: ${girAct} mg/kg/mnt ${girAct>10?'⚠️ Terlalu tinggi':girAct<4?'⚠️ Terlalu rendah':'✅ OK'}<br>
+  NPC:N ratio: ${npc}:1 (target 100–200:1 anak sehat; 80–120:1 katabolik)<br>
+  Kalori total: ${totalKcal} kcal/kgBB/hari`;
+  show('res-tpn');
+}
+
+function calcElecTPN(){
+  const w=parseFloat($('elec-w').value)||15;
+  const age=parseFloat($('elec-age').value)||3;
+  const early=age<1;
+  const data=[
+    {e:'Natrium (Na)',unit:'mEq/kg/hr',min:2,max:4,conc:'NaCl 0.9% = 0.154 mEq/mL'},
+    {e:'Kalium (K)',unit:'mEq/kg/hr',min:early?0:2,max:early?0:4,conc:'KCl 7.46% = 1 mEq/mL'},
+    {e:'Kalsium (Ca)',unit:'mmol/kg/hr',min:0.8,max:1.5,conc:'Ca Glukonat 10% = 0.22 mmol/mL'},
+    {e:'Fosfat (P)',unit:'mmol/kg/hr',min:1,max:2,conc:'Na Fosfat = 1 mmol/mL'},
+    {e:'Magnesium (Mg)',unit:'mmol/kg/hr',min:0.15,max:0.25,conc:'MgSO4 20% = 0.8 mmol/mL'},
+  ];
+  const tbody=$('elec-tbody');
+  tbody.innerHTML=data.map(d=>{
+    const minT=r2(d.min*w);const maxT=r2(d.max*w);
+    return `<tr><td><strong>${d.e}</strong></td><td>${d.min}–${d.max} ${d.unit}</td><td>${minT>0?`${minT}–${maxT}`:'—'} ${d.unit.includes('mEq')?'mEq':'mmol'}/hari</td><td style="font-size:0.7rem;color:var(--muted)">${d.conc}</td></tr>`;
+  }).join('');
+  show('res-elec');
+}
+
+// ── KONDISI KHUSUS ──
+function calcSAM(){
+  const w=parseFloat($('sam-w').value)||7;
+  const phase=$('sam-phase').value;
+  const comp=$('sam-comp').value;
+  let output='';
+  if(phase==='stabilize'){
+    const f75Vol=r0(130*w);
+    const f75Feed=r0(f75Vol/8);
+    output=`<strong>FASE STABILISASI — F-75 (Hari 1–7)</strong><br>
+    🍼 F-75: Volume <strong>${f75Vol} mL/hari</strong> → ${f75Feed} mL per kali (q3h = 8×/hari)<br>
+    Kalori: ${r0(75*w*130/1000)} kcal/hari (~75 kcal/100mL × ${f75Vol}mL)<br>
+    ${comp==='hypoglycemia'?`⛔ HIPOGLIKEMIA: Beri 50 mL D10% oral/NGT SEGERA → lanjut F-75 q30mnt x2 jam`:''}<br>
+    ${comp==='edema'?'⚠️ Edema: Pembatasan Na! Pantau TT, diuresis, penurunan edema':''}<br>
+    💊 TIDAK diberikan Fe pada fase ini. Berikan: Vit A + Folat + Multivitamin + Zn<br>
+    🩺 Monitor: Glukosa tiap 4 jam (malam), suhu, HR, respirasi`;
+  } else if(phase==='transition'){
+    const f100Vol=r0(150*w);
+    output=`<strong>FASE TRANSISI — F-100 (Hari 8–14)</strong><br>
+    🍼 F-100: Volume <strong>${f100Vol} mL/hari</strong> → ${r0(f100Vol/8)} mL per kali (q3h)<br>
+    Kalori: ${r0(100*w*150/1000)} kcal/hari (~100 kcal/100mL)<br>
+    Naik bertahap: 10 mL/kali tiap 12 jam bila toleran<br>
+    💊 Mulai Fe pada fase ini (kalau sudah tidak infeksi aktif)<br>
+    📈 Target: BB naik ≥5 g/kgBB/hari`;
+  } else {
+    const rutfSachets=r0(w*500/92/92); // approx RUTF
+    output=`<strong>FASE REHABILITASI — RUTF / F-100 Modifikasi</strong><br>
+    🥜 RUTF (Ready-to-Use Therapeutic Food): <strong>${rutfSachets} sachet/hari</strong> (92g/sachet, 500 kcal/100g)<br>
+    Target kalori: ${r0(150*w)} kcal/hari (150 kcal/kgBB/hari)<br>
+    Protein: ${r1(5*w)} g/hari (~5.5 g/100 kcal RUTF)<br>
+    🏠 RUTF diberikan outpatient (IMAM program) bila tidak ada komplikasi<br>
+    📊 Monitor: BB tiap minggu, target naik 10–15 g/kgBB/hari`;
+  }
+  $('sam-output').innerHTML=output;
+  show('res-sam');
+}
+
+function calcSpecial(){
+  const w=parseFloat($('sp-w').value)||15;
+  const cond=$('sp-cond').value;
+  const recs={
+    chd:`<strong>PJB — Penyakit Jantung Bawaan:</strong><br>
+    🔥 Kalori: <strong>${r0(150*w)}–${r0(200*w)} kcal/hari</strong> (140–200% kebutuhan normal)<br>
+    💧 Restriksi cairan: <strong>100–120 mL/kgBB/hari</strong> (bila gagal jantung)<br>
+    🥤 Formula kalori tinggi: 1–1.5 kcal/mL (konsentrasi formula 22–24 kcal/oz)<br>
+    💉 Suplemen MCT oil, modular protein bila perlu<br>
+    ⚠️ Pantau: BB harian, diuresis, edema, hepatomegali`,
+    cf:`<strong>Fibrosis Kistik (CF):</strong><br>
+    🔥 Kalori: <strong>${r0(130*w)}–${r0(150*w)} kcal/hari</strong> (120–150% kebutuhan)<br>
+    🥩 Protein: ${r1(3*w)}–${r1(4*w)} g/hari (3–4 g/kgBB)<br>
+    🧂 Sodium suplemen (hiperhidrosis via keringat)<br>
+    💊 PERT (Pancreatic Enzyme Replacement Therapy) WAJIB bersama makan<br>
+    📊 Vit ADEK larut lemak dosis tinggi`,
+    ibd:`<strong>IBD / Kolitis Ulseratif:</strong><br>
+    🔥 Kalori: <strong>${r0(120*w)}–${r0(140*w)} kcal/hari</strong> (flare: lebih tinggi)<br>
+    💉 EEN (Exclusive Enteral Nutrition) efektif untuk remisi CD pada anak (80% berhasil!)<br>
+    Formula: polymeric (Modulen IBD, Peptamen) 6–8 minggu<br>
+    ❌ Hindari serat tak larut saat flare. Rendah laktosa bila intoleransi`,
+    'ckd-child':`<strong>CKD Pediatrik:</strong><br>
+    🔥 Kalori: sesuai AKG normal (jaga pertumbuhan)<br>
+    🥩 Protein: TIDAK dibatasi bila pre-dialisis (kontroversi) → ${r1(1.1*w)}–${r1(1.5*w)} g/hari<br>
+    🦴 Fosfat: restriksi makanan tinggi fosfat (fosfor additive!)<br>
+    🧂 Kalium: restriksi bila hiperkalemia<br>
+    💊 Vit D aktif (Kalsitriol), Ca suplemen, Eritropoietin`,
+    cancer:`<strong>Onkologi / Kemoterapi:</strong><br>
+    🔥 Kalori: <strong>${r0(120*w)}–${r0(150*w)} kcal/hari</strong> (130–150% kebutuhan)<br>
+    🥩 Protein: ${r1(2*w)}–${r1(3*w)} g/hari (2–3 g/kgBB)<br>
+    💉 TPN bila asupan oral <50% target >3–5 hari<br>
+    ❌ Hindari suplemen antioksidan dosis tinggi saat kemo (interfere dengan terapi)`,
+    cp:`<strong>Cerebral Palsy:</strong><br>
+    🔥 Kalori: <strong>${r0(70*w)}–${r0(90*w)} kcal/hari</strong> (60–80% anak normal — aktivitas lebih rendah)<br>
+    🥩 Protein: ${r1(1.5*w)}–${r1(2*w)} g/hari<br>
+    💧 Pertimbangkan feeding tube (gastrostomi) bila asupan oral tidak aman<br>
+    💊 Kalsium dan Vit D tinggi (kepadatan tulang rendah)`,
+    liver:`<strong>Penyakit Hati Kronik:</strong><br>
+    🔥 Kalori: <strong>${r0(120*w)}–${r0(140*w)} kcal/hari</strong> (malabsorpsi lemak!)<br>
+    🥩 Protein: <strong>TIDAK dibatasi</strong> (kecuali ensefalopati hepatik aktif): ${r1(1.5*w)}–${r1(2*w)} g/hari<br>
+    💊 Vit ADEK dosis tinggi (suplemen larut lemak + air)<br>
+    💧 MCT oil (Medium Chain Triglyceride) untuk suplemen kalori lemak`,
+    'short-bowel':`<strong>Short Bowel Syndrome:</strong><br>
+    💉 TPN jangka panjang fase awal. Enteral trofik SEGERA dimulai<br>
+    🔥 Kalori: <strong>${r0(150*w)}–${r0(200*w)} kcal/hari</strong> (oral/EN agresif)<br>
+    🥛 Formula: elemental/semielemental lebih mudah diserap<br>
+    💊 B12 parenteral bila ileum terminal terpotong >60 cm<br>
+    🌿 Glutamin suplemen untuk adaptasi intestinal`
+  };
+  $('sp-output').innerHTML=recs[cond]||'—';
+  show('res-sp');
+}
+
+function calcRefeeding(){
+  const w=parseFloat($('rf-w').value)||12;
+  const loss=parseFloat($('rf-loss').value)||20;
+  const days=parseFloat($('rf-days').value)||7;
+  const highRisk=(loss>=15||days>=5);
+  const startKcal=r0(w*10);
+  const day3Kcal=r0(w*15);
+  const day7Kcal=r0(w*20);
+  $('rf-output').innerHTML=`<strong>Risiko Refeeding: ${highRisk?'🔴 TINGGI':'🟡 Sedang'}</strong><br>
+  BB turun ${loss}% + Puasa ${days} hari → ${highRisk?'Monitor SANGAT KETAT':'Monitor ketat'}<br><br>
+  <strong>Protokol Reintroduksi Makan:</strong><br>
+  Hari 1–2: ${startKcal} kcal/hari (10 kcal/kgBB) — MULAI RENDAH<br>
+  Hari 3–4: ${day3Kcal} kcal/hari (naikkan bertahap)<br>
+  Hari 5–7: ${day7Kcal} kcal/hari (target maintenance)<br>
+  Hari 7+: Naik menuju kalori penuh dalam 2 minggu<br><br>
+  ⚡ <strong>Monitor Refeeding Syndrome:</strong><br>
+  Fosfat, Kalium, Magnesium setiap hari × 5 hari pertama<br>
+  EKG (QT prolongasi), edema, sesak napas<br>
+  💊 Tiamin 100–300 mg/hari WAJIB sebelum/saat refeeding (Wernicke prevention)`;
+  show('res-rf');
+}
+
+// ── FOOD TABLE ──
+const foodData={
+  grain:[
+    ['Nasi putih 100g','130','3','0','28'],['Nasi merah 100g','111','3','1','23'],
+    ['Roti gandum 1 iris (30g)','75','3','1','14'],['Kentang 100g','77','2','0','17'],
+    ['Ubi jalar 100g','86','2','0','20'],['Mie telur 100g','138','5','2','25'],
+    ['Oatmeal kering 40g','154','5','3','27'],['Singkong 100g','159','1','0','38'],
+    ['Jagung 1 tongkol (100g)','86','3','1','19'],['Tepung terigu 30g','109','3','0','23'],
+  ],
+  protein:[
+    ['Dada ayam 100g','165','31','4','0'],['Tuna kalengan 100g','132','29','1','0'],
+    ['Telur 1 btr (50g)','78','6','5','0'],['Tempe 100g','193','19','11','10'],
+    ['Tahu 100g','76','8','4','2'],['Daging sapi 100g','250','26','17','0'],
+    ['Ikan lele 100g','135','21','4','0'],['Kacang merah rebus 100g','127','9','0','23'],
+    ['Edamame 100g','121','11','5','10'],['Hati ayam 100g','167','25','5','0'],
+  ],
+  dairy:[
+    ['ASI 100mL','67','1','4','7'],['Formula bayi S1 100mL (siap)','67','1','4','7'],
+    ['Susu UHT full fat 200mL','130','7','7','10'],['Susu skim 200mL','82','8','0','12'],
+    ['Keju cheddar 30g','120','7','10','0'],['Yogurt plain 150g','88','9','1','12'],
+    ['Pediasure std 100mL','100','3','3','14'],['Ensure Jr 100mL','100','3','3','14'],
+    ['Peptamen Jr 100mL','100','4','4','10'],['Formula prematur 100mL','80','2','4','9'],
+  ],
+  veg:[
+    ['Bayam 100g','23','3','0','4'],['Brokoli 100g','34','3','0','7'],
+    ['Wortel 100g','41','1','0','10'],['Kacang panjang 100g','47','3','0','8'],
+    ['Tomat 100g','18','1','0','4'],['Labu siam 100g','17','1','0','4'],
+    ['Kangkung 100g','19','2','0','3'],['Kol 100g','25','1','0','6'],
+  ],
+  fruit:[
+    ['Pisang 1 buah (100g)','89','1','0','23'],['Apel 1 buah (150g)','78','0','0','21'],
+    ['Jeruk 1 buah (100g)','47','1','0','12'],['Mangga 100g','60','1','0','15'],
+    ['Pepaya 100g','43','1','0','11'],['Semangka 100g','30','1','0','8'],
+    ['Avokad ½ buah (75g)','120','1','11','6'],['Melon 100g','34','1','0','8'],
+  ],
+  fat:[
+    ['Minyak kelapa sawit 10mL','90','0','10','0'],['Minyak zaitun 10mL','88','0','10','0'],
+    ['Margarin 10g','74','0','8','0'],['Santan 50mL','118','1','12','3'],
+    ['Minyak ikan (omega-3) 5mL','45','0','5','0'],['MCT oil 10mL','86','0','10','0'],
+  ],
+  formula:[
+    ['Pediasure (1.0 kcal/mL)','100','3.0','3.8','13.5'],
+    ['Ensure Junior (1.0)','100','3.2','3.4','13.9'],
+    ['Peptamen Junior (1.0)','100','4.0','3.8','10.7'],
+    ['Modulen IBD (1.0)','100','3.6','3.7','12.7'],
+    ['Pediasure 1.5 (1.5)','150','4.5','5.7','20.3'],
+    ['Infatrini (1.0)','100','2.6','5.4','10.3'],
+    ['Renastart (renal)','100','0.8','5.1','15.2'],
+    ['Pregestimil (elemental)','100','2.8','5.1','11.5'],
+    ['SMA Gold prematur','80','2.0','3.9','8.9'],
+    ['Nutrison (1.0)','100','4.0','3.9','12.3'],
+  ]
+};
+
+function showFoodTable(){
+  const cat=$('food-cat').value;
+  const foods=foodData[cat]||[];
+  $('food-table').innerHTML=`<thead><tr><th>Makanan</th><th>Kalori (kcal)</th><th>Protein (g)</th><th>Lemak (g)</th><th>KH (g)</th></tr></thead>
+  <tbody>${foods.map(f=>`<tr><td>${f[0]}</td><td>${f[1]}</td><td>${f[2]}</td><td>${f[3]}</td><td>${f[4]}</td></tr>`).join('')}</tbody>`;
+  show('res-food');
+}
+
+function calcMealPlan(){
+  const kcal=parseFloat($('mp2-kcal').value)||1200;
+  const age=parseFloat($('mp2-age').value)||4;
+  const pattern=$('mp2-pattern').value;
+  const distributions={
+    '3meal':[[25,'Sarapan'],[15,'Selingan Pagi'],[30,'Makan Siang'],[15,'Selingan Sore'],[15,'Makan Malam']],
+    '5meal':[[20,'Makan 1'],[20,'Makan 2'],[20,'Makan 3'],[20,'Makan 4'],[20,'Makan 5']],
+    '6meal':[[17,'Makan 1'],[17,'Makan 2'],[17,'Makan 3'],[17,'Makan 4'],[17,'Makan 5'],[15,'Makan 6']],
+    '2main':[[25,'Makan Utama 1'],[15,'Selingan 1'],[25,'Makan Utama 2'],[15,'Selingan 2'],[20,'Selingan 3']]
+  };
+  const dist=distributions[pattern]||distributions['3meal'];
+  const lines=dist.map(([pct,name])=>`${name}: <strong>${r0(kcal*pct/100)} kcal</strong> (${pct}%)`).join('<br>');
+  $('mp2-output').innerHTML=`<strong>Target ${kcal} kcal/hari — ${dist.length} kali makan</strong><br><br>
+  ${lines}<br><br>
+  💡 <em>Contoh porsi untuk ${r0(kcal*0.25)} kcal (sarapan):</em><br>
+  Nasi 100g (130 kcal) + Telur 1 btr (78 kcal) + Bayam 50g (12 kcal) + Minyak 5mL (45 kcal) ≈ 265 kcal`;
+  show('res-mp2');
+}
+
+// ── INIT ──
+syncAll();
+setTimeout(()=>{
+  calcAntro();calcSTRONG();calcWaterlow();calcCatchup();
+  calcEnergy();calcAKG();
+  calcProtein();calcMacro();calcGIRnutri();
+  calcMicro();calcSupp();
+  calcEnteral();calcASI();calcMPASI();
+  calcTPN();calcElecTPN();
+  calcSAM();calcSpecial();calcRefeeding();
+  showFoodTable();calcMealPlan();
+},200);
+</script>
+
+<script>
+(function(){
+  let deferredPrompt = null;
+
+  // Add status dot to header
+  document.addEventListener('DOMContentLoaded', function(){
+    const hdrInner = document.querySelector('.hdr-inner');
+    if(hdrInner){
+      const dot = document.createElement('div');
+      dot.id = 'pwa-dot';
+      dot.className = 'pwa-dot';
+      dot.title = 'Status koneksi';
+      Object.assign(dot.style,{width:'8px',height:'8px',borderRadius:'50%',background:'var(--mint)',marginLeft:'auto',flexShrink:'0',transition:'background 0.3s'});
+      hdrInner.appendChild(dot);
+    }
+  });
+
+  // Online/Offline
+  function updateStatus(){
+    const dot = document.getElementById('pwa-dot');
+    const toast = document.getElementById('pwa-toast');
+    if(!navigator.onLine){
+      if(dot){dot.style.background='#ff6b6b';dot.title='Offline';}
+      if(toast){toast.classList.add('v');setTimeout(()=>toast.classList.remove('v'),5000);}
+    } else {
+      if(dot){dot.style.background='var(--mint)';dot.title='Online';}
+    }
+  }
+  window.addEventListener('online', updateStatus);
+  window.addEventListener('offline', updateStatus);
+  setTimeout(updateStatus, 800);
+
+  // Install Prompt
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault();
+    deferredPrompt = e;
+    if(!localStorage.getItem('pwa-dismissed')){
+      setTimeout(function(){
+        var b = document.getElementById('pwa-install-banner');
+        if(b) b.classList.add('visible');
+      }, 3000);
+    }
+  });
+
+  window.addEventListener('appinstalled', function(){
+    var b = document.getElementById('pwa-install-banner');
+    if(b) b.classList.remove('visible');
+    deferredPrompt = null;
+    var dot = document.getElementById('pwa-dot');
+    if(dot){dot.style.background='#ffd700';dot.title='Terinstall!';}
+  });
+
+  window.installPWA = function(){
+    if(!deferredPrompt){
+      alert('Cara install:\n\nChrome/Edge Android: Menu \u22ee \u2192 Instal Aplikasi\nSafari iOS: Share \u2197 \u2192 Add to Home Screen\nChrome Desktop: Ikon \u2795 di address bar');
+      return;
+    }
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function(r){
+      deferredPrompt = null;
+      var b = document.getElementById('pwa-install-banner');
+      if(b) b.classList.remove('visible');
+    });
+  };
+
+  window.dismissInstall = function(){
+    var b = document.getElementById('pwa-install-banner');
+    if(b) b.classList.remove('visible');
+    localStorage.setItem('pwa-dismissed','1');
+  };
+
+  window.showUpdateToast = function(){
+    var t = document.getElementById('pwa-update');
+    if(t) t.classList.add('v');
+  };
+
+  // iOS Safari hint
+  var isIOS = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
+  var isStandalone = window.navigator.standalone === true;
+  if(isIOS && !isStandalone && !localStorage.getItem('pwa-ios')){
+    setTimeout(function(){
+      var b = document.getElementById('pwa-install-banner');
+      if(b){
+        var ti = b.querySelector('.pwa-title');
+        var su = b.querySelector('.pwa-sub');
+        var ib = b.querySelector('.pwa-install');
+        var db = b.querySelector('.pwa-dismiss');
+        if(ti) ti.textContent = 'Add to Home Screen (iOS)';
+        if(su) su.innerHTML = 'Safari: ketuk <strong style=\"color:var(--mint)\">\u2B06 Share</strong> lalu pilih<br><strong style=\"color:var(--mint)\">Add to Home Screen</strong>';
+        if(ib){ib.textContent = 'Lihat Cara Install'; ib.onclick = function(){ alert('Langkah Install di iPhone/iPad:\n\n1. Buka halaman ini di Safari\n2. Ketuk tombol Share (kotak dengan panah atas)\n3. Scroll bawah, pilih \"Add to Home Screen\"\n4. Ketuk \"Add\"\n\nAplikasi akan muncul di layar utama!'); };}
+        if(db){db.onclick = function(){ b.classList.remove('visible'); localStorage.setItem('pwa-ios','1'); };}
+        b.classList.add('visible');
+      }
+    }, 5000);
+  }
+})();
+</script>
+
+</body>
+</html>

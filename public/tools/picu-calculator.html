@@ -1,0 +1,1939 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PICU Calculator — Pediatric Intensive Care</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700;900&family=Barlow:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #03060a;
+  --s1:      #070c12;
+  --s2:      #0c1420;
+  --s3:      #10192a;
+  --border:  #162032;
+  --text:    #c8d8f0;
+  --muted:   #4a6080;
+  --dim:     #1c2e44;
+
+  --alert:   #ff3b3b;
+  --warn:    #ff9f1c;
+  --ok:      #00e5a0;
+  --info:    #00b4f5;
+  --purple:  #9b5de5;
+  --pink:    #f72585;
+  --cyan:    #00f5d4;
+  --yellow:  #ffd60a;
+
+  --glow-r:  rgba(255,59,59,0.15);
+  --glow-b:  rgba(0,180,245,0.12);
+  --glow-g:  rgba(0,229,160,0.12);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Barlow', sans-serif;
+  font-weight: 300;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0,180,245,0.06) 0%, transparent 70%),
+    repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(22,32,50,0.3) 39px, rgba(22,32,50,0.3) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(22,32,50,0.15) 39px, rgba(22,32,50,0.15) 40px);
+}
+
+/* ── CRITICAL HEADER ── */
+.hdr {
+  background: rgba(7,12,18,0.97);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 300;
+}
+
+.hdr-top {
+  display: flex; align-items: center; gap: 1rem;
+  padding: 0.8rem 1.25rem;
+  border-bottom: 1px solid rgba(255,59,59,0.15);
+}
+
+.hdr-logo {
+  width: 44px; height: 44px;
+  background: linear-gradient(135deg, #ff3b3b, #ff9f1c);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem; flex-shrink: 0;
+  box-shadow: 0 0 20px rgba(255,59,59,0.4);
+  animation: pulse-logo 3s ease infinite;
+}
+
+@keyframes pulse-logo {
+  0%,100% { box-shadow: 0 0 20px rgba(255,59,59,0.4); }
+  50% { box-shadow: 0 0 35px rgba(255,59,59,0.7); }
+}
+
+.hdr-brand h1 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.2rem; font-weight: 900;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text);
+}
+.hdr-brand p {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.58rem; color: var(--muted);
+  letter-spacing: 0.15em; text-transform: uppercase; margin-top: 0.1rem;
+}
+
+.critical-badge {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 0.4rem;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.65rem; letter-spacing: 0.1em;
+  color: var(--alert);
+  padding: 0.3rem 0.7rem;
+  border: 1px solid rgba(255,59,59,0.4);
+  border-radius: 4px;
+  background: rgba(255,59,59,0.08);
+}
+
+.pulse-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--alert);
+  animation: pulse-dot 1.5s ease infinite;
+}
+@keyframes pulse-dot {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+
+/* patient strip */
+.pt-strip {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.5rem 1.25rem; overflow-x: auto; scrollbar-width: none;
+  background: rgba(0,0,0,0.3);
+}
+.pt-strip::-webkit-scrollbar { display: none; }
+
+.pf { display: flex; flex-direction: column; gap: 0.12rem; flex-shrink: 0; }
+.pf-lbl {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.5rem; letter-spacing: 0.15em;
+  text-transform: uppercase; color: var(--muted);
+}
+.pf-inp {
+  background: rgba(0,180,245,0.07);
+  border: 1px solid rgba(0,180,245,0.2);
+  border-radius: 5px; color: var(--info);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.88rem; font-weight: 400;
+  padding: 0.28rem 0.55rem; width: 80px; outline: none;
+}
+.pf-inp:focus { border-color: var(--info); background: rgba(0,180,245,0.12); }
+.pf-inp.w100 { width: 100px; }
+.pf-inp.w70 { width: 70px; }
+
+.pt-sep { width: 1px; height: 28px; background: var(--border); flex-shrink: 0; }
+
+.pt-badge {
+  font-family: 'Share Tech Mono', monospace; font-size: 0.65rem;
+  padding: 0.25rem 0.65rem; border-radius: 4px; flex-shrink: 0;
+  white-space: nowrap; animation: badge-in 0.3s ease;
+}
+
+/* ── TABS ── */
+.tabs {
+  background: var(--s1);
+  border-bottom: 1px solid var(--border);
+  display: flex; overflow-x: auto; scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+
+.tb {
+  flex: 0 0 auto; background: none; border: none;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  color: var(--muted);
+  font-family: 'Barlow Condensed', sans-serif; font-size: 0.78rem;
+  font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 0.65rem 1.1rem; cursor: pointer;
+  display: flex; align-items: center; gap: 0.35rem;
+  transition: all 0.15s; white-space: nowrap;
+}
+.tb:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.tb.active { color: var(--info); border-bottom-color: var(--info); background: rgba(0,180,245,0.05); }
+
+/* ── CONTENT ── */
+.tc { display: none; padding: 1.25rem; animation: up 0.2s ease; }
+.tc.active { display: block; }
+@keyframes up { from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);} }
+
+/* ── GRID ── */
+.grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(315px,1fr)); gap: 1rem; }
+.grid-w { display: grid; grid-template-columns: repeat(auto-fill,minmax(400px,1fr)); gap: 1rem; }
+
+/* ── CARD ── */
+.card {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  position: relative;
+}
+.card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,180,245,0.3), transparent);
+}
+.card:hover { border-color: rgba(0,180,245,0.25); box-shadow: 0 4px 30px rgba(0,180,245,0.07); }
+
+.ch {
+  display: flex; align-items: center; gap: 0.65rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(0,0,0,0.2);
+}
+
+.cico {
+  width: 32px; height: 32px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem; flex-shrink: 0;
+}
+
+.ct {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.9rem; font-weight: 700;
+  letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--text);
+}
+.cs { font-size: 0.62rem; color: var(--muted); margin-top: 0.1rem; font-family: 'Share Tech Mono', monospace; }
+
+.cb { padding: 1rem; }
+
+/* inputs */
+.ir { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.55rem; }
+.ir.s1 { grid-template-columns: 1fr; }
+.ir.s3 { grid-template-columns: repeat(3,1fr); }
+.ir.s4 { grid-template-columns: repeat(4,1fr); }
+.ir.s5 { grid-template-columns: repeat(5,1fr); }
+
+.ig { display: flex; flex-direction: column; gap: 0.15rem; }
+.il {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.55rem; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--muted);
+}
+.ii {
+  background: var(--s3); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--text);
+  font-family: 'Share Tech Mono', monospace; font-size: 0.82rem;
+  padding: 0.38rem 0.6rem; outline: none; width: 100%;
+  transition: border-color 0.15s;
+}
+.ii:focus { border-color: var(--info); box-shadow: 0 0 0 2px rgba(0,180,245,0.1); }
+select.ii { cursor: pointer; }
+
+/* buttons */
+.btn {
+  width: 100%; border: none; border-radius: 7px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.85rem; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 0.58rem; cursor: pointer;
+  transition: all 0.15s; margin-bottom: 0.7rem;
+  position: relative; overflow: hidden;
+}
+.btn::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: rgba(255,255,255,0.08);
+  opacity: 0; transition: opacity 0.15s;
+}
+.btn:hover::after { opacity: 1; }
+.btn:active { transform: scale(0.98); }
+
+/* result */
+.res { display: none; border-radius: 9px; padding: 0.85rem; border: 1px solid; }
+.res.show { display: block; animation: ri 0.2s ease; }
+@keyframes ri { from{opacity:0;transform:scale(0.97);}to{opacity:1;transform:scale(1);} }
+
+.rg { display: grid; grid-template-columns: 1fr 1fr; gap: 0.45rem; }
+.rg.s1 { grid-template-columns: 1fr; }
+.rg.s3 { grid-template-columns: repeat(3,1fr); }
+.rg.s4 { grid-template-columns: repeat(4,1fr); }
+.rg.s5 { grid-template-columns: repeat(5,1fr); }
+
+.ri {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 7px; padding: 0.55rem 0.7rem;
+}
+.rl {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.52rem; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--muted);
+  margin-bottom: 0.2rem;
+}
+.rv {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 1rem; font-weight: 400; line-height: 1;
+  color: var(--text);
+}
+.rv.big { font-size: 1.3rem; }
+.rv.xl { font-size: 1.6rem; }
+.rn { font-size: 0.6rem; color: var(--muted); margin-top: 0.2rem; line-height: 1.4; }
+
+/* alert box */
+.ralert {
+  border-radius: 7px; padding: 0.65rem 0.85rem;
+  font-size: 0.77rem; line-height: 1.75;
+  border: 1px solid; margin-top: 0.5rem;
+}
+.rwarn {
+  margin-top: 0.45rem; border-radius: 6px;
+  padding: 0.4rem 0.6rem; font-size: 0.68rem;
+  line-height: 1.55; display: flex; gap: 0.4rem;
+  background: rgba(255,159,28,0.08);
+  border: 1px solid rgba(255,159,28,0.3);
+  color: var(--warn);
+}
+
+/* info box */
+.ibox {
+  background: rgba(0,180,245,0.07);
+  border: 1px solid rgba(0,180,245,0.2);
+  border-radius: 6px; padding: 0.6rem 0.8rem;
+  font-size: 0.7rem; line-height: 1.7;
+  color: rgba(200,216,240,0.75);
+  margin-bottom: 0.7rem;
+}
+.ibox strong { color: var(--info); font-weight: 500; }
+
+/* section label */
+.slbl {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.55rem; letter-spacing: 0.25em;
+  text-transform: uppercase; color: var(--muted);
+  margin: 1.1rem 0 0.7rem;
+  display: flex; align-items: center; gap: 0.6rem;
+}
+.slbl::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* table */
+.rtbl {
+  width: 100%; border-collapse: collapse;
+  font-size: 0.72rem;
+  border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+}
+.rtbl th {
+  background: rgba(0,0,0,0.4);
+  font-family: 'Share Tech Mono', monospace; font-size: 0.58rem;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+  padding: 0.5rem 0.7rem; text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.rtbl td {
+  padding: 0.48rem 0.7rem;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  line-height: 1.5; color: var(--text);
+}
+.rtbl tr:last-child td { border-bottom: none; }
+.rtbl tr:hover td { background: rgba(255,255,255,0.02); }
+
+/* disclaimer */
+.disc {
+  background: rgba(255,59,59,0.07);
+  border: 1px solid rgba(255,59,59,0.25);
+  border-radius: 9px; padding: 0.7rem 1rem;
+  font-size: 0.7rem; color: rgba(255,180,180,0.85);
+  line-height: 1.65; margin-bottom: 1rem;
+}
+
+/* status */
+.c-ok     { color: var(--ok); }
+.c-warn   { color: var(--warn); }
+.c-alert  { color: var(--alert); }
+.c-info   { color: var(--info); }
+.c-yellow { color: var(--yellow); }
+.c-purple { color: var(--purple); }
+.c-cyan   { color: var(--cyan); }
+
+/* special: resus card */
+.resus-card {
+  background: rgba(255,59,59,0.06);
+  border: 1px solid rgba(255,59,59,0.2);
+  border-radius: 7px; padding: 0.6rem 0.8rem;
+  margin-top: 0.45rem;
+}
+
+/* progress */
+.prog-wrap { background: rgba(0,0,0,0.4); border-radius: 999px; height: 8px; overflow: hidden; margin: 0.25rem 0; }
+.prog-bar { height: 100%; border-radius: 999px; transition: width 0.4s ease; }
+
+@media(max-width:600px){
+  .grid,.grid-w { grid-template-columns: 1fr; }
+  .ir.s3,.ir.s4,.ir.s5 { grid-template-columns: 1fr 1fr; }
+  .rg.s3,.rg.s4,.rg.s5 { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-top">
+    <div class="hdr-logo">🏥</div>
+    <div class="hdr-brand">
+      <h1>PICU Calculator</h1>
+      <p>Pediatric Intensive Care Unit · Clinical Decision Support</p>
+    </div>
+    <div class="critical-badge">
+      <div class="pulse-dot"></div>
+      CRITICAL CARE MODE
+    </div>
+  </div>
+  <div class="pt-strip">
+    <div class="pf"><span class="pf-lbl">BB (kg)</span><input class="pf-inp" id="ptW" type="number" value="20" min="1" max="150" step="0.1" oninput="syncAll()"></div>
+    <div class="pf"><span class="pf-lbl">TB (cm)</span><input class="pf-inp" id="ptH" type="number" value="110" min="30" max="200" step="0.5" oninput="syncAll()"></div>
+    <div class="pf"><span class="pf-lbl">Usia (thn)</span><input class="pf-inp w70" id="ptAge" type="number" value="5" min="0" max="18" step="0.5" oninput="syncAll()"></div>
+    <div class="pf"><span class="pf-lbl">Sex</span>
+      <select class="pf-inp w70" id="ptSex" oninput="syncAll()">
+        <option value="m">L</option><option value="f">P</option>
+      </select>
+    </div>
+    <div class="pt-sep"></div>
+    <div class="pt-badge" id="badgeETT" style="background:rgba(0,180,245,0.1);border:1px solid rgba(0,180,245,0.3);color:var(--info)">ETT: —</div>
+    <div class="pt-badge" id="badgeBP" style="background:rgba(0,229,160,0.1);border:1px solid rgba(0,229,160,0.3);color:var(--ok)">BP min: —</div>
+    <div class="pt-badge" id="badgeDefib" style="background:rgba(255,159,28,0.1);border:1px solid rgba(255,159,28,0.3);color:var(--warn)">Defib: — J</div>
+    <div class="pt-badge" id="badgeEpi" style="background:rgba(255,59,59,0.1);border:1px solid rgba(255,59,59,0.3);color:var(--alert)">Epi: — mL</div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tb active" onclick="showTab('resus',this)">🚨 Resusitasi</button>
+  <button class="tb" onclick="showTab('vent',this)">🌬️ Ventilator</button>
+  <button class="tb" onclick="showTab('hemo',this)">💓 Hemodinamik</button>
+  <button class="tb" onclick="showTab('drugs',this)">💉 Infus Obat</button>
+  <button class="tb" onclick="showTab('sedation',this)">😴 Sedasi & Analgesia</button>
+  <button class="tb" onclick="showTab('scores',this)">📊 Skor PICU</button>
+  <button class="tb" onclick="showTab('fluid',this)">💧 Cairan & Nutrisi</button>
+  <button class="tb" onclick="showTab('procedures',this)">🔧 Prosedur</button>
+</div>
+
+<!-- ═══ RESUSITASI ═══ -->
+<div class="tc active" id="tab-resus">
+  <div class="disc">⚠️ Gunakan sebagai panduan. Verifikasi semua dosis sebelum pemberian. Prioritas: ABCDE, airway management, compresi berkualitas. Aktifkan tim code blue.</div>
+
+  <!-- RESUS QUICK REFERENCE -->
+  <div class="card" style="margin-bottom:1rem;border-color:rgba(255,59,59,0.3)">
+    <div class="ch" style="background:rgba(255,59,59,0.1);border-color:rgba(255,59,59,0.2)">
+      <div class="cico" style="background:rgba(255,59,59,0.2)">🚨</div>
+      <div><div class="ct" style="color:var(--alert)">Panduan Cepat Resusitasi</div><div class="cs">Real-time berdasarkan BB pasien</div></div>
+    </div>
+    <div class="cb">
+      <div class="ir s3">
+        <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="r-w" type="number" value="20" oninput="calcResus()" style="border-color:rgba(255,59,59,0.3)"></div>
+        <div class="ig"><label class="il">Kondisi</label>
+          <select class="ii" id="r-cond" oninput="calcResus()">
+            <option value="pulseless">Cardiac Arrest (pulseless)</option>
+            <option value="shock">Syok (ada nadi)</option>
+            <option value="anaphylaxis">Anafilaksis</option>
+            <option value="bradycardia">Bradikardia simtomatik</option>
+          </select>
+        </div>
+        <div class="ig"><label class="il">Ritme EKG</label>
+          <select class="ii" id="r-rhythm" oninput="calcResus()">
+            <option value="vf">VF / Pulseless VT</option>
+            <option value="pea">PEA / Asistol</option>
+            <option value="svt">SVT</option>
+            <option value="afib">AF / Flutter</option>
+            <option value="none">—</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn" style="background:var(--alert);color:white;box-shadow:0 0 20px rgba(255,59,59,0.3)" onclick="calcResus()">⚡ GENERATE RESUS CARD</button>
+      <div class="res" id="res-resus" style="background:rgba(255,59,59,0.06);border-color:rgba(255,59,59,0.25)">
+        <div class="rg s5" id="resus-vitals"></div>
+        <div id="resus-drugs" style="margin-top:0.6rem"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <!-- EPINEPHRINE DETAILS -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:rgba(255,59,59,0.15)">💉</div><div><div class="ct">Epinefrin — Detail</div><div class="cs">Cardiac Arrest & Anafilaksis</div></div></div>
+      <div class="cb">
+        <div class="ir">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="epi-w" type="number" value="20" oninput="calcEpi()"></div>
+          <div class="ig"><label class="il">Indikasi</label>
+            <select class="ii" id="epi-ind" oninput="calcEpi()">
+              <option value="arrest">Cardiac Arrest (IV/IO)</option>
+              <option value="arrest-ett">Cardiac Arrest (ETT)</option>
+              <option value="anaphylaxis-im">Anafilaksis (IM paha)</option>
+              <option value="anaphylaxis-iv">Anafilaksis (IV krisis)</option>
+              <option value="infusion">Infus Inotropik</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" style="background:var(--alert);color:white" onclick="calcEpi()">Hitung Epinefrin</button>
+        <div class="res" id="res-epi" style="background:rgba(255,59,59,0.07);border-color:rgba(255,59,59,0.25)">
+          <div class="rg s3">
+            <div class="ri"><div class="rl">Dosis (mg)</div><div class="rv big c-alert" id="epi-mg"></div></div>
+            <div class="ri"><div class="rl">Volume</div><div class="rv big c-alert" id="epi-vol"></div><div class="rn" id="epi-conc"></div></div>
+            <div class="ri"><div class="rl">Interval / Info</div><div class="rv c-warn" id="epi-freq" style="font-size:0.75rem;line-height:1.4"></div></div>
+          </div>
+          <div id="epi-notes" class="rwarn" style="margin-top:0.5rem"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEFIBRILLATION / CARDIOVERSION -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:rgba(255,159,28,0.15)">⚡</div><div><div class="ct">Defibrilasi & Kardioversi</div><div class="cs">Dosis Joule berdasarkan BB</div></div></div>
+      <div class="cb">
+        <div class="ibox"><strong>Defibrilasi:</strong> VF/pVT asinkron. <strong>Kardioversi:</strong> SVT/AF/VT stabil — sinkron (sync mode ON).</div>
+        <div class="ir">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="def-w" type="number" value="20" oninput="calcDefib()"></div>
+          <div class="ig"><label class="il">Tipe</label>
+            <select class="ii" id="def-type" oninput="calcDefib()">
+              <option value="defib">Defibrilasi (VF/pVT)</option>
+              <option value="cardio-svt">Kardioversi SVT</option>
+              <option value="cardio-af">Kardioversi AF/Flutter</option>
+              <option value="cardio-vt">Kardioversi VT stabil</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" style="background:var(--warn);color:#000" onclick="calcDefib()">Hitung Energi</button>
+        <div class="res" id="res-def" style="background:rgba(255,159,28,0.08);border-color:rgba(255,159,28,0.3)">
+          <div class="rg s3">
+            <div class="ri"><div class="rl">Dosis 1 (J)</div><div class="rv xl c-warn" id="def-d1"></div></div>
+            <div class="ri"><div class="rl">Dosis 2 (J)</div><div class="rv big c-warn" id="def-d2"></div></div>
+            <div class="ri"><div class="rl">Dosis 3+ (J)</div><div class="rv big c-warn" id="def-d3"></div></div>
+          </div>
+          <div id="def-notes" class="rwarn" style="margin-top:0.5rem"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADENOSINE SVT -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:rgba(155,93,229,0.15)">💜</div><div><div class="ct">Adenosin — SVT</div><div class="cs">Rapid bolus + NS flush</div></div></div>
+      <div class="cb">
+        <div class="ibox">Adenosin harus diberikan IV <strong>SECEPAT MUNGKIN</strong> bolus, diikuti flush NS 5–10 mL segera. Gunakan IV paling dekat jantung.</div>
+        <div class="ig" style="margin-bottom:0.55rem"><label class="il">BB (kg)</label><input class="ii" id="ado-w" type="number" value="20" oninput="calcAdo()"></div>
+        <button class="btn" style="background:var(--purple);color:white" onclick="calcAdo()">Hitung Adenosin</button>
+        <div class="res" id="res-ado" style="background:rgba(155,93,229,0.08);border-color:rgba(155,93,229,0.3)">
+          <div class="rg s3">
+            <div class="ri"><div class="rl">Dosis 1 (0.1 mg/kg)</div><div class="rv big c-purple" id="ado-d1"></div><div class="rn" id="ado-v1"></div></div>
+            <div class="ri"><div class="rl">Dosis 2 (0.2 mg/kg)</div><div class="rv big c-purple" id="ado-d2"></div><div class="rn" id="ado-v2"></div></div>
+            <div class="ri"><div class="rl">Dosis 3 (maks)</div><div class="rv c-purple" id="ado-d3"></div><div class="rn" id="ado-v3"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ATROPINE -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:rgba(0,245,212,0.1)">🔵</div><div><div class="ct">Atropin & Obat Resus Lain</div><div class="cs">Bradikardia, Premedikasi, Organofosfor</div></div></div>
+      <div class="cb">
+        <div class="ir">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="atr-w" type="number" value="20" oninput="calcAtr()"></div>
+          <div class="ig"><label class="il">Indikasi</label>
+            <select class="ii" id="atr-ind" oninput="calcAtr()">
+              <option value="brady">Bradikardia (IV/IO)</option>
+              <option value="premedikasi">Premedikasi RSI</option>
+              <option value="organofos">Organofosfat</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" style="background:var(--cyan);color:#000" onclick="calcAtr()">Hitung Atropin</button>
+        <div class="res" id="res-atr" style="background:rgba(0,245,212,0.06);border-color:rgba(0,245,212,0.25)">
+          <div class="rg s3">
+            <div class="ri"><div class="rl">Dosis (mg)</div><div class="rv big c-cyan" id="atr-mg"></div></div>
+            <div class="ri"><div class="rl">Volume (0.5mg/mL)</div><div class="rv big c-cyan" id="atr-vol"></div><div class="rn">mL</div></div>
+            <div class="ri"><div class="rl">Note</div><div class="rv c-muted" id="atr-note" style="font-size:0.72rem;line-height:1.4;color:var(--muted)"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ VENTILATOR ═══ -->
+<div class="tc" id="tab-vent">
+  <div class="grid">
+
+    <!-- RSI -->
+    <div class="card" style="border-color:rgba(255,59,59,0.2)">
+      <div class="ch" style="background:rgba(255,59,59,0.06)"><div class="cico" style="background:rgba(255,59,59,0.15)">⚡</div><div><div class="ct" style="color:var(--alert)">RSI — Rapid Sequence Intubation</div><div class="cs">Pre-oksigenasi → Obat → Intubasi</div></div></div>
+      <div class="cb">
+        <div class="ir">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="rsi-w" type="number" value="20" oninput="calcRSI()"></div>
+          <div class="ig"><label class="il">Indikasi / Kondisi</label>
+            <select class="ii" id="rsi-cond" oninput="calcRSI()">
+              <option value="general">Umum / Elektif</option>
+              <option value="status-asth">Status Asmatikus</option>
+              <option value="raised-icp">Raised ICP</option>
+              <option value="shock">Syok / Hipotensi</option>
+              <option value="trauma">Trauma</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" style="background:var(--alert);color:white;box-shadow:0 0 15px rgba(255,59,59,0.25)" onclick="calcRSI()">Generate RSI Protocol</button>
+        <div class="res" id="res-rsi" style="background:rgba(255,59,59,0.06);border-color:rgba(255,59,59,0.2)">
+          <div id="rsi-output" style="font-size:0.77rem;line-height:1.85;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ETT SIZE & DEPTH -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:rgba(0,180,245,0.15)">📏</div><div><div class="ct">ETT — Ukuran & Kedalaman</div><div class="cs">Cuffed/Uncuffed, Oral/Nasal</div></div></div>
+      <div class="cb">
+        <div class="ir s3">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="ett-w" type="number" value="20" oninput="calcETT()"></div>
+          <div class="ig"><label class="il">Usia (thn)</label><input class="ii" id="ett-age" type="number" value="5" oninput="calcETT()"></div>
+          <div class="ig"><label class="il">Jenis</label>
+            <select class="ii" id="ett-type" oninput="calcETT()">
+              <option value="uncuffed">Uncuffed</option>
+              <option value="cuffed">Cuffed</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" style="background:var(--info);color:#000" onclick="calcETT()">Hitung ETT</button>
+        <div class="res" id="res-ett" style="background:rgba(0,180,245,0.07);border-color:rgba(0,180,245,0.25)">
+          <div class="rg s4">
+            <div class="ri"><div class="rl">Ukuran ETT (mm ID)</div><div class="rv big c-info" id="ett-size"></div></div>
+            <div class="ri"><div class="rl">ETT ±1 siapkan</div><div class="rv c-info" id="ett-alt"></div></div>
+            <div class="ri"><div class="rl">Kedalaman bibir (cm)</div><div class="rv big c-ok" id="ett-oral"></div></div>
+            <div class="ri"><div class="rl">Kedalaman nares (cm)</div><div class="rv big c-ok" id="ett-nasal"></div></div>
+          </div>
+          <div id="ett-blade" class="rwarn" style="margin-top:0.5rem"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VENT SETTINGS -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:rgba(0,229,160,0.12)">🌬️</div><div><div class="ct">Setting Ventilator PICU</div><div class="cs">Initial settings per diagnosis</div></div></div>
+      <div class="cb">
+        <div class="ir">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="vt-w" type="number" value="20" oninput="calcVentPICU()"></div>
+          <div class="ig"><label class="il">Diagnosis / Indikasi</label>
+            <select class="ii" id="vt-dx" oninput="calcVentPICU()">
+              <option value="ards">ARDS / ALI</option>
+              <option value="asthma">Status Asmatikus</option>
+              <option value="pneumonia">Pneumonia</option>
+              <option value="raised-icp">Raised ICP</option>
+              <option value="neuromuscular">Penyakit Neuromuskular</option>
+              <option value="post-op">Post-operasi (cardiac)</option>
+              <option value="pphn">PPHN / Hipertensi Pulmonal</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" style="background:var(--ok);color:#000" onclick="calcVentPICU()">Generate Vent Settings</button>
+        <div class="res" id="res-vent" style="background:rgba(0,229,160,0.06);border-color:rgba(0,229,160,0.25)">
+          <div class="rg s4" id="vent-params"></div>
+          <div id="vent-notes" style="margin-top:0.6rem;font-size:0.75rem;line-height:1.75;background:rgba(0,0,0,0.2);border-radius:6px;padding:0.6rem 0.8rem"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OI & OXYGENATION -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:rgba(255,214,10,0.12)">📉</div><div><div class="ct">Oxygenation Index & SpO₂/FiO₂</div><div class="cs">ARDS criteria, escalation triggers</div></div></div>
+      <div class="cb">
+        <div class="ibox"><strong>Berlin ARDS:</strong> PF ratio: Ringan 200–300; Sedang 100–200; Berat &lt;100. <strong>OI:</strong> &gt;25 → HFOV/iNO; &gt;40 → ECMO criteria.</div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">FiO₂ (0.21–1.0)</label><input class="ii" id="oi-fio2" type="number" value="0.6" step="0.01" oninput="calcOI()"></div>
+          <div class="ig"><label class="il">PaO₂ (mmHg)</label><input class="ii" id="oi-po2" type="number" value="70" oninput="calcOI()"></div>
+          <div class="ig"><label class="il">MAP (cmH₂O)</label><input class="ii" id="oi-map" type="number" value="12" step="0.5" oninput="calcOI()"></div>
+        </div>
+        <div class="ir">
+          <div class="ig"><label class="il">SpO₂ (%)</label><input class="ii" id="oi-spo2" type="number" value="92" oninput="calcOI()"></div>
+          <div class="ig"><label class="il">PEEP (cmH₂O)</label><input class="ii" id="oi-peep" type="number" value="8" oninput="calcOI()"></div>
+        </div>
+        <button class="btn" style="background:var(--yellow);color:#000" onclick="calcOI()">Evaluate Oxygenation</button>
+        <div class="res" id="res-oi" style="background:rgba(255,214,10,0.06);border-color:rgba(255,214,10,0.25)">
+          <div class="rg s4">
+            <div class="ri"><div class="rl">PF Ratio</div><div class="rv big" id="oi-pf"></div></div>
+            <div class="ri"><div class="rl">OI</div><div class="rv big" id="oi-result"></div></div>
+            <div class="ri"><div class="rl">SF Ratio</div><div class="rv" id="oi-sf"></div></div>
+            <div class="ri"><div class="rl">Kategori ARDS</div><div class="rv" id="oi-ards"></div></div>
+          </div>
+          <div class="ralert" id="oi-rec"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ HEMODINAMIK ═══ -->
+<div class="tc" id="tab-hemo">
+  <div class="grid">
+
+    <!-- SHOCK ASSESSMENT -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:rgba(255,59,59,0.15)">🩺</div><div><div class="ct">Evaluasi Syok & Target</div><div class="cs">MAP, SVR, CO, perfusi</div></div></div>
+      <div class="cb">
+        <div class="ir s4">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="sh-w" type="number" value="20" oninput="calcShock()"></div>
+          <div class="ig"><label class="il">Usia (thn)</label><input class="ii" id="sh-age" type="number" value="5" oninput="calcShock()"></div>
+          <div class="ig"><label class="il">HR (/mnt)</label><input class="ii" id="sh-hr" type="number" value="130" oninput="calcShock()"></div>
+          <div class="ig"><label class="il">Jenis Kelamin</label>
+            <select class="ii" id="sh-sex" oninput="calcShock()">
+              <option value="m">L</option><option value="f">P</option>
+            </select>
+          </div>
+        </div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">Sistolik (mmHg)</label><input class="ii" id="sh-sys" type="number" value="85" oninput="calcShock()"></div>
+          <div class="ig"><label class="il">Diastolik (mmHg)</label><input class="ii" id="sh-dia" type="number" value="50" oninput="calcShock()"></div>
+          <div class="ig"><label class="il">Jenis Syok</label>
+            <select class="ii" id="sh-type" oninput="calcShock()">
+              <option value="septic">Septik / Distributif</option>
+              <option value="hypovolemic">Hipovolemik</option>
+              <option value="cardiogenic">Kardiogenik</option>
+              <option value="obstructive">Obstruktif (tamponade/PTX)</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" style="background:var(--alert);color:white" onclick="calcShock()">Evaluasi & Target Terapi</button>
+        <div class="res" id="res-shock" style="background:rgba(255,59,59,0.06);border-color:rgba(255,59,59,0.25)">
+          <div class="rg s4">
+            <div class="ri"><div class="rl">MAP (mmHg)</div><div class="rv big" id="sh-map"></div></div>
+            <div class="ri"><div class="rl">MAP target min</div><div class="rv big c-ok" id="sh-map-tgt"></div></div>
+            <div class="ri"><div class="rl">Shock Index</div><div class="rv big" id="sh-si"></div></div>
+            <div class="ri"><div class="rl">BP status</div><div class="rv" id="sh-bp-status"></div></div>
+          </div>
+          <div class="ralert" id="sh-rec"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FLUID RESUSCITATION -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:rgba(0,180,245,0.12)">💧</div><div><div class="ct">Resusitasi Cairan Syok</div><div class="cs">Fluid challenge, bolus, reassessment</div></div></div>
+      <div class="cb">
+        <div class="ibox"><strong>Surviving Sepsis Campaign 2020:</strong> Bolus 10–20 mL/kg (bukan 20–40) → reassess. Total &lt;40–60 mL/kg dalam 1 jam pertama. Monitor tanda fluid overload.</div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="flr-w" type="number" value="20" oninput="calcFluidResus()"></div>
+          <div class="ig"><label class="il">Jenis Syok</label>
+            <select class="ii" id="flr-type" oninput="calcFluidResus()">
+              <option value="septic">Septik</option>
+              <option value="hypo">Hipovolemik</option>
+              <option value="dka">DKA</option>
+              <option value="burn">Luka Bakar</option>
+            </select>
+          </div>
+          <div class="ig"><label class="il">Siklus Bolus ke-</label>
+            <select class="ii" id="flr-cycle" oninput="calcFluidResus()">
+              <option value="1">1 (pertama)</option>
+              <option value="2">2</option>
+              <option value="3">3+</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" style="background:var(--info);color:#000" onclick="calcFluidResus()">Hitung Volume & Rate</button>
+        <div class="res" id="res-flr" style="background:rgba(0,180,245,0.07);border-color:rgba(0,180,245,0.25)">
+          <div class="rg s3">
+            <div class="ri"><div class="rl">Volume bolus (mL)</div><div class="rv big c-info" id="flr-vol"></div></div>
+            <div class="ri"><div class="rl">Rate (mL/jam)</div><div class="rv big c-info" id="flr-rate"></div><div class="rn" id="flr-dur"></div></div>
+            <div class="ri"><div class="rl">Cairan pilihan</div><div class="rv c-info" id="flr-fluid" style="font-size:0.78rem;line-height:1.4"></div></div>
+          </div>
+          <div id="flr-notes" class="rwarn" style="margin-top:0.5rem"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARDIAC OUTPUT -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:rgba(0,229,160,0.12)">❤️</div><div><div class="ct">Cardiac Output & Indeks</div><div class="cs">CI, SVR, DO₂, VO₂</div></div></div>
+      <div class="cb">
+        <div class="ir s3">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="co-w" type="number" value="20" oninput="calcCO()"></div>
+          <div class="ig"><label class="il">HR (/mnt)</label><input class="ii" id="co-hr" type="number" value="100" oninput="calcCO()"></div>
+          <div class="ig"><label class="il">SV (mL/beat) — echo</label><input class="ii" id="co-sv" type="number" value="35" oninput="calcCO()"></div>
+        </div>
+        <div class="ir s4">
+          <div class="ig"><label class="il">MAP (mmHg)</label><input class="ii" id="co-map" type="number" value="65" oninput="calcCO()"></div>
+          <div class="ig"><label class="il">CVP (mmHg)</label><input class="ii" id="co-cvp" type="number" value="8" oninput="calcCO()"></div>
+          <div class="ig"><label class="il">Hb (g/dL)</label><input class="ii" id="co-hb" type="number" value="10" step="0.1" oninput="calcCO()"></div>
+          <div class="ig"><label class="il">SaO₂ (%)</label><input class="ii" id="co-sao2" type="number" value="95" oninput="calcCO()"></div>
+        </div>
+        <button class="btn" style="background:var(--ok);color:#000" onclick="calcCO()">Hitung Hemodinamik</button>
+        <div class="res" id="res-co" style="background:rgba(0,229,160,0.06);border-color:rgba(0,229,160,0.25)">
+          <div class="rg s4">
+            <div class="ri"><div class="rl">CO (L/mnt)</div><div class="rv big c-ok" id="co-co"></div></div>
+            <div class="ri"><div class="rl">CI (L/mnt/m²)</div><div class="rv big c-ok" id="co-ci"></div><div class="rn">N: 3.5–5.5</div></div>
+            <div class="ri"><div class="rl">SVR (dyne·s/cm⁵)</div><div class="rv" id="co-svr"></div></div>
+            <div class="ri"><div class="rl">DO₂ (mL/mnt)</div><div class="rv" id="co-do2"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ DRUG INFUSIONS ═══ -->
+<div class="tc" id="tab-drugs">
+  <div class="grid">
+
+    <!-- SYRINGE PUMP CALCULATOR -->
+    <div class="card" style="border-color:rgba(155,93,229,0.25)">
+      <div class="ch" style="background:rgba(155,93,229,0.07)"><div class="cico" style="background:rgba(155,93,229,0.2)">🧮</div><div><div class="ct" style="color:var(--purple)">Syringe Pump — Rule of 6</div><div class="cs">Inotropik, vasopresor, bronkodilator</div></div></div>
+      <div class="cb">
+        <div class="ibox"><strong>Rule of 6:</strong> [Dosis mcg/kg/mnt × BB(kg) × 6] mg dalam 100 mL = 1 mL/jam : 1 mcg/kg/mnt</div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="sp-w" type="number" value="20" oninput="calcSyringe()"></div>
+          <div class="ig"><label class="il">Obat</label>
+            <select class="ii" id="sp-drug" oninput="calcSyringe()">
+              <option value="dopamine">Dopamin</option>
+              <option value="dobutamine">Dobutamin</option>
+              <option value="epinephrine">Epinefrin</option>
+              <option value="norepinephrine">Norepinefrin</option>
+              <option value="vasopressin">Vasopresin</option>
+              <option value="milrinone">Milrinon</option>
+              <option value="salbutamol">Salbutamol (bronko)</option>
+              <option value="lidocaine">Lidokain (anti-aritmia)</option>
+              <option value="amiodarone">Amiodaron</option>
+            </select>
+          </div>
+          <div class="ig"><label class="il">Dosis target</label><input class="ii" id="sp-dose" type="number" value="5" step="0.01" oninput="calcSyringe()"></div>
+        </div>
+        <div class="ir">
+          <div class="ig"><label class="il">Volume syringe (mL)</label>
+            <select class="ii" id="sp-vol" oninput="calcSyringe()">
+              <option value="50">50 mL</option>
+              <option value="20">20 mL</option>
+              <option value="10">10 mL</option>
+            </select>
+          </div>
+          <div class="ig"><label class="il">Diluent</label>
+            <select class="ii" id="sp-dil" oninput="calcSyringe()">
+              <option value="D5W">D5%</option>
+              <option value="NS">NS 0.9%</option>
+              <option value="D10W">D10%</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" style="background:var(--purple);color:white" onclick="calcSyringe()">Hitung Syringe Pump</button>
+        <div class="res" id="res-sp" style="background:rgba(155,93,229,0.08);border-color:rgba(155,93,229,0.3)">
+          <div class="rg s4">
+            <div class="ri"><div class="rl">Obat (mg) dlm syringe</div><div class="rv big c-purple" id="sp-drug-mg"></div></div>
+            <div class="ri"><div class="rl">Rate (mL/jam)</div><div class="rv big c-purple" id="sp-rate"></div></div>
+            <div class="ri"><div class="rl">Konsentrasi</div><div class="rv" id="sp-conc"></div><div class="rn">mg/mL</div></div>
+            <div class="ri"><div class="rl">Range dosis</div><div class="rv" id="sp-range" style="font-size:0.7rem;line-height:1.4"></div></div>
+          </div>
+          <div id="sp-notes" class="rwarn" style="margin-top:0.5rem;display:none"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HEPARIN INFUSION -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:rgba(247,37,133,0.12)">🩸</div><div><div class="ct">Heparin & Antikoagulan PICU</div><div class="cs">UFH infus, LMWH, terapi & profilaksis</div></div></div>
+      <div class="cb">
+        <div class="ir">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="hep-w" type="number" value="20" oninput="calcHep()"></div>
+          <div class="ig"><label class="il">Indikasi</label>
+            <select class="ii" id="hep-ind" oninput="calcHep()">
+              <option value="dvt-treat">DVT / PE — Terapi</option>
+              <option value="dvt-ppx">DVT — Profilaksis</option>
+              <option value="crrt">CRRT / Dialisis</option>
+              <option value="ecmo">ECMO</option>
+              <option value="enox-treat">Enoksaparin — Terapi</option>
+              <option value="enox-ppx">Enoksaparin — Profilaksis</option>
+            </select>
+          </div>
+        </div>
+        <div class="ig" style="margin-bottom:0.55rem"><label class="il">aPTT aktual (dtk) — untuk titrasi UFH</label><input class="ii" id="hep-aptt" type="number" value="60" placeholder="opsional"></div>
+        <button class="btn" style="background:var(--pink);color:white" onclick="calcHep()">Hitung Antikoagulan</button>
+        <div class="res" id="res-hep" style="background:rgba(247,37,133,0.07);border-color:rgba(247,37,133,0.25)">
+          <div class="ralert" id="hep-result" style="font-size:0.77rem;line-height:1.85;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INSULIN INFUSION -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:rgba(0,229,160,0.12)">🩺</div><div><div class="ct">Insulin Infus PICU</div><div class="cs">DKA, hiperglikemia stres, HHS</div></div></div>
+      <div class="cb">
+        <div class="ir s3">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="ins-w" type="number" value="20" oninput="calcInsulin()"></div>
+          <div class="ig"><label class="il">GDS aktual (mg/dL)</label><input class="ii" id="ins-gds" type="number" value="350" oninput="calcInsulin()"></div>
+          <div class="ig"><label class="il">Kondisi</label>
+            <select class="ii" id="ins-cond" oninput="calcInsulin()">
+              <option value="dka">DKA</option>
+              <option value="stress">Hiperglikemia Stres PICU</option>
+              <option value="hhs">HHS (Hiperosmolar)</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" style="background:var(--ok);color:#000" onclick="calcInsulin()">Hitung Insulin</button>
+        <div class="res" id="res-ins" style="background:rgba(0,229,160,0.06);border-color:rgba(0,229,160,0.25)">
+          <div class="ralert" id="ins-result" style="font-size:0.77rem;line-height:1.85;"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ SEDASI ═══ -->
+<div class="tc" id="tab-sedation">
+  <div class="grid">
+
+    <!-- RASS & SEDATION TARGET -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:rgba(155,93,229,0.15)">😴</div><div><div class="ct">Target Sedasi — RASS & CAM-ICU</div><div class="cs">Richmond Agitation-Sedation Scale</div></div></div>
+      <div class="cb">
+        <div class="slbl">RASS Score</div>
+        <table class="rtbl">
+          <thead><tr><th>Skor</th><th>Deskripsi</th><th>Target</th></tr></thead>
+          <tbody>
+            <tr><td><span style="color:var(--alert)">+4</span></td><td>Combative — berbahaya</td><td></td></tr>
+            <tr><td><span style="color:var(--warn)">+3</span></td><td>Sangat agitasi</td><td></td></tr>
+            <tr><td><span style="color:var(--warn)">+2</span></td><td>Agitasi</td><td></td></tr>
+            <tr><td><span style="color:var(--yellow)">+1</span></td><td>Gelisah</td><td></td></tr>
+            <tr><td><span style="color:var(--ok)">0</span></td><td>Alert & tenang</td><td>✅ Pasien awake</td></tr>
+            <tr><td><span style="color:var(--info)">-1</span></td><td>Drowsy (mata buka >10dtk)</span></td><td>✅ Light sedasi</td></tr>
+            <tr><td><span style="color:var(--info)">-2</span></td><td>Light sedasi (buka singkat)</td><td>✅ Target umum</td></tr>
+            <tr><td><span style="color:var(--purple)">-3</span></td><td>Moderate sedasi</td><td>⚠️ Selektif</td></tr>
+            <tr><td><span style="color:var(--alert)">-4</span></td><td>Deep sedasi</td><td>⚠️ Pilihan tertentu</td></tr>
+            <tr><td><span style="color:var(--alert)">-5</span></td><td>Unarousable</td><td>🔴 Hindari</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SEDATION DRUGS -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:rgba(0,180,245,0.12)">💊</div><div><div class="ct">Obat Sedasi & Analgesia PICU</div><div class="cs">Dosis infus + bolus per BB</div></div></div>
+      <div class="cb">
+        <div class="ir">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="sed-w" type="number" value="20" oninput="calcSedation()"></div>
+          <div class="ig"><label class="il">Regimen</label>
+            <select class="ii" id="sed-reg" oninput="calcSedation()">
+              <option value="standard">Standard (Midazolam+Fentanil)</option>
+              <option value="dexmed">Dexmedetomidine (awake sedation)</option>
+              <option value="propofol">Propofol (≥3 thn, ICU saja)</option>
+              <option value="ketamine">Ketamin (bronkospasme/prosedur)</option>
+              <option value="pain">Analgesia Tanpa Sedasi</option>
+              <option value="delirium">Delirium PICU (Haloperidol)</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" style="background:var(--info);color:#000" onclick="calcSedation()">Tampilkan Regimen</button>
+        <div class="res" id="res-sed" style="background:rgba(0,180,245,0.06);border-color:rgba(0,180,245,0.25)">
+          <div class="ralert" id="sed-result" style="font-size:0.77rem;line-height:1.9;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAIN ASSESSMENT -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:rgba(255,159,28,0.12)">😣</div><div><div class="ct">Nyeri PICU — FLACC & CPOT</div><div class="cs">Skor nyeri anak tidak dapat bicara</div></div></div>
+      <div class="cb">
+        <div class="slbl">FLACC Score (0–2 thn / tidak komunikatif)</div>
+        <div style="display:grid;gap:0.4rem;margin-bottom:0.7rem">
+          ${['Face (Wajah)','Legs (Kaki)','Activity (Aktivitas)','Cry (Menangis)','Consolability (Bisa ditenangkan)'].map((item,i)=>`
+          <div style="display:flex;align-items:center;gap:0.6rem">
+            <span style="font-size:0.73rem;color:var(--text);flex:1;font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:0.04em">${item}</span>
+            <select class="ii" id="flacc-${i}" style="width:auto;min-width:180px" oninput="calcFLACC()">
+              ${i===0?'<option value="0">0 — Tidak ada ekspresi nyeri</option><option value="1">1 — Cemberut kadang</option><option value="2">2 — Mengerutkan dahi terus</option>':
+                i===1?'<option value="0">0 — Normal / santai</option><option value="1">1 — Tidak nyaman, gelisah</option><option value="2">2 — Menendang / kaku</option>':
+                i===2?'<option value="0">0 — Tenang, posisi normal</option><option value="1">1 — Tegang, bergerak terus</option><option value="2">2 — Melengkung / kaku</option>':
+                i===3?'<option value="0">0 — Tidak menangis</option><option value="1">1 — Merengek / mengerang</option><option value="2">2 — Menangis keras terus</option>':
+                '<option value="0">0 — Senang, dapat ditenangkan</option><option value="1">1 — Agak susah ditenangkan</option><option value="2">2 — Tidak bisa ditenangkan</option>'}
+            </select>
+          </div>`).join('')}
+        </div>
+        <button class="btn" style="background:var(--warn);color:#000" onclick="calcFLACC()">Hitung FLACC</button>
+        <div class="res" id="res-flacc" style="background:rgba(255,159,28,0.07);border-color:rgba(255,159,28,0.3)">
+          <div class="rg">
+            <div class="ri"><div class="rl">FLACC Score</div><div class="rv big c-warn" id="flacc-score"></div></div>
+            <div class="ri"><div class="rl">Interpretasi</div><div class="rv" id="flacc-interp" style="font-size:0.78rem;line-height:1.4"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NMBA -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:rgba(247,37,133,0.12)">🔒</div><div><div class="ct">Neuromuscular Blockade (NMBA)</div><div class="cs">RSI + ARDS + ICP elevated</div></div></div>
+      <div class="cb">
+        <div class="ibox">NMBA hanya diberikan bila <strong>sedasi adekuat DULU</strong> (RASS -2 atau lebih dalam). Monitor TOF (Train-of-Four) untuk titrasi.</div>
+        <div class="ir">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="nmba-w" type="number" value="20" oninput="calcNMBA()"></div>
+          <div class="ig"><label class="il">Jenis & Indikasi</label>
+            <select class="ii" id="nmba-drug" oninput="calcNMBA()">
+              <option value="succinylcholine">Suksinilkolin — RSI</option>
+              <option value="rocuronium">Rokuroium — RSI (prefered)</option>
+              <option value="vecuronium">Vekuroium — RSI / Maintenance</option>
+              <option value="cisatracurium">Cisatrakurium — ARDS infus</option>
+              <option value="atracurium">Atrakurium — infus</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" style="background:var(--pink);color:white" onclick="calcNMBA()">Hitung NMBA</button>
+        <div class="res" id="res-nmba" style="background:rgba(247,37,133,0.06);border-color:rgba(247,37,133,0.25)">
+          <div class="rg s3">
+            <div class="ri"><div class="rl">Dosis (mg)</div><div class="rv big c-pink" id="nmba-dose"></div></div>
+            <div class="ri"><div class="rl">Volume</div><div class="rv big c-pink" id="nmba-vol"></div><div class="rn" id="nmba-conc"></div></div>
+            <div class="ri"><div class="rl">Durasi / Infus</div><div class="rv" id="nmba-dur" style="font-size:0.75rem;line-height:1.4;color:var(--muted)"></div></div>
+          </div>
+          <div id="nmba-note" class="rwarn" style="margin-top:0.5rem"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ SCORES ═══ -->
+<div class="tc" id="tab-scores">
+  <div class="grid">
+
+    <!-- PELOD-2 -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:rgba(255,59,59,0.15)">📊</div><div><div class="ct">PELOD-2 Score</div><div class="cs">Pediatric Logistic Organ Dysfunction — mortalitas</div></div></div>
+      <div class="cb">
+        <div class="ibox">PELOD-2 menilai 6 organ sistem. Setiap poin ↑ mortalitas ↑. Skor ≥8: mortalitas >25%.</div>
+        <div style="display:grid;gap:0.45rem;margin-bottom:0.7rem">
+          <div class="ig"><label class="il">Glasgow Coma Scale</label>
+            <select class="ii" id="p2-gcs" oninput="calcPELOD2()">
+              <option value="0">GCS ≥11 (0 poin)</option>
+              <option value="4">GCS 5–10 (4 poin)</option>
+              <option value="8">GCS 4 (8 poin)</option>
+              <option value="12">GCS 3 (12 poin)</option>
+            </select>
+          </div>
+          <div class="ig"><label class="il">Pupil (refleks cahaya)</label>
+            <select class="ii" id="p2-pupil" oninput="calcPELOD2()">
+              <option value="0">Kedua reaktif (0)</option>
+              <option value="7">Satu/kedua non-reaktif (7)</option>
+            </select>
+          </div>
+          <div class="ig"><label class="il">Laktat (mmol/L)</label>
+            <select class="ii" id="p2-lac" oninput="calcPELOD2()">
+              <option value="0">&lt;1.4 (0)</option>
+              <option value="1">1.4–3.4 (1)</option>
+              <option value="4">≥3.4 (4)</option>
+            </select>
+          </div>
+          <div class="ig"><label class="il">Tekanan darah sistolik (sesuai usia)</label>
+            <select class="ii" id="p2-bp" oninput="calcPELOD2()">
+              <option value="0">Normal (0)</option>
+              <option value="2">Rendah bermakna (2)</option>
+              <option value="5">Sangat rendah (5)</option>
+            </select>
+          </div>
+          <div class="ig"><label class="il">Kreatinin serum</label>
+            <select class="ii" id="p2-cr" oninput="calcPELOD2()">
+              <option value="0">Normal untuk usia (0)</option>
+              <option value="2">≥2× batas normal (2)</option>
+            </select>
+          </div>
+          <div class="ig"><label class="il">PaO₂/FiO₂ atau SpO₂/FiO₂</label>
+            <select class="ii" id="p2-pf" oninput="calcPELOD2()">
+              <option value="0">≥61 kPa (≥458 mmHg) atau &gt;264 (0)</option>
+              <option value="3">30–61 kPa (226–458) atau 148–264 (3)</option>
+              <option value="6">&lt;30 kPa (&lt;226) atau &lt;148 (6)</option>
+            </select>
+          </div>
+          <div class="ig"><label class="il">Ventilasi mekanik?</label>
+            <select class="ii" id="p2-vent" oninput="calcPELOD2()">
+              <option value="0">Tidak (0)</option>
+              <option value="3">Ya, invasif (3)</option>
+            </select>
+          </div>
+          <div class="ig"><label class="il">Leukosit (/µL)</label>
+            <select class="ii" id="p2-wbc" oninput="calcPELOD2()">
+              <option value="0">≥2000 (0)</option>
+              <option value="2">&lt;2000 (2)</option>
+            </select>
+          </div>
+          <div class="ig"><label class="il">Trombosit (/µL)</label>
+            <select class="ii" id="p2-plt" oninput="calcPELOD2()">
+              <option value="0">≥150.000 (0)</option>
+              <option value="1">50.000–149.999 (1)</option>
+              <option value="5">&lt;50.000 (5)</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" style="background:var(--alert);color:white" onclick="calcPELOD2()">Hitung PELOD-2</button>
+        <div class="res" id="res-pelod" style="background:rgba(255,59,59,0.06);border-color:rgba(255,59,59,0.25)">
+          <div class="rg s3">
+            <div class="ri"><div class="rl">Total Skor</div><div class="rv xl c-alert" id="pelod-score"></div></div>
+            <div class="ri"><div class="rl">Prediksi Mortalitas</div><div class="rv big" id="pelod-mort"></div></div>
+            <div class="ri"><div class="rl">Interpretasi</div><div class="rv" id="pelod-interp" style="font-size:0.75rem;line-height:1.4"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRISM-3 SIMPLIFIED -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:rgba(255,214,10,0.12)">🎯</div><div><div class="ct">PRISM-III Simplified</div><div class="cs">Pediatric Risk of Mortality</div></div></div>
+      <div class="cb">
+        <div class="ir s3">
+          <div class="ig"><label class="il">Sistolik min (mmHg)</label><input class="ii" id="pr-sys" type="number" value="85" oninput="calcPRISM()"></div>
+          <div class="ig"><label class="il">HR maks (/mnt)</label><input class="ii" id="pr-hr" type="number" value="130" oninput="calcPRISM()"></div>
+          <div class="ig"><label class="il">Usia (thn)</label><input class="ii" id="pr-age" type="number" value="5" oninput="calcPRISM()"></div>
+        </div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">GCS min</label><input class="ii" id="pr-gcs" type="number" value="12" min="3" max="15" oninput="calcPRISM()"></div>
+          <div class="ig"><label class="il">PaO₂/FiO₂</label><input class="ii" id="pr-pf" type="number" value="250" oninput="calcPRISM()"></div>
+          <div class="ig"><label class="il">PT (maks, dtk)</label><input class="ii" id="pr-pt" type="number" value="14" oninput="calcPRISM()"></div>
+        </div>
+        <div class="ir">
+          <div class="ig"><label class="il">Kreatinin (mg/dL)</label><input class="ii" id="pr-cr" type="number" value="0.6" step="0.01" oninput="calcPRISM()"></div>
+          <div class="ig"><label class="il">Bilirubin total (mg/dL)</label><input class="ii" id="pr-bili" type="number" value="1.2" step="0.1" oninput="calcPRISM()"></div>
+        </div>
+        <button class="btn" style="background:var(--yellow);color:#000" onclick="calcPRISM()">Hitung PRISM-III</button>
+        <div class="res" id="res-prism" style="background:rgba(255,214,10,0.06);border-color:rgba(255,214,10,0.3)">
+          <div class="rg s3">
+            <div class="ri"><div class="rl">Skor PRISM-III</div><div class="rv big c-yellow" id="prism-score"></div></div>
+            <div class="ri"><div class="rl">Risk Mortalitas</div><div class="rv big" id="prism-mort"></div></div>
+            <div class="ri"><div class="rl">Kategori</div><div class="rv" id="prism-cat" style="font-size:0.78rem;line-height:1.4"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEPSIS CRITERIA -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:rgba(255,59,59,0.15)">🦠</div><div><div class="ct">Sepsis Pediatrik — Kriteria</div><div class="cs">IPSCC 2005 + Sepsis-3 adaptasi anak</div></div></div>
+      <div class="cb">
+        <div class="ir">
+          <div class="ig"><label class="il">Usia (thn)</label><input class="ii" id="sep-age" type="number" value="5" oninput="calcSepsis()"></div>
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="sep-w" type="number" value="20" oninput="calcSepsis()"></div>
+        </div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">Suhu (°C)</label><input class="ii" id="sep-temp" type="number" value="39.5" step="0.1" oninput="calcSepsis()"></div>
+          <div class="ig"><label class="il">HR (/mnt)</label><input class="ii" id="sep-hr" type="number" value="145" oninput="calcSepsis()"></div>
+          <div class="ig"><label class="il">RR (/mnt)</label><input class="ii" id="sep-rr" type="number" value="35" oninput="calcSepsis()"></div>
+        </div>
+        <div class="ir">
+          <div class="ig"><label class="il">Leukosit (/µL)</label><input class="ii" id="sep-wbc" type="number" value="18000" oninput="calcSepsis()"></div>
+          <div class="ig"><label class="il">Sistolik (mmHg)</label><input class="ii" id="sep-sys" type="number" value="90" oninput="calcSepsis()"></div>
+        </div>
+        <button class="btn" style="background:var(--alert);color:white" onclick="calcSepsis()">Evaluasi Sepsis</button>
+        <div class="res" id="res-sep" style="background:rgba(255,59,59,0.06);border-color:rgba(255,59,59,0.25)">
+          <div class="ralert" id="sep-result"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ CAIRAN & NUTRISI ═══ -->
+<div class="tc" id="tab-fluid">
+  <div class="grid">
+
+    <!-- MAINTENANCE -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:rgba(0,180,245,0.12)">💧</div><div><div class="ct">Kebutuhan Cairan PICU</div><div class="cs">Holliday-Segar + kondisi kritis</div></div></div>
+      <div class="cb">
+        <div class="ir s3">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="mf-w" type="number" value="20" oninput="calcMFpicu()"></div>
+          <div class="ig"><label class="il">Kondisi</label>
+            <select class="ii" id="mf-cond" oninput="calcMFpicu()">
+              <option value="normal">Normal (maintenance)</option>
+              <option value="ards">ARDS — restriksi</option>
+              <option value="raised-icp">Raised ICP — euvolemia ketat</option>
+              <option value="sepsis-resus">Sepsis — fase resusitasi</option>
+              <option value="post-resus">Sepsis — pasca resusitasi</option>
+              <option value="burn">Luka bakar</option>
+            </select>
+          </div>
+          <div class="ig"><label class="il">%TBSA terbakar (luka bakar)</label><input class="ii" id="mf-burn" type="number" value="0" oninput="calcMFpicu()"></div>
+        </div>
+        <button class="btn" style="background:var(--info);color:#000" onclick="calcMFpicu()">Hitung Cairan PICU</button>
+        <div class="res" id="res-mf" style="background:rgba(0,180,245,0.07);border-color:rgba(0,180,245,0.25)">
+          <div class="rg s4">
+            <div class="ri"><div class="rl">Total/hari (mL)</div><div class="rv big c-info" id="mf-total"></div></div>
+            <div class="ri"><div class="rl">Rate (mL/jam)</div><div class="rv big c-info" id="mf-rate"></div></div>
+            <div class="ri"><div class="rl">UO target</div><div class="rv c-info" id="mf-uo"></div><div class="rn">mL/kg/jam</div></div>
+            <div class="ri"><div class="rl">Jenis cairan</div><div class="rv" id="mf-type" style="font-size:0.72rem;line-height:1.3;color:var(--ok)"></div></div>
+          </div>
+          <div id="mf-notes" class="rwarn" style="margin-top:0.5rem;display:none"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NUTRITION PICU -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:rgba(0,229,160,0.12)">🥗</div><div><div class="ct">Nutrisi PICU</div><div class="cs">Enteral + Parenteral target</div></div></div>
+      <div class="cb">
+        <div class="ibox">Early enteral nutrition dalam 24–48 jam. <strong>Target kalori PICU:</strong> 50–100% kebutuhan hari 1–3; 100% hari 4+. Hindari overfeeding (↑CO₂, ↑infeksi).</div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="nut-w" type="number" value="20" oninput="calcNutPICU()"></div>
+          <div class="ig"><label class="il">Hari rawat PICU</label><input class="ii" id="nut-day" type="number" value="1" oninput="calcNutPICU()"></div>
+          <div class="ig"><label class="il">Status Nutrisi</label>
+            <select class="ii" id="nut-status" oninput="calcNutPICU()">
+              <option value="normal">Normal</option>
+              <option value="malnourished">Malnutrisi</option>
+              <option value="obese">Obesitas</option>
+              <option value="sepsis">Sepsis / Hiperkatabolic</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" style="background:var(--ok);color:#000" onclick="calcNutPICU()">Hitung Target Nutrisi</button>
+        <div class="res" id="res-nut" style="background:rgba(0,229,160,0.06);border-color:rgba(0,229,160,0.25)">
+          <div class="rg s4">
+            <div class="ri"><div class="rl">Kalori/hari (kcal)</div><div class="rv big c-ok" id="nut-kcal"></div></div>
+            <div class="ri"><div class="rl">Protein (g/hr)</div><div class="rv big c-ok" id="nut-prot"></div></div>
+            <div class="ri"><div class="rl">EN rate (mL/jam)</div><div class="rv" id="nut-en"></div><div class="rn">formula 1 kcal/mL</div></div>
+            <div class="ri"><div class="rl">Glukosa target (GIR)</div><div class="rv" id="nut-gir"></div><div class="rn">mg/kg/mnt</div></div>
+          </div>
+          <div id="nut-notes" class="rwarn" style="margin-top:0.5rem;display:none"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ PROSEDUR ═══ -->
+<div class="tc" id="tab-procedures">
+  <div class="grid-w">
+
+    <!-- PARKLAND BURN -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:rgba(255,159,28,0.15)">🔥</div><div><div class="ct">Luka Bakar — Parkland Formula</div><div class="cs">Resusitasi 24 jam pertama</div></div></div>
+      <div class="cb">
+        <div class="ibox"><strong>Parkland:</strong> 3–4 mL × BB(kg) × %TBSA (anak: 3 mL). Setengah dalam 8 jam pertama, sisanya 16 jam. Tambahkan D5W 1500 mL/m²/hari untuk anak.</div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="burn-w" type="number" value="20" oninput="calcBurn()"></div>
+          <div class="ig"><label class="il">%TBSA</label><input class="ii" id="burn-tbsa" type="number" value="25" oninput="calcBurn()"></div>
+          <div class="ig"><label class="il">TB (cm) — untuk anak</label><input class="ii" id="burn-h" type="number" value="110" oninput="calcBurn()"></div>
+        </div>
+        <button class="btn" style="background:var(--warn);color:#000" onclick="calcBurn()">Hitung Resusitasi Luka Bakar</button>
+        <div class="res" id="res-burn" style="background:rgba(255,159,28,0.07);border-color:rgba(255,159,28,0.3)">
+          <div class="rg s4">
+            <div class="ri"><div class="rl">Total 24j (mL)</div><div class="rv big c-warn" id="burn-total"></div></div>
+            <div class="ri"><div class="rl">8j pertama (mL)</div><div class="rv big c-warn" id="burn-8h"></div><div class="rn" id="burn-8h-rate">mL/jam</div></div>
+            <div class="ri"><div class="rl">16j berikutnya (mL)</div><div class="rv c-warn" id="burn-16h"></div><div class="rn" id="burn-16h-rate">mL/jam</div></div>
+            <div class="ri"><div class="rl">Maintenance D5W</div><div class="rv" id="burn-maint"></div><div class="rn">mL/hari (anak)</div></div>
+          </div>
+          <div class="rwarn" style="margin-top:0.5rem">⚠️ Target UO: 0.5–1 mL/kgBB/jam. Titrasi rate setiap 2 jam. Reevaluasi formula bila UO tidak tercapai.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LUMBAR PUNCTURE -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:rgba(155,93,229,0.15)">🔬</div><div><div class="ct">Pungsi Lumbal — Referensi CSS</div><div class="cs">Normal values & interpretasi</div></div></div>
+      <div class="cb">
+        <div class="slbl">Nilai Normal CSS</div>
+        <table class="rtbl">
+          <thead><tr><th>Parameter</th><th>Normal</th><th>Meningitis Bakteri</th><th>Meningitis Viral</th><th>TB</th></tr></thead>
+          <tbody>
+            <tr><td>Tekanan (mmH₂O)</td><td>70–180</td><td><span class="c-alert">&gt;180</span></td><td>Normal/↑ ringan</td><td>↑</td></tr>
+            <tr><td>Penampilan</td><td>Jernih</td><td><span class="c-alert">Keruh/Purulen</span></td><td>Jernih</td><td>Jernih/Xantokrom</td></tr>
+            <tr><td>Leukosit (/µL)</td><td>0–5</td><td><span class="c-alert">&gt;1000 PMN</span></td><td>10–300 limfosit</td><td>100–500 limfosit</td></tr>
+            <tr><td>Protein (mg/dL)</td><td>20–45</td><td><span class="c-alert">&gt;100</span></td><td>45–100</td><td>100–500</td></tr>
+            <tr><td>Glukosa CSS (mg/dL)</td><td>50–80% GDS</td><td><span class="c-alert">&lt;45 (&lt;40% GDS)</span></td><td>Normal</td><td>Rendah</td></tr>
+            <tr><td>Gram stain</td><td>Negatif</td><td><span class="c-alert">Sering positif</span></td><td>Negatif</td><td>BTA kadang +</td></tr>
+          </tbody>
+        </table>
+        <div class="slbl" style="margin-top:1rem">Kalkulator Rasio CSS/Darah</div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">Glukosa CSS (mg/dL)</label><input class="ii" id="csf-glu" type="number" value="45" oninput="calcCSF()"></div>
+          <div class="ig"><label class="il">GDS (mg/dL)</label><input class="ii" id="csf-gds" type="number" value="90" oninput="calcCSF()"></div>
+          <div class="ig"><label class="il">Protein CSS (mg/dL)</label><input class="ii" id="csf-pro" type="number" value="80" oninput="calcCSF()"></div>
+        </div>
+        <button class="btn" style="background:var(--purple);color:white" onclick="calcCSF()">Interpretasi CSS</button>
+        <div class="res" id="res-csf" style="background:rgba(155,93,229,0.07);border-color:rgba(155,93,229,0.3)">
+          <div class="rg s3">
+            <div class="ri"><div class="rl">Rasio CSS/Darah</div><div class="rv big c-purple" id="csf-ratio"></div><div class="rn">N: ≥0.6</div></div>
+            <div class="ri"><div class="rl">Glukosa status</div><div class="rv" id="csf-glu-status"></div></div>
+            <div class="ri"><div class="rl">Protein status</div><div class="rv" id="csf-pro-status"></div></div>
+          </div>
+          <div class="ralert" id="csf-interp"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── helpers ──
+const $=id=>document.getElementById(id);
+const r2=n=>Math.round(n*100)/100;
+const r1=n=>Math.round(n*10)/10;
+const r0=n=>Math.round(n);
+const bsa=(w,h)=>r2(Math.sqrt(w*h/3600));
+function show(id,on=true){const e=$(id);if(e)e.classList.toggle('show',on);}
+function showTab(id,btn){
+  document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('active'));
+  $('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+function syncAll(){
+  const w=parseFloat($('ptW').value)||20;
+  const h=parseFloat($('ptH').value)||110;
+  const age=parseFloat($('ptAge').value)||5;
+  // ETT uncuffed: age/4+4
+  const ettSize=age>=1?r1(age/4+4):3.5;
+  const ettDepth=r1(ettSize*3);
+  $('badgeETT').textContent=`ETT: ${ettSize} mm`;
+  // Min BP
+  const minBP=age<1?70:age<10?70+2*age:90;
+  $('badgeBP').textContent=`BP min: ${minBP} mmHg`;
+  // Defib
+  $('badgeDefib').textContent=`Defib: ${r0(2*w)} J`;
+  // Epi 1:10000
+  $('badgeEpi').textContent=`Epi: ${r2(0.1*w)} mL (1:10000)`;
+  // sync inputs
+  [['ptW',['r-w','epi-w','def-w','ado-w','atr-w','rsi-w','ett-w','vt-w','sh-w','flr-w','co-w','sp-w','hep-w','ins-w','sed-w','nmba-w','mf-w','nut-w','burn-w','burn-h','sep-w','pr-age']],
+   ['ptAge',['ett-age','sh-age','sep-age','pr-age']],
+   ['ptH',['burn-h']]
+  ].forEach(([src,dests])=>{
+    const v=$(src)?.value;
+    if(v) dests.forEach(d=>{const e=$(d);if(e&&document.activeElement!==e)e.value=v;});
+  });
+}
+
+// ── RESUS ──
+function calcResus(){
+  const w=parseFloat($('r-w').value)||20;
+  const cond=$('r-cond').value;
+  const rhythm=$('r-rhythm').value;
+  const vitals=[
+    {l:'Epinefrin IV/IO',v:`${r2(0.01*w)} mg`,n:`= ${r2(0.1*w)} mL (1:10000)`,col:'c-alert'},
+    {l:'Defibrilasi (J)',v:`${r0(2*w)} → ${r0(4*w)}`,n:'2→4 J/kg maks 10J/kg',col:'c-warn'},
+    {l:'Bolus cairan',v:`${r0(10*w)} mL`,n:'NS 0.9% 10mL/kg',col:'c-info'},
+    {l:'NaHCO₃ 8.4%',v:`${r0(w)} mEq`,n:`= ${r0(w)} mL IV pelan`,col:'c-cyan'},
+    {l:'Glukosa D10%',v:`${r0(w*2.5)} mL`,n:'2.5 mL/kg D10%',col:'c-ok'},
+  ];
+  $('resus-vitals').innerHTML=vitals.map(v=>`<div class="ri"><div class="rl">${v.l}</div><div class="rv ${v.col}" style="font-size:0.9rem">${v.v}</div><div class="rn">${v.n}</div></div>`).join('');
+  let drugs=`<div class="resus-card"><div style="font-family:'Barlow Condensed',sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--alert);margin-bottom:0.5rem">`;
+  if(cond==='pulseless'){
+    drugs+=`Cardiac Arrest (PALS Algorithm)</div>
+    <div style="font-size:0.75rem;line-height:1.9">
+    🔴 <strong>CPR:</strong> 100–120/mnt, kedalaman ⅓ diameter dada, ratio 15:2 (1 rescuer: 30:2)<br>
+    💉 <strong>Epinefrin:</strong> ${r2(0.01*w)} mg IV/IO q3-5 mnt<br>
+    ${rhythm==='vf'?`⚡ <strong>Defibrilasi:</strong> 2 J/kg → 4 J/kg → max 10 J/kg<br>💊 Amiodaron: ${r0(5*w)} mg (5mg/kg) IV/IO atau Lidokain 1mg/kg`:
+    '📋 Cari & koreksi 5H5T: Hipovolemia, Hipoksia, H⁺, Hipokalemia/Hiperkalemia, Hipotermia / Tension pneumo, Tamponade, Toksin, Trombo pulmonal, Trombo koroner'}
+    </div>`;
+  } else if(cond==='shock'){
+    drugs+=`Syok Pediatrik — Awal 1 jam</div>
+    <div style="font-size:0.75rem;line-height:1.9">
+    💧 <strong>Bolus:</strong> ${r0(10*w)} mL NS (10 mL/kg) dalam 15 mnt → reassess<br>
+    💊 <strong>Antibiotik broad spectrum</strong> dalam 1 jam (kultur dulu bila mungkin)<br>
+    🔴 <strong>Norepinefrin infus</strong> mulai ${r2(0.05*w*60*0.006)} mg dalam 50 mL → 1 mL/jam = 0.05 mcg/kg/mnt
+    </div>`;
+  } else if(cond==='anaphylaxis'){
+    drugs+=`Anafilaksis</div>
+    <div style="font-size:0.75rem;line-height:1.9">
+    1️⃣ <strong>Epinefrin IM:</strong> ${r2(0.01*w)} mg (maks 0.5 mg) paha anterolateral<br>
+    2️⃣ <strong>Antihistamin:</strong> Difenhidramin ${r0(w)} mg IV<br>
+    3️⃣ <strong>Steroid:</strong> Hidrokortison ${r0(4*w)} mg (maks 200 mg) IV<br>
+    4️⃣ <strong>Salbutamol</strong> nebulisasi bila bronkospasme
+    </div>`;
+  } else {
+    drugs+=`Bradikardia Simtomatik</div>
+    <div style="font-size:0.75rem;line-height:1.9">
+    1️⃣ <strong>Atropin:</strong> ${r2(Math.max(0.1,0.02*w))} mg IV (maks 1 mg/dosis)<br>
+    2️⃣ CPR bila HR &lt;60 + tidak ada perfusi adekuat<br>
+    3️⃣ Epinefrin infus bila refrakter<br>
+    4️⃣ Pacu jantung transthorakal bila tersedia
+    </div>`;
+  }
+  drugs+='</div>';
+  $('resus-drugs').innerHTML=drugs;
+  show('res-resus');
+}
+
+function calcEpi(){
+  const w=parseFloat($('epi-w').value)||20;
+  const ind=$('epi-ind').value;
+  const data={
+    'arrest':{dose:r2(0.01*w),conc:'1mg/10mL (1:10000)',vol:r2(0.1*w),freq:'q3-5 mnt',note:'IV/IO. Setelah setiap 2 siklus CPR (3-5 mnt).'},
+    'arrest-ett':{dose:r2(0.1*w),conc:'1mg/mL (1:1000)',vol:r2(0.1*w),freq:'ETT — flush 5mL NS',note:'Encerkan ke 3-5 mL NS. Tidak sepotent IV/IO.'},
+    'anaphylaxis-im':{dose:r2(Math.min(0.5,0.01*w)),conc:'1mg/mL (1:1000)',vol:r2(Math.min(0.5,0.01*w)),freq:'q5-15 mnt PRN, maks 3×',note:'IM paha anterolateral. Tidak ada KI absolut pada anafilaksis!'},
+    'anaphylaxis-iv':{dose:r2(0.001*w),conc:'0.1mg/mL (1:10000)',vol:r2(0.01*w),freq:'IV pelan, monitor ketat',note:'Hanya bila IM gagal/syok berat. Risiko aritmia.'},
+    'infusion':{dose:r2(0.1*w*6*0.05),conc:`${r2(0.1*w*6*0.05)} mg dalam 100 mL`,vol:'1 mL/jam = 0.05 mcg/kg/mnt',freq:'Titrasi 0.05–2 mcg/kg/mnt',note:'Mulai dosis rendah. Eskalasi setiap 5–10 mnt.'}
+  };
+  const d=data[ind];
+  $('epi-mg').textContent=d.dose+' mg';
+  $('epi-vol').textContent=d.vol+' mL';
+  $('epi-conc').textContent=d.conc;
+  $('epi-freq').textContent=d.freq;
+  $('epi-notes').textContent=d.note;
+  $('epi-notes').style.display='flex';
+  show('res-epi');
+}
+
+function calcDefib(){
+  const w=parseFloat($('def-w').value)||20;
+  const type=$('def-type').value;
+  let d1,d2,d3,notes;
+  if(type==='defib'){d1=r0(2*w);d2=r0(4*w);d3=r0(Math.min(4*w,360));notes='ASINKRON. Lanjutkan CPR sampai AED siap. Jangan delay analisis ritme.';}
+  else if(type==='cardio-svt'){d1=r0(0.5*w);d2=r0(1*w);d3=r0(2*w);notes='SINKRON (sync mode ON). Sedasi dulu bila sadar. Adenosin dulu sebelum kardioversi SVT.';}
+  else if(type==='cardio-af'){d1=r0(1*w);d2=r0(2*w);d3=r0(4*w);notes='SINKRON. Antikoagulasi bila AF >48 jam sebelum kardioversi elektif.';}
+  else{d1=r0(1*w);d2=r0(2*w);d3=r0(4*w);notes='SINKRON. Amiodarone/Lidokain IV sebelum kardioversi bila stabilisasi farmakologis gagal.';}
+  $('def-d1').textContent=d1+' J';
+  $('def-d2').textContent=d2+' J';
+  $('def-d3').textContent=d3+' J';
+  $('def-notes').textContent=notes;
+  $('def-notes').style.display='flex';
+  show('res-def');
+}
+
+function calcAdo(){
+  const w=parseFloat($('ado-w').value)||20;
+  const d1=r2(Math.min(6,0.1*w));
+  const d2=r2(Math.min(12,0.2*w));
+  const d3=r2(Math.min(18,0.3*w));
+  $('ado-d1').textContent=d1+' mg';
+  $('ado-v1').textContent=`${r2(d1/3)} mL (3mg/mL)`;
+  $('ado-d2').textContent=d2+' mg';
+  $('ado-v2').textContent=`${r2(d2/3)} mL`;
+  $('ado-d3').textContent=d3+' mg (maks)';
+  $('ado-v3').textContent=`${r2(d3/3)} mL`;
+  show('res-ado');
+}
+
+function calcAtr(){
+  const w=parseFloat($('atr-w').value)||20;
+  const ind=$('atr-ind').value;
+  const data={
+    brady:{dose:r2(Math.max(0.1,Math.min(0.5,0.02*w))),note:'Min 0.1 mg (paradoxical bradycardia!), Maks 1 mg/dosis dewasa. Ulangi sekali bila perlu.'},
+    premedikasi:{dose:r2(Math.max(0.1,Math.min(0.4,0.02*w))),note:'Premedikasi RSI: IM/IV 10 mnt sebelum induksi. Kurangi bradikardi akibat ketamin/suksinilkolin.'},
+    organofos:{dose:r2(Math.max(0.05,0.02*w)),note:'TITRATE sampai sekresi berkurang (tidak sampai dilatasi pupil). Dosis bisa sangat tinggi pada keracunan berat. Ulangi q5-10 mnt.'}
+  };
+  const d=data[ind];
+  $('atr-mg').textContent=d.dose+' mg';
+  $('atr-vol').textContent=r2(d.dose/0.5)+' mL';
+  $('atr-note').textContent=d.note;
+  show('res-atr');
+}
+
+// ── VENT ──
+function calcRSI(){
+  const w=parseFloat($('rsi-w').value)||20;
+  const cond=$('rsi-cond').value;
+  let pretreat='',induct='',nmba='';
+  // pretreatment
+  if(cond==='raised-icp') pretreat=`<strong>Pre-treatment (3 mnt sebelum):</strong><br>Atropin ${r2(Math.max(0.1,0.02*w))} mg IV + Fentanil ${r2(1.5*w)} mcg IV (1.5 mcg/kg) + Lidokain ${r2(1.5*w)} mg IV`;
+  else if(cond==='status-asth') pretreat=`<strong>Pre-treatment:</strong><br>Atropin ${r2(Math.max(0.1,0.02*w))} mg IV (antisialogog untuk ketamin)`;
+  else pretreat=`<strong>Pre-oxygenation 3–5 mnt:</strong> NRM 100% O₂. SpO₂ target ≥93% sebelum intubasi`;
+  // induction
+  if(cond==='shock') induct=`<strong>Induksi (hemodinamik tidak stabil):</strong><br>Ketamin ${r0(w)} mg IV (1–2 mg/kg) — mempertahankan TD<br><em>Alternatif:</em> Etomidat ${r2(0.3*w)} mg IV (0.3 mg/kg)`;
+  else if(cond==='raised-icp') induct=`<strong>Induksi:</strong><br>Propofol ${r0(1.5*w)} mg IV (1.5–2.5 mg/kg) — menurunkan TIK<br><em>Atau:</em> Etomidat ${r2(0.3*w)} mg IV`;
+  else if(cond==='status-asth') induct=`<strong>Induksi (bronkodilator!):</strong><br>Ketamin ${r0(2*w)} mg IV (2 mg/kg) — bronkodilasi aktif<br>Midazolam ${r2(0.1*w)} mg sebagai adjuvant`;
+  else induct=`<strong>Induksi:</strong><br>Propofol ${r0(2*w)} mg IV (2–3 mg/kg) — maks 200 mg<br><em>Atau:</em> Midazolam ${r2(0.2*w)} mg + Ketamin ${r0(2*w)} mg`;
+  // NMBA
+  nmba=`<strong>Paralitik (berikan segera setelah induksi):</strong><br>🥇 Rokuroium ${r0(1.2*w)} mg IV (1.2 mg/kg) — pilihan utama, reversibel dengan Sugammadex ${r0(16*w)} mg<br>🥈 Suksinilkolin ${r0(1.5*w)} mg IV (1.5 mg/kg) — onset cepat, hindari bila: hiperkalemia/denervasi/luka bakar luas`;
+  $('rsi-output').innerHTML=`
+  ${pretreat}<br>
+  ${induct}<br>
+  ${nmba}<br>
+  <strong>Konfirmasi intubasi:</strong> Capnografi (EtCO₂), auskultasi, CXR. ETT size: ${r1(parseFloat($('ptAge').value||5)/4+4)} mm (cuffed: ${r1(parseFloat($('ptAge').value||5)/4+3.5)} mm)
+  `;
+  show('res-rsi');
+}
+
+function calcETT(){
+  const w=parseFloat($('ett-w').value)||20;
+  const age=parseFloat($('ett-age').value)||5;
+  const type=$('ett-type').value;
+  let size;
+  if(age<1){size=3.5;}
+  else if(type==='uncuffed'){size=r1(age/4+4);}
+  else{size=r1(age/4+3.5);}
+  if(w<1){size=2.5;} else if(w<3){size=3;}
+  const alt=`${r1(size-0.5)} / ${r1(size+0.5)}`;
+  const oral=r1(size*3);
+  const nasal=r1(oral+2);
+  $('ett-size').textContent=size+' mm';
+  $('ett-alt').textContent=alt+' mm';
+  $('ett-oral').textContent=oral+' cm';
+  $('ett-nasal').textContent=nasal+' cm';
+  const bladeSize=age<6?age<2?'Miller 0–1':'Miller 1':age<12?'Macintosh 2':'Macintosh 3';
+  $('ett-blade').innerHTML=`Blade: ${bladeSize} | Suction: ${r0(size*2+2)} Fr | Konfirmasi X-ray (0.5–1 cm di atas carina)`;
+  $('ett-blade').style.display='flex';
+  show('res-ett');
+}
+
+function calcVentPICU(){
+  const w=parseFloat($('vt-w').value)||20;
+  const dx=$('vt-dx').value;
+  const sets={
+    ards:   {mode:'PRVC/A-C PC',rr:'30–40',pip:'≤28',peep:'8–12',fio2:'0.6–1.0',ti:'0.5–0.6',vt:'4–6 mL/kg',map:'≥14',note:'Lung protective strategy. Target plateau ≤28 cmH₂O. Permissive hypercapnia (PaCO₂ 50–70). Prone positioning bila OI >20. HFOV bila gagal.'},
+    asthma: {mode:'SIMV/A-C',rr:'10–16',pip:'25–35',peep:'Auto-PEEP risky, PEEP 0–5',fio2:'0.40–0.60',ti:'0.8–1.0',vt:'6–8 mL/kg',map:'8–10',note:'IE ratio 1:3–1:4. Hindari air trapping. Heliox 70/30 bila refrakter. Ketamin untuk bronkodilatasi.'},
+    pneumonia:{mode:'SIMV+PS',rr:'25–35',pip:'20–26',peep:'6–8',fio2:'0.40–0.80',ti:'0.5–0.7',vt:'5–6 mL/kg',map:'10–12',note:'Antibiotik broad spectrum. Surfaktan pertimbangkan. Drainase effusi bila signifikan.'},
+    'raised-icp':{mode:'A-C/SIMV',rr:'25–35',pip:'18–22',peep:'5 (hindari tinggi)',fio2:'0.40',ti:'0.4–0.5',vt:'6–8 mL/kg',map:'8–10',note:'Target PaCO₂ 35–40 (normokapnia). Hyperventilasi sementara bila herniasi akut (PaCO₂ 30–35). HOB 30°. Hindari PEEP tinggi.'},
+    neuromuscular:{mode:'A-C/SIMV+PS',rr:'15–20',pip:'16–20',peep:'5',fio2:'0.25–0.35',ti:'0.8–1.0',vt:'8–10 mL/kg',map:'8–9',note:'Weaning bertahap. Target SpO₂ 94–98%. Strategi ekstubasi dini bila kondisi stabil. NIF monitoring.'},
+    'post-op':{mode:'SIMV',rr:'20–30',pip:'18–22',peep:'5',fio2:'0.30–0.50',ti:'0.5',vt:'6–7 mL/kg',map:'9–11',note:'Target ekstubasi dini. Jaga normokapnia. Monitor EKG dan Tekanan Arteri. Bleeding watch post-cardiac surgery.'},
+    pphn:{mode:'A-C/HFOV',rr:'60–80 (HFOV)',pip:'20–26',peep:'4–5',fio2:'0.80–1.0',ti:'0.3–0.4',vt:'4–6 mL/kg',map:'≥14 (HFOV)',note:'iNO 20 ppm bila tersedia (NO donor). Target PaO₂ >70 mmHg / SpO₂ >95%. Hindari asidosis, hipotermia, stimulasi.'}
+  };
+  const s=sets[dx]||sets.ards;
+  const vtMin=r1(4*w);const vtMax=r1(6*w);
+  const params=[
+    {l:'Mode',v:s.mode},{l:'RR (/mnt)',v:s.rr},{l:'PIP (cmH₂O)',v:s.pip},
+    {l:'PEEP (cmH₂O)',v:s.peep},{l:'FiO₂',v:s.fio2},{l:'Ti (dtk)',v:s.ti},
+    {l:`VT (${vtMin}–${vtMax} mL)`,v:s.vt},{l:'MAP target',v:s.map+' cmH₂O'}
+  ];
+  $('vent-params').innerHTML=params.map(p=>`<div class="ri"><div class="rl">${p.l}</div><div class="rv" style="font-size:0.88rem">${p.v}</div></div>`).join('');
+  $('vent-notes').innerHTML=`📋 ${s.note}`;
+  show('res-vent');
+}
+
+function calcOI(){
+  const fio2=parseFloat($('oi-fio2').value)||0.6;
+  const po2=parseFloat($('oi-po2').value)||70;
+  const map=parseFloat($('oi-map').value)||12;
+  const spo2=parseFloat($('oi-spo2').value)||92;
+  const peep=parseFloat($('oi-peep').value)||8;
+  const pf=r0(po2/fio2);
+  const sf=r0(spo2/fio2);
+  const oi=r1((map*fio2*100)/po2);
+  let ards='',color='',rec='';
+  if(pf>=300){ards='Normal';color='var(--ok)';rec='Tidak memenuhi kriteria ARDS. Monitor ketat bila ada risiko.';}
+  else if(pf>=200){ards='ARDS Ringan';color='var(--warn)';rec='OI target <20. Lung protective ventilation. Prone bila tidak membaik 12–24 jam.';}
+  else if(pf>=100){ards='ARDS Sedang';color='var(--warn)';rec='Pertimbangkan HFOV. Prone positioning. NMB 48 jam. iNO bila PPHN.';}
+  else{ards='ARDS Berat';color='var(--alert)';rec='⛔ OI >25 → HFOV. OI >40 → ECMO criteria. Konsul center ECMO SEGERA.';}
+  $('oi-pf').textContent=pf; $('oi-pf').style.color=color;
+  $('oi-result').textContent=oi; $('oi-result').style.color=oi>25?'var(--alert)':oi>15?'var(--warn)':'var(--ok)';
+  $('oi-sf').textContent=sf;
+  $('oi-ards').innerHTML=`<span style="color:${color}">${ards}</span>`;
+  $('oi-rec').innerHTML=`<div style="font-size:0.75rem;line-height:1.7">${rec}</div>`;
+  $('oi-rec').style.background='rgba(0,0,0,0.2)';$('oi-rec').style.borderColor='rgba(255,255,255,0.06)';
+  show('res-oi');
+}
+
+// ── HEMO ──
+function calcShock(){
+  const w=parseFloat($('sh-w').value)||20;
+  const age=parseFloat($('sh-age').value)||5;
+  const hr=parseFloat($('sh-hr').value)||130;
+  const sys=parseFloat($('sh-sys').value)||85;
+  const dia=parseFloat($('sh-dia').value)||50;
+  const type=$('sh-type').value;
+  const map=r0((sys+2*dia)/3);
+  const minBP=age<1?70:age<10?r0(70+2*age):90;
+  const si=r2(hr/sys);
+  const mapTgt=age<1?45:age<5?55:age<12?65:70;
+  const isShock=sys<minBP||si>1.2||map<mapTgt;
+  $('sh-map').textContent=map;
+  $('sh-map').style.color=map<mapTgt?'var(--alert)':'var(--ok)';
+  $('sh-map-tgt').textContent=mapTgt;
+  $('sh-si').textContent=si;
+  $('sh-si').style.color=si>1.2?'var(--alert)':si>0.9?'var(--warn)':'var(--ok)';
+  $('sh-bp-status').innerHTML=isShock?`<span class="c-alert">🔴 Syok</span>`:`<span class="c-ok">🟢 Kompensasi</span>`;
+  const recs={
+    septic:`<div style="font-size:0.75rem;line-height:1.8">🔴 <strong>Septic Shock:</strong> Bolus NS ${r0(10*w)} mL (10 mL/kg) IV dalam 15 mnt → reassess × 3<br>💊 Norepinefrin infus mulai 0.05 mcg/kg/mnt. Target MAP ≥${mapTgt} mmHg<br>🧪 Kultur darah → antibiotik broad spectrum dalam 1 jam<br>💉 Kortisol stimulation test bila refrakter → Hidrokortison ${r0(1*w)} mg/dosis q6h</div>`,
+    hypovolemic:`<div style="font-size:0.75rem;line-height:1.8">💧 <strong>Hypovolemic Shock:</strong> Bolus ${r0(10*w)}–${r0(20*w)} mL NS/RL segera<br>🩸 Bila perdarahan → PRC 10 mL/kg + FFP 10 mL/kg (ratio 1:1)<br>⚠️ Cari sumber perdarahan! Pertimbangkan MTP (massive transfusion protocol)</div>`,
+    cardiogenic:`<div style="font-size:0.75rem;line-height:1.8">💔 <strong>Cardiogenic Shock:</strong> HINDARI bolus besar!<br>💊 Dobutamin ${r0(5*w*6*0.05)} mg dalam 50 mL → 1 mL/jam = 0.05 mcg/kg/mnt<br>💊 Milrinon loading ${r2(0.05*w)} mg IV, infus 0.375–0.75 mcg/kg/mnt<br>🫀 Echo SEGERA! Evaluasi: tamponade, aritmia, miokarditis</div>`,
+    obstructive:`<div style="font-size:0.75rem;line-height:1.8">⚠️ <strong>Obstructive Shock:</strong><br>Tension PTX → needle decompression segera 2ICS MCL → chest drain<br>Tamponade → pericardiosentesis darurat<br>PE masif → trombolisis bila tidak ada KI</div>`
+  };
+  $('sh-rec').innerHTML=recs[type]||'';
+  $('sh-rec').style.background='rgba(255,59,59,0.05)';$('sh-rec').style.borderColor='rgba(255,59,59,0.2)';
+  show('res-shock');
+}
+
+function calcFluidResus(){
+  const w=parseFloat($('flr-w').value)||20;
+  const type=$('flr-type').value;
+  const cycle=parseInt($('flr-cycle').value)||1;
+  const volMap={septic:10,hypo:20,dka:10,burn:0};
+  const vol=r0((volMap[type]||10)*w);
+  const rate=r0(vol/0.25);
+  const fluidMap={septic:'NS 0.9% atau Ringer Laktat',hypo:'NS 0.9% (atau RL, koloid bila perlu)',dka:'NS 0.9% — HINDARI bikarbonat',burn:'Ringer Laktat (Parkland formula)'};
+  $('flr-vol').textContent=vol+' mL';
+  $('flr-rate').textContent=rate+' mL/jam';
+  $('flr-dur').textContent='dalam 15–20 mnt';
+  $('flr-fluid').textContent=fluidMap[type];
+  let notes='';
+  if(type==='dka') notes='⚠️ DKA: Ganti cairan perlahan setelah stabilisasi. Target keseimbangan 48 jam. Cerebral edema watch!';
+  else if(cycle>=3) notes='⚠️ Bolus ke-3: Nilai ulang dengan hati-hati. Tanda fluid overload? Pertimbangkan vasopressor.';
+  else if(type==='burn') notes='Gunakan Parkland formula (tab Prosedur) untuk kalkulasi lengkap luka bakar.';
+  if(notes){$('flr-notes').textContent=notes;$('flr-notes').style.display='flex';}
+  else{$('flr-notes').style.display='none';}
+  show('res-flr');
+}
+
+function calcCO(){
+  const w=parseFloat($('co-w').value)||20;
+  const h=parseFloat($('ptH').value)||110;
+  const hr=parseFloat($('co-hr').value)||100;
+  const sv=parseFloat($('co-sv').value)||35;
+  const map=parseFloat($('co-map').value)||65;
+  const cvp=parseFloat($('co-cvp').value)||8;
+  const hb=parseFloat($('co-hb').value)||10;
+  const sao2=parseFloat($('co-sao2').value)||95;
+  const bsaVal=bsa(w,h);
+  const co=r2(hr*sv/1000);
+  const ci=r2(co/bsaVal);
+  const svr=r0(79.9*(map-cvp)/co);
+  const cao2=r2((hb*1.34*sao2/100)+(0.003*94));
+  const do2=r0(co*cao2*10);
+  $('co-co').textContent=co+' L/mnt';
+  $('co-ci').textContent=ci;
+  $('co-ci').style.color=ci<2?'var(--alert)':ci<3.5?'var(--warn)':'var(--ok)';
+  $('co-svr').textContent=svr;
+  $('co-do2').textContent=do2;
+  show('res-co');
+}
+
+// ── DRUGS ──
+function calcSyringe(){
+  const w=parseFloat($('sp-w').value)||20;
+  const drug=$('sp-drug').value;
+  const dose=parseFloat($('sp-dose').value)||5;
+  const vol=parseFloat($('sp-vol').value)||50;
+  const drugMg=r2(dose*w*6);
+  const rate=r2(dose);
+  const conc=r2(drugMg/vol);
+  const ranges={
+    dopamine:'Low: 1–5 (renal/inotrop), Mid: 5–10 (inotrop), High: >10 (vasokonst)',
+    dobutamine:'Inotrop: 2.5–20 mcg/kg/mnt',
+    epinephrine:'Low: 0.01–0.1 (β>α), High: >0.3 (α+β)',
+    norepinephrine:'0.05–2 mcg/kg/mnt (vasopresor)',
+    vasopressin:'0.0003–0.002 unit/kg/mnt (unit bukan mcg!)',
+    milrinone:'Loading 50 mcg/kg → infus 0.25–0.75 mcg/kg/mnt',
+    salbutamol:'Bronkospasme: 0.1–1 mcg/kg/mnt',
+    lidocaine:'Anti-aritmia: 20–50 mcg/kg/mnt',
+    amiodarone:'5mg/kg loading dalam 20 mnt → infus 5–15 mcg/kg/mnt'
+  };
+  $('sp-drug-mg').textContent=drugMg+' mg';
+  $('sp-rate').textContent=rate+' mL/jam';
+  $('sp-conc').textContent=conc;
+  $('sp-range').textContent=ranges[drug]||'';
+  let notes=drug==='vasopressin'?'⚠️ Vasopresin: dosis dalam unit/kg/mnt, bukan mcg. Sediaan 20 unit/mL.':
+            drug==='milrinone'?'⚠️ Milrinon: berikan loading sebelum infus. Monitor hipotensi.':'';
+  if(notes){$('sp-notes').textContent=notes;$('sp-notes').style.display='flex';}
+  else{$('sp-notes').style.display='none';}
+  show('res-sp');
+}
+
+function calcHep(){
+  const w=parseFloat($('hep-w').value)||20;
+  const ind=$('hep-ind').value;
+  const aptt=parseFloat($('hep-aptt').value)||60;
+  const recs={
+    'dvt-treat':`<strong>UFH — DVT/PE Terapi:</strong><br>Loading: ${r0(75*w)} unit IV (75 unit/kg) dalam 10 mnt<br>Infus: ${r0(20*w)} unit/jam (20 unit/kg/jam) → titrasi setiap 6 jam<br>Target aPTT: 60–85 dtk (atau anti-Xa 0.3–0.7 unit/mL)`,
+    'dvt-ppx':`<strong>UFH — Profilaksis:</strong><br>Infus: ${r0(10*w)} unit/jam (10 unit/kg/jam)<br>Atau: Heparin 5000 unit SC q8–12h (dewasa besar)`,
+    'crrt':`<strong>UFH — CRRT:</strong><br>Loading: ${r0(30*w)} unit IV<br>Infus: ${r0(10*w)}–${r0(15*w)} unit/jam (10–15 unit/kg/jam) via pre-filter<br>Target aPTT sirkuit: 45–60 dtk<br><em>Alternatif: Sitrat regional (Trisodium Citrate 4%)</em>`,
+    'ecmo':`<strong>UFH — ECMO:</strong><br>Loading: ${r0(100*w)} unit IV<br>Infus: ${r0(25*w)}–${r0(50*w)} unit/jam → titrasi setiap 1 jam<br>Target ACT: 180–200 dtk (atau anti-Xa 0.3–0.5 unit/mL)`,
+    'enox-treat':`<strong>Enoksaparin — Terapi:</strong><br>${w<2?`Neonatus: 1.5 mg/kg SC q12h`:`Anak: ${r2(1*w)} mg SC q12h (1 mg/kgBB)`}<br>Target anti-Xa 4h post-dose: 0.5–1.0 unit/mL`,
+    'enox-ppx':`<strong>Enoksaparin — Profilaksis:</strong><br>${w<2?`Neonatus: 0.75 mg/kg SC q12h`:`Anak: ${r2(0.5*w)} mg SC q12h (0.5 mg/kg)`}<br>Target anti-Xa: 0.1–0.3 unit/mL`
+  };
+  let titrasi='';
+  if(ind.includes('dvt')||ind.includes('crrt')){
+    if(aptt<50) titrasi='<br>⬆️ aPTT <50: Naik dosis 10%. Bolus ulang bila &lt;35.';
+    else if(aptt>100) titrasi='<br>⬇️ aPTT >100: Kurangi dosis 20%. Stop 1 jam bila &gt;120.';
+    else if(aptt>=60&&aptt<=85) titrasi='<br>✅ aPTT dalam target (60–85 dtk)';
+  }
+  $('hep-result').innerHTML=recs[ind]+(titrasi?titrasi:'');
+  $('hep-result').style.background='rgba(0,0,0,0.2)';$('hep-result').style.borderColor='rgba(255,255,255,0.06)';
+  show('res-hep');
+}
+
+function calcInsulin(){
+  const w=parseFloat($('ins-w').value)||20;
+  const gds=parseFloat($('ins-gds').value)||350;
+  const cond=$('ins-cond').value;
+  let result='';
+  if(cond==='dka'){
+    result=`<strong>DKA — Protocol:</strong><br>
+    1️⃣ <strong>Cairan:</strong> NS ${r0(10*w)} mL/kg dalam 1 jam → lanjut 1–1.5× maintenance<br>
+    2️⃣ <strong>Insulin:</strong> Mulai 1–2 jam SETELAH cairan. <strong>TIDAK ada bolus insulin pada anak!</strong><br>
+    → Infus insulin: ${r2(0.05*w)} unit/jam (0.05–0.1 unit/kg/jam)<br>
+    → Bila GDS <250 → tambahkan dextrose ke cairan IV<br>
+    3️⃣ Monitor K⁺ setiap 2 jam. Koreksi bila K <3.5 mEq/L SEBELUM insulin<br>
+    4️⃣ Target koreksi lambat: GDS turun maks 100 mg/dL/jam`;
+  } else if(cond==='stress'){
+    result=`<strong>Hiperglikemia Stres PICU (GDS ${gds} mg/dL):</strong><br>
+    Target GDS: 140–180 mg/dL (hindari hipoglikemia!)<br>
+    <strong>Insulin infus:</strong> ${r2(0.02*w)} unit/jam mulai → titrasi setiap jam<br>
+    Monitor GDS tiap 1–2 jam sampai stabil, lalu tiap 4 jam<br>
+    ${gds>300?'⚠️ GDS sangat tinggi → mulai lebih agresif, perhatikan osmolalitas':''}`;
+  } else {
+    result=`<strong>HHS (Hyperosmolar Hyperglycemic State):</strong><br>
+    ⚠️ JARANG pada anak. Dehidrasi lebih berat dari DKA.<br>
+    Cairan: NS → D5 NS bila GDS <300 → koreksi SANGAT lambat (48–72 jam)<br>
+    Insulin: ${r2(0.025*w)} unit/jam — dosis sangat rendah<br>
+    Target osmolalitas: turun maks 3 mOsm/kg/jam`;
+  }
+  $('ins-result').innerHTML=result;
+  $('ins-result').style.background='rgba(0,0,0,0.2)';$('ins-result').style.borderColor='rgba(255,255,255,0.06)';
+  show('res-ins');
+}
+
+// ── SEDATION ──
+function calcSedation(){
+  const w=parseFloat($('sed-w').value)||20;
+  const reg=$('sed-reg').value;
+  const recs={
+    standard:`<strong>Midazolam + Fentanil (Standard PICU):</strong><br>
+    💊 <strong>Midazolam:</strong> Bolus ${r2(0.1*w)} mg IV → Infus ${r2(0.05*w*60)} mg/jam (0.05–0.2 mg/kg/jam)<br>
+    💊 <strong>Fentanil:</strong> Bolus ${r2(1*w)} mcg IV → Infus ${r2(1*w*60)} mcg/jam (1–5 mcg/kg/jam)<br>
+    ⚠️ Target RASS -1 hingga -2 (light sedasi diutamakan)`,
+    dexmed:`<strong>Dexmedetomidine (Awake Sedation / Weaning):</strong><br>
+    💊 Loading: ${r2(1*w)} mcg (1 mcg/kg) dalam 10 mnt (opsional)<br>
+    💊 Infus: ${r2(0.2*w*60)} mcg/jam (0.2–1 mcg/kg/jam)<br>
+    ✅ Tidak depresi napas. Cocok untuk weaning ventilator.<br>
+    ⚠️ Bisa bradikardi — monitor HR`,
+    propofol:`<strong>Propofol (≥3 tahun, short-term ICU):</strong><br>
+    💊 Infus: ${r2(1*w*60)} mg/jam (1–4 mg/kg/jam) → maks 4 mg/kg/jam<br>
+    ⛔ TIDAK untuk anak &lt;3 thn. Durasi &lt;48 jam. Cek trigliserida tiap 24 jam.<br>
+    ⚠️ Propofol Infusion Syndrome (PRIS): asidosis metabolik + rabdomiolisis`,
+    ketamine:`<strong>Ketamin (Bronkospasme / Prosedur):</strong><br>
+    💊 Bolus: ${r0(2*w)} mg IV (1–2 mg/kg)<br>
+    💊 Infus: ${r0(1*w*60)} mg/jam (1–2 mg/kg/jam) untuk sedasi berkelanjutan<br>
+    ✅ Mempertahankan TD dan refleks jalan napas. Bronkodilasi.<br>
+    ⚠️ Atropin ${r2(Math.max(0.1,0.02*w))} mg pre-medication (hipersalivasi)`,
+    pain:`<strong>Analgesia-First (Awake / Minimal Sedasi):</strong><br>
+    💊 <strong>Fentanil:</strong> ${r2(1*w)} mcg IV q1-2h PRN atau infus ${r2(0.5*w*60)} mcg/jam<br>
+    💊 <strong>Morfin:</strong> ${r2(0.1*w)} mg IV q2-4h atau infus ${r2(0.01*w*60)} mg/jam<br>
+    💊 <strong>Parasetamol IV:</strong> ${r0(15*w)} mg (maks 1g) q6h<br>
+    💊 <strong>Ibuprofen:</strong> ${r0(10*w)} mg (maks 400 mg) q6-8h PO bila toleransi GI`,
+    delirium:`<strong>Delirium PICU — Haloperidol + Non-Farmakologi:</strong><br>
+    💊 <strong>Haloperidol:</strong> ${r2(0.05*w)} mg IV (0.05–0.15 mg/kg) q6h<br>
+    💊 <strong>Melatonin:</strong> 0.5–2 mg PO malam hari (sirkadian)<br>
+    ✅ Mobilisasi dini, orientasi, eksposur cahaya, kurangi restraint<br>
+    ⚠️ CAPS (Cornell Assessment Pediatric Delirium) monitoring`
+  };
+  $('sed-result').innerHTML=recs[reg]||'—';
+  $('sed-result').style.background='rgba(0,0,0,0.2)';$('sed-result').style.borderColor='rgba(255,255,255,0.06)';
+  show('res-sed');
+}
+
+function calcFLACC(){
+  let total=0;
+  for(let i=0;i<5;i++) total+=parseInt($(`flacc-${i}`)?.value||0);
+  $('flacc-score').textContent=total;
+  let interp;
+  if(total===0){interp='😊 Tidak nyeri — Relaksasi / tidur';}
+  else if(total<=3){interp='😐 Nyeri Ringan — Pemantauan; Intervensi non-farmakologi';}
+  else if(total<=6){interp='😣 Nyeri Sedang — Analgesik PRN; Comfort measures';}
+  else{interp='😭 Nyeri Berat — Analgesik segera! Titrasi opioid';}
+  $('flacc-interp').textContent=interp;
+  show('res-flacc');
+}
+
+function calcNMBA(){
+  const w=parseFloat($('nmba-w').value)||20;
+  const drug=$('nmba-drug').value;
+  const data={
+    succinylcholine:{dose:r1(1.5*w),conc:'20mg/mL',vol:r2(1.5*w/20),dur:'5–10 mnt',note:'⚠️ KONTRAINDIKASI: hiperkalemia, denervasi, miopati, luka bakar >24j, cedera mata terbuka, riwayat malignant hyperthermia.'},
+    rocuronium:{dose:r1(1.2*w),conc:'10mg/mL',vol:r2(1.2*w/10),dur:'30–60 mnt',note:'Pilihan utama RSI. Reversibel dengan Sugammadex 16 mg/kg bila perlu.'},
+    vecuronium:{dose:r2(0.1*w),conc:'1mg/mL',vol:r2(0.1*w),dur:'25–40 mnt',note:'Maintenance RSI atau blokade jangka sedang.'},
+    cisatracurium:{dose:r2(0.15*w),conc:'2mg/mL',vol:r2(0.15*w/2),dur:`Infus ${r2(1*w*0.003*60)} mg/jam (1–3 mcg/kg/mnt)`,note:'Pilihan ARDS: tidak tergantung fungsi hati/ginjal. Monitor TOF.'},
+    atracurium:{dose:r2(0.5*w),conc:'10mg/mL',vol:r2(0.5*w/10),dur:`Infus ${r2(5*w*0.006*60)} mg/jam (5–10 mcg/kg/mnt)`,note:'Laudanosine (metabolit) dapat menyebabkan kejang dosis besar.'}
+  };
+  const d=data[drug];
+  $('nmba-dose').textContent=d.dose+' mg';
+  $('nmba-vol').textContent=d.vol+' mL';
+  $('nmba-conc').textContent=d.conc;
+  $('nmba-dur').textContent=d.dur;
+  $('nmba-note').textContent=d.note;
+  $('nmba-note').style.display='flex';
+  show('res-nmba');
+}
+
+// ── SCORES ──
+function calcPELOD2(){
+  const scores=['p2-gcs','p2-pupil','p2-lac','p2-bp','p2-cr','p2-pf','p2-vent','p2-wbc','p2-plt'];
+  const total=scores.reduce((a,id)=>a+parseInt($(id)?.value||0),0);
+  const mortMap=[[0,0],[2,2],[4,5],[6,9],[8,16],[10,25],[12,38],[15,55],[20,75]];
+  let mort='~0%';
+  for(let [s,m] of mortMap){ if(total>=s) mort=m+'%'; }
+  $('pelod-score').textContent=total;
+  $('pelod-mort').textContent=mort;
+  $('pelod-mort').style.color=total>=8?'var(--alert)':total>=5?'var(--warn)':'var(--ok)';
+  let interp=total>=8?'🔴 Mortalitas tinggi (>25%). Evaluasi tujuan perawatan, ICU tiering.':
+             total>=5?'🟡 Mortalitas sedang. Monitoring intensif. Re-evaluasi tiap 24 jam.':
+             '🟢 Mortalitas rendah (<10%). Monitoring standar PICU.';
+  $('pelod-interp').textContent=interp;
+  show('res-pelod');
+}
+
+function calcPRISM(){
+  const sys=parseFloat($('pr-sys').value)||85;
+  const hr=parseFloat($('pr-hr').value)||130;
+  const age=parseFloat($('pr-age').value)||5;
+  const gcs=parseFloat($('pr-gcs').value)||12;
+  const pf=parseFloat($('pr-pf').value)||250;
+  const pt=parseFloat($('pr-pt').value)||14;
+  const cr=parseFloat($('pr-cr').value)||0.6;
+  const bili=parseFloat($('pr-bili').value)||1.2;
+  let score=0;
+  const minBP=age<1?55:age<5?65:age<12?75:85;
+  if(sys<minBP) score+=6;
+  if(hr>150&&age<1||hr>150&&age<5||hr>130&&age>=5) score+=4;
+  if(gcs<8) score+=6; else if(gcs<11) score+=2;
+  if(pf<100) score+=6; else if(pf<200) score+=4;
+  if(pt>22) score+=6;
+  if(cr>3.5) score+=6; else if(cr>1.5) score+=4;
+  if(bili>5) score+=6;
+  const mortMap=[[0,1],[5,5],[10,12],[15,25],[20,45],[25,70]];
+  let mort='<1%';
+  for(let [s,m] of mortMap){ if(score>=s) mort=m+'%'; }
+  $('prism-score').textContent=score;
+  $('prism-mort').textContent=mort;
+  $('prism-mort').style.color=score>=15?'var(--alert)':score>=10?'var(--warn)':'var(--ok)';
+  $('prism-cat').textContent=score>=15?'Risiko Sangat Tinggi':score>=10?'Risiko Tinggi':score>=5?'Risiko Sedang':'Risiko Rendah';
+  show('res-prism');
+}
+
+function calcSepsis(){
+  const age=parseFloat($('sep-age').value)||5;
+  const w=parseFloat($('sep-w').value)||20;
+  const temp=parseFloat($('sep-temp').value)||38;
+  const hr=parseFloat($('sep-hr').value)||120;
+  const rr=parseFloat($('sep-rr').value)||30;
+  const wbc=parseFloat($('sep-wbc').value)||12000;
+  const sys=parseFloat($('sep-sys').value)||90;
+  const minBP=age<1?70:age<10?r0(70+2*age):90;
+  const hrHigh=age<1?180:age<3?180:age<8?150:130;
+  const rrHigh=age<1?60:age<3?40:age<8?34:22;
+  const wbcHigh=age<1?34000:age<3?19500:age<8?15000:13000;
+  let sirs=0;
+  if(temp>38.5||temp<36) sirs++;
+  if(hr>hrHigh) sirs++;
+  if(rr>rrHigh) sirs++;
+  if(wbc>wbcHigh||wbc<4000) sirs++;
+  const isShock=sys<minBP;
+  let result='';
+  if(sirs>=2&&isShock){
+    result=`<div style="font-size:0.75rem;line-height:1.85">
+    ⛔ <strong>SEPTIC SHOCK</strong> (SIRS ${sirs} kriteria + hipotensi/hipoperfusi)<br>
+    🚨 "Hour-1 Bundle":<br>
+    1. Kulturdahl → Antibiotik broad spectrum DALAM 1 JAM<br>
+    2. NS ${r0(10*w)} mL (10 mL/kgBB) bolus 15 mnt → reassess (maks 40 mL/kg total)<br>
+    3. Norepinefrin mulai 0.05 mcg/kg/mnt bila BP tidak respons cairan<br>
+    4. Glukosa dan kalsium periksa<br>
+    5. Pertimbangkan: Intubasi (bila GCS turun atau WOB ↑), Central IV access
+    </div>`;
+  } else if(sirs>=2){
+    result=`<div style="font-size:0.75rem;line-height:1.85">
+    🟡 <strong>SEPSIS</strong> (SIRS ${sirs}/4 kriteria)<br>
+    Tanda SIRS: Suhu ${temp>38.5?'↑':'↓'} | HR ${hr>hrHigh?'↑':'-'} | RR ${rr>rrHigh?'↑':'-'} | WBC ${wbc>wbcHigh?'↑':wbc<4000?'↓':'-'}<br>
+    Tangani sumber infeksi, kultur, antibiotik dalam 3 jam, monitor produksi urin
+    </div>`;
+  } else {
+    result=`<div style="font-size:0.75rem;line-height:1.85">🟢 Tidak memenuhi kriteria SIRS (${sirs}/4). Monitor ketat bila klinis memburuk.</div>`;
+  }
+  $('sep-result').innerHTML=result;
+  $('sep-result').style.background=sirs>=2&&isShock?'rgba(255,59,59,0.1)':sirs>=2?'rgba(255,159,28,0.1)':'rgba(0,229,160,0.1)';
+  $('sep-result').style.borderColor=sirs>=2&&isShock?'rgba(255,59,59,0.3)':sirs>=2?'rgba(255,159,28,0.3)':'rgba(0,229,160,0.3)';
+  show('res-sep');
+}
+
+// ── FLUID & NUTRITION ──
+function calcMFpicu(){
+  const w=parseFloat($('mf-w').value)||20;
+  const cond=$('mf-cond').value;
+  const burn=parseFloat($('mf-burn').value)||0;
+  let base=w<=10?w*100:w<=20?(1000+(w-10)*50):(1500+(w-20)*20);
+  let mult=1,uo='0.5–1',type='NS 0.9% isotonik',notesText='';
+  if(cond==='ards'){mult=0.67;uo='0.5–1';notesText='Restriksi cairan pada ARDS: target balance ±0 atau negatif. Gunakan diuretik untuk mencapai target.';}
+  else if(cond==='raised-icp'){mult=1;uo='0.5–1';type='NS 0.9% — HINDARI hipotonik!';notesText='Euvolemia KETAT. Hindari hipoosmolalitas. Target Na normal-tinggi (140–150). HOB 30°.';}
+  else if(cond==='sepsis-resus'){mult=2;uo='1–2 (target resusitasi)';type='NS 0.9% / RL';notesText='Fase resusitasi: agresif, guided PALS. Setelah stabil → restriksi.';}
+  else if(cond==='post-resus'){mult=0.67;uo='0.5–1';notesText='Pasca resusitasi: restriksi untuk cegah fluid overload. Target FO <10%.';}
+  else if(cond==='burn'){
+    const parkland=r0(3*w*burn);
+    base=parkland;mult=1;type='Ringer Laktat (Parkland 3 mL×kg×%TBSA)';
+    notesText=`Luka bakar ${burn}%TBSA: ${parkland} mL dalam 24j. ½ dalam 8j pertama = ${r0(parkland/2)} mL (${r0(parkland/2/8)} mL/jam).`;
+  }
+  const total=r0(base*mult);
+  $('mf-total').textContent=total;
+  $('mf-rate').textContent=r1(total/24);
+  $('mf-uo').textContent=uo;
+  $('mf-type').textContent=type;
+  if(notesText){$('mf-notes').textContent=notesText;$('mf-notes').style.display='flex';}
+  else{$('mf-notes').style.display='none';}
+  show('res-mf');
+}
+
+function calcNutPICU(){
+  const w=parseFloat($('nut-w').value)||20;
+  const day=parseFloat($('nut-day').value)||1;
+  const status=$('nut-status').value;
+  let calPkg=status==='sepsis'?70:status==='malnourished'?90:60;
+  if(day>3) calPkg=status==='sepsis'?90:110;
+  const kcal=r0(calPkg*w);
+  const pro=r1((status==='malnourished'?2.5:status==='sepsis'?2:1.5)*w);
+  const en=r1(kcal/(24*1));
+  const gir=status==='sepsis'?5:6;
+  $('nut-kcal').textContent=kcal;
+  $('nut-prot').textContent=pro;
+  $('nut-en').textContent=en;
+  $('nut-gir').textContent=gir;
+  let notes=day<=2?`⚠️ Hari ${day}: mulai EN trofik dulu (10–20 mL/jam). Naikkan bertahap dalam 3–5 hari. Hindari overfeeding akut.`:'';
+  if(notes){$('nut-notes').textContent=notes;$('nut-notes').style.display='flex';}
+  else{$('nut-notes').style.display='none';}
+  show('res-nut');
+}
+
+// ── PROCEDURES ──
+function calcBurn(){
+  const w=parseFloat($('burn-w').value)||20;
+  const tbsa=parseFloat($('burn-tbsa').value)||25;
+  const h=parseFloat($('burn-h').value)||110;
+  const bsaVal=bsa(w,h);
+  const total=r0(3*w*tbsa);
+  const first8=r0(total/2);
+  const last16=r0(total-first8);
+  const maint=r0(1500*bsaVal);
+  $('burn-total').textContent=total;
+  $('burn-8h').textContent=first8;
+  $('burn-8h-rate').textContent=r0(first8/8)+' mL/jam';
+  $('burn-16h').textContent=last16;
+  $('burn-16h-rate').textContent=r0(last16/16)+' mL/jam';
+  $('burn-maint').textContent=maint;
+  show('res-burn');
+}
+
+function calcCSF(){
+  const gluCSF=parseFloat($('csf-glu').value)||45;
+  const gds=parseFloat($('csf-gds').value)||90;
+  const pro=parseFloat($('csf-pro').value)||80;
+  const ratio=r2(gluCSF/gds);
+  const gluStatus=ratio<0.5?'<span class="c-alert">Rendah (&lt;0.5)</span>':ratio<0.6?'<span class="c-warn">Borderline</span>':'<span class="c-ok">Normal (≥0.6)</span>';
+  const proStatus=pro>100?'<span class="c-alert">Tinggi</span>':pro>45?'<span class="c-warn">Sedang</span>':'<span class="c-ok">Normal</span>';
+  $('csf-ratio').textContent=ratio;
+  $('csf-ratio').style.color=ratio<0.5?'var(--alert)':ratio<0.6?'var(--warn)':'var(--ok)';
+  $('csf-glu-status').innerHTML=gluStatus;
+  $('csf-pro-status').innerHTML=proStatus;
+  let interp='';
+  if(ratio<0.5&&pro>100) interp='🔴 Pattern meningitis bakterial — antibiotik empiris SEGERA. Deksametason 0.6 mg/kg/hari IV × 4 hari.';
+  else if(ratio<0.5) interp='🟡 Glukosa CSS rendah — DD: meningitis bakteri, TB, fungi. Kultur CSS hasil dinantikan.';
+  else if(pro>100) interp='🟡 Protein CSS tinggi — periksa ulang dengan konteks klinis. GBS, meningitis viral berat?';
+  else interp='🟢 CSS tampak normal untuk glukosa dan protein. Evaluasi ulang bila klinis memburuk.';
+  $('csf-interp').innerHTML=`<div style="font-size:0.75rem;line-height:1.7">${interp}</div>`;
+  $('csf-interp').style.background='rgba(0,0,0,0.2)';$('csf-interp').style.borderColor='rgba(255,255,255,0.06)';
+  show('res-csf');
+}
+
+// ── INIT ──
+syncAll();
+setTimeout(()=>{
+  calcResus();calcEpi();calcDefib();calcAdo();calcAtr();
+  calcRSI();calcETT();calcVentPICU();calcOI();
+  calcShock();calcFluidResus();calcCO();
+  calcSyringe();calcHep();calcInsulin();
+  calcSedation();calcFLACC();calcNMBA();
+  calcPELOD2();calcPRISM();calcSepsis();
+  calcMFpicu();calcNutPICU();calcBurn();calcCSF();
+},200);
+</script>
+</body>
+</html>

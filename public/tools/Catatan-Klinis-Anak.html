@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<meta name="theme-color" content="#0f2a4a">
+<title>Catatan Klinis Dokter Anak</title>
+<style>
+:root{
+  --navy:#0f2a4a; --navy-2:#16385f; --navy-3:#1d4574;
+  --blue:#2563a8; --blue-soft:#3b7dc4;
+  --sky:#eef4fb; --sky-2:#e0ebf8; --sky-line:#cfe0f3;
+  --ink:#152233; --muted:#5d6f86; --muted-2:#8497ac;
+  --bg:#ffffff; --card:#ffffff; --field:#f4f8fd;
+  --warn-bg:#fff6e6; --warn-line:#f0c873; --warn-ink:#8a5a00;
+  --ok-bg:#e8f6ee; --ok-line:#9bd4b2; --ok-ink:#16633b;
+  --shadow:0 1px 2px rgba(15,42,74,.06),0 8px 24px rgba(15,42,74,.08);
+  --shadow-sm:0 1px 2px rgba(15,42,74,.08);
+  --r:16px; --r-sm:11px;
+  --serif:Georgia,'Iowan Old Style','Times New Roman',serif;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--sans); color:var(--ink); background:var(--bg);
+  font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+.wrap{max-width:880px;margin:0 auto;padding:0 16px 96px}
+
+/* ---------- Header ---------- */
+header{
+  position:sticky;top:0;z-index:50;
+  background:linear-gradient(165deg,var(--navy) 0%,var(--navy-3) 100%);
+  color:#fff;box-shadow:0 6px 22px rgba(15,42,74,.22);
+}
+.head-inner{max-width:880px;margin:0 auto;padding:14px 16px 16px}
+.brand{display:flex;align-items:center;gap:11px;cursor:pointer;user-select:none}
+.logo{
+  width:38px;height:38px;border-radius:11px;flex:0 0 38px;
+  background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.22);
+  display:flex;align-items:center;justify-content:center;
+}
+.logo svg{width:22px;height:22px}
+.brand h1{font-family:var(--serif);font-size:19px;font-weight:600;margin:0;letter-spacing:.2px;line-height:1.15}
+.brand p{margin:1px 0 0;font-size:11.5px;color:rgba(255,255,255,.72);letter-spacing:.3px}
+.search-box{position:relative;margin-top:13px}
+.search-box svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:18px;height:18px;opacity:.5}
+#q{
+  width:100%;padding:12px 38px 12px 40px;border:none;border-radius:12px;
+  font-size:15px;font-family:var(--sans);background:#fff;color:var(--ink);
+  box-shadow:0 3px 10px rgba(0,0,0,.12);
+}
+#q::placeholder{color:#9bacc2}
+#q:focus{outline:2px solid var(--blue-soft);outline-offset:1px}
+.clearq{position:absolute;right:8px;top:50%;transform:translateY(-50%);
+  border:none;background:#e7eef7;color:#5d6f86;width:26px;height:26px;border-radius:50%;
+  font-size:16px;line-height:1;cursor:pointer;display:none}
+.clearq.show{display:block}
+
+/* ---------- Section title ---------- */
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--blue);margin:26px 2px 12px}
+.hello{margin:22px 2px 4px}
+.hello .k{font-family:var(--serif);font-size:23px;font-weight:600;color:var(--navy)}
+.hello .s{font-size:13.5px;color:var(--muted);margin-top:2px}
+
+/* ---------- Division grid ---------- */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+@media(min-width:620px){.grid{grid-template-columns:1fr 1fr 1fr}}
+.dcard{
+  position:relative;background:var(--card);border:1px solid var(--sky-line);border-radius:var(--r);
+  padding:15px 14px 14px;cursor:pointer;transition:.16s;box-shadow:var(--shadow-sm);overflow:hidden;
+}
+.dcard:active{transform:scale(.975)}
+.dcard:hover{border-color:var(--blue-soft);box-shadow:var(--shadow)}
+.dcard .num{
+  position:absolute;top:10px;right:12px;font-family:var(--serif);font-size:30px;font-weight:700;
+  color:var(--sky-2);line-height:1
+}
+.dcard .ic{width:36px;height:36px;border-radius:10px;background:var(--sky);display:flex;align-items:center;justify-content:center;margin-bottom:30px}
+.dcard .ic svg{width:21px;height:21px;color:var(--blue)}
+.dcard h3{margin:0;font-size:15px;font-weight:700;color:var(--navy);line-height:1.2}
+.dcard .full{margin:2px 0 0;font-size:11.5px;color:var(--muted)}
+.dcard .cnt{margin-top:7px;font-size:11px;color:var(--blue);font-weight:600}
+
+/* feature tile (kalkulator) */
+.tile{
+  display:flex;align-items:center;gap:13px;background:linear-gradient(120deg,var(--navy) 0%,var(--blue) 130%);
+  color:#fff;border-radius:var(--r);padding:15px 16px;cursor:pointer;transition:.16s;
+  box-shadow:0 8px 22px rgba(20,49,95,.28);margin-bottom:6px
+}
+.tile:active{transform:scale(.985)}
+.tile .ti{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;flex:0 0 42px}
+.tile .ti svg{width:23px;height:23px}
+.tile h3{margin:0;font-size:16px;font-weight:700}
+.tile p{margin:2px 0 0;font-size:12.5px;color:rgba(255,255,255,.82)}
+.tile .arr{margin-left:auto;opacity:.8}
+
+/* ---------- Back bar ---------- */
+.back{display:inline-flex;align-items:center;gap:7px;margin:18px 0 4px;color:var(--blue);
+  background:none;border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans);padding:6px 2px}
+.back svg{width:17px;height:17px}
+.dhead{margin:6px 2px 8px}
+.dhead .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:#fff;background:var(--blue);padding:3px 9px;border-radius:20px}
+.dhead h2{font-family:var(--serif);font-size:25px;font-weight:600;color:var(--navy);margin:10px 0 2px;line-height:1.15}
+.dhead .full{font-size:13px;color:var(--muted);margin:0}
+
+/* ---------- Section accordion ---------- */
+.sec{background:var(--card);border:1px solid var(--sky-line);border-radius:var(--r);margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow-sm)}
+.sec-h{display:flex;align-items:center;gap:10px;padding:14px 15px;cursor:pointer;user-select:none}
+.sec-h .dot{width:7px;height:7px;border-radius:50%;background:var(--blue);flex:0 0 7px}
+.sec-h h4{margin:0;font-size:15px;font-weight:700;color:var(--navy);flex:1;line-height:1.3}
+.sec-h .chev{width:20px;height:20px;color:var(--muted-2);transition:transform .22s;flex:0 0 20px}
+.sec.open .sec-h .chev{transform:rotate(180deg)}
+.sec-b{display:none;padding:2px 15px 16px}
+.sec.open .sec-b{display:block}
+.sec.open .sec-h h4{color:var(--blue)}
+
+/* content blocks */
+.blk{margin:11px 0 0}
+.blk:first-child{margin-top:6px}
+.sub{font-size:12.5px;font-weight:700;color:var(--navy-3);text-transform:uppercase;letter-spacing:.4px;margin:14px 0 2px}
+p.txt{margin:0;font-size:14.5px;color:var(--ink)}
+ul.lst{margin:4px 0 0;padding-left:2px;list-style:none}
+ul.lst li{position:relative;padding-left:18px;font-size:14.5px;margin:5px 0;color:var(--ink)}
+ul.lst li::before{content:"";position:absolute;left:3px;top:9px;width:5px;height:5px;border-radius:50%;background:var(--blue-soft)}
+.formula{background:var(--sky);border:1px solid var(--sky-line);border-left:3px solid var(--blue);
+  border-radius:8px;padding:9px 12px;font-size:14px;color:var(--navy-2);margin:8px 0 0;
+  font-variant-numeric:tabular-nums}
+.formula b{color:var(--navy)}
+.warn{background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:10px;padding:10px 12px 10px 36px;
+  position:relative;font-size:13.5px;color:var(--warn-ink);margin:9px 0 0;line-height:1.45}
+.warn::before{content:"⚠";position:absolute;left:12px;top:9px;font-size:15px}
+.note{font-size:13px;color:var(--muted);margin:7px 0 0;font-style:italic}
+
+/* table */
+.tw{overflow-x:auto;margin:9px 0 0;-webkit-overflow-scrolling:touch;border-radius:10px;border:1px solid var(--sky-line)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:100%}
+thead th{background:var(--navy);color:#fff;text-align:left;padding:9px 11px;font-weight:600;white-space:nowrap;font-size:12.5px}
+tbody td{padding:9px 11px;border-top:1px solid var(--sky-line);vertical-align:top;color:var(--ink)}
+tbody tr:nth-child(even) td{background:var(--sky)}
+tbody td:first-child{font-weight:600;color:var(--navy-2)}
+
+/* ---------- Search results ---------- */
+.rescount{font-size:13px;color:var(--muted);margin:16px 2px 8px}
+.rescard{background:var(--card);border:1px solid var(--sky-line);border-radius:var(--r-sm);padding:13px 15px;margin-bottom:9px;cursor:pointer;box-shadow:var(--shadow-sm);transition:.14s}
+.rescard:active{transform:scale(.985)}
+.rescard:hover{border-color:var(--blue-soft)}
+.rescard .d{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--blue)}
+.rescard h4{margin:3px 0 3px;font-size:15px;color:var(--navy);font-weight:700}
+.rescard p{margin:0;font-size:13px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+mark{background:#ffe9a8;color:inherit;padding:0 1px;border-radius:3px}
+.empty{text-align:center;color:var(--muted);padding:50px 20px;font-size:14.5px}
+.empty svg{width:44px;height:44px;opacity:.35;margin-bottom:10px}
+
+/* ---------- Calculator ---------- */
+.calc-cat{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted-2);margin:18px 2px 8px}
+.calc-li{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--sky-line);
+  border-radius:var(--r-sm);padding:13px 14px;margin-bottom:8px;cursor:pointer;box-shadow:var(--shadow-sm);transition:.14s}
+.calc-li:active{transform:scale(.985)}
+.calc-li:hover{border-color:var(--blue-soft)}
+.calc-li .ci{width:34px;height:34px;border-radius:9px;background:var(--sky);display:flex;align-items:center;justify-content:center;flex:0 0 34px;font-weight:800;color:var(--blue);font-size:15px}
+.calc-li h4{margin:0;font-size:14.5px;color:var(--navy);font-weight:700}
+.calc-li p{margin:1px 0 0;font-size:12px;color:var(--muted)}
+.calc-li .arr{margin-left:auto;color:var(--muted-2)}
+
+.calc-card{background:var(--card);border:1px solid var(--sky-line);border-radius:var(--r);padding:18px 16px;box-shadow:var(--shadow);margin-top:6px}
+.calc-card h3{font-family:var(--serif);font-size:20px;color:var(--navy);margin:0 0 3px}
+.calc-card .desc{font-size:13px;color:var(--muted);margin:0 0 15px}
+.field{margin-bottom:13px}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--navy-2);margin-bottom:5px}
+.field .unit{color:var(--muted);font-weight:400}
+.field input,.field select{
+  width:100%;padding:11px 12px;border:1.5px solid var(--sky-line);border-radius:10px;
+  font-size:16px;font-family:var(--sans);background:var(--field);color:var(--ink)
+}
+.field input:focus,.field select:focus{outline:none;border-color:var(--blue);background:#fff}
+.result{margin-top:6px;background:linear-gradient(120deg,var(--navy),var(--navy-3));color:#fff;
+  border-radius:12px;padding:15px 16px}
+.result .rl{font-size:12px;color:rgba(255,255,255,.7);letter-spacing:.4px}
+.result .rv{font-family:var(--serif);font-size:27px;font-weight:700;line-height:1.1;margin-top:2px;font-variant-numeric:tabular-nums}
+.result .rv small{font-size:15px;font-weight:600;opacity:.85}
+.result .rsub{font-size:12.5px;color:rgba(255,255,255,.78);margin-top:6px;line-height:1.4}
+.calc-note{font-size:12.5px;color:var(--muted);margin-top:13px;line-height:1.5;border-top:1px solid var(--sky-line);padding-top:11px}
+
+/* footer disclaimer */
+.disc{margin-top:26px;font-size:11.5px;color:var(--muted-2);text-align:center;line-height:1.5;padding:0 8px}
+.disc b{color:var(--muted)}
+
+.hidden{display:none!important}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+#view>*{animation:fade .22s ease}
+</style>
+</head>
+<body>
+<header>
+  <div class="head-inner">
+    <div class="brand" onclick="goHome()">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4M16 2v4M5 9h14M9 14h6M12 11v6"/><rect x="4" y="5" width="16" height="16" rx="3"/></svg>
+      </div>
+      <div>
+        <h1>Catatan Klinis Anak</h1>
+        <p>Referensi cepat PPDS &middot; offline</p>
+      </div>
+    </div>
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" inputmode="search" autocomplete="off" placeholder="Cari obat, rumus, kondisi..." />
+      <button class="clearq" id="clearq" aria-label="Hapus">&times;</button>
+    </div>
+  </div>
+</header>
+<main class="wrap"><div id="view"></div>
+  <p class="disc"><b>Catatan Klinis Dokter Anak</b> &mdash; ringkasan pribadi untuk pembelajaran &amp; pengingat bedside. Selalu verifikasi dosis dengan protokol setempat, sediaan aktual, dan pertimbangan klinis. Sumber: catatan PPDS IKA.</p>
+</main>
+<script>
+/* ============ ICONS ============ */
+const IC = {
+  nicu:'<path d="M9 18a3 3 0 0 0 6 0M12 2a4 4 0 0 0-4 4c0 2 1 3 1 5v3h6v-3c0-2 1-3 1-5a4 4 0 0 0-4-4Z"/>',
+  picu:'<path d="M3 12h4l2-5 4 12 2-7h6"/>',
+  hemato:'<path d="M12 2s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11Z"/>',
+  kardio:'<path d="M20.8 5.6a5 5 0 0 0-7.1 0L12 7.3l-1.7-1.7a5 5 0 0 0-7.1 7.1L12 21l8.8-8.3a5 5 0 0 0 0-7.1Z"/>',
+  gastro:'<path d="M12 3v5M9 8c-3 1-5 3-5 7a5 5 0 0 0 10 0c0-2 1-3 3-3a2 2 0 0 1 0 4"/>',
+  nutrisi:'<path d="M3 2v7c0 1.7 1.3 3 3 3s3-1.3 3-3V2M6 12v10M18 2c-2 0-3 3-3 6s1 4 3 4 3-1 3-4-1-6-3-6ZM18 12v10"/>',
+  neuro:'<path d="M9.5 2A4.5 4.5 0 0 0 5 6.5c0 1-1 1.5-1 3 0 1 .5 1.5.5 2.5S4 14 4 15a3 3 0 0 0 5.5 1.7M9.5 2a3 3 0 0 1 3 3v13a3 3 0 0 1-3 3"/>',
+  respi:'<path d="M12 2v8M9 7c0-2.8-2-5-4.5-5C3 2 2 4 2 7c0 5 2.5 8 4.5 8 1.5 0 2.5-1.5 2.5-4M15 7c0-2.8 2-5 4.5-5C21 2 22 4 22 7c0 5-2.5 8-4.5 8-1.5 0-2.5-1.5-2.5-4"/>',
+  endo:'<path d="M12 2a5 5 0 0 1 5 5c0 3-2 4-2 7v3H9v-3c0-3-2-4-2-7a5 5 0 0 1 5-5ZM9 21h6"/>',
+  nefro:'<path d="M12 3C8 3 5 6 5 10c0 5 4 8 7 11 3-3 7-6 7-11 0-4-3-7-7-7Z"/><path d="M9 11c1.5-2 4.5-2 6 0"/>',
+  infeksi:'<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
+  alergi:'<path d="M12 2 4 5v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V5l-8-3Z"/><path d="m9 12 2 2 4-4"/>',
+  pedsos:'<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 20c0-2 .8-3.8 2-5"/>'
+};
+
+/* ============ DATA ============ */
+const DATA = [
+/* 1 NICU */
+{id:'nicu',name:'NICU',full:'Neonatal Intensive Care Unit',icon:'nicu',sec:[
+  {t:'Heparin Flush — Pengenceran',b:[
+    {p:'Tujuan: menjaga kepatenan jalur infus agar tidak tersumbat.'},
+    {sub:'Larutan Heparin 10 unit/mL'},
+    {list:['Ambil 0,1 mL heparin (konsentrasi 1000 unit/mL)','Tambahkan 9,9 mL NaCl 0,9%','Hasil: 10 mL larutan = 10 unit/mL (siap pakai)']}
+  ]},
+  {t:'Koreksi Bikarbonat (Bicnat / Meylon)',b:[
+    {formula:'<b>0,3 × BE × BB</b> → habis dalam 24 jam'},
+    {p:'Contoh: BB 2,1 kg, BE 6 → 0,3 × 6 × 2,1 = 3,78 mEq.'},
+    {list:['Jika melalui CVC: encerkan 1:1 dengan D5%/D10%']},
+    {formula:'Rumus alternatif NICU: <b>0,6 × BB × BE</b> dalam D10% (dikali 5) → habis 24 jam'}
+  ]},
+  {t:'Koreksi Hiponatremia',b:[
+    {formula:'Rumus cepat: <b>6 mmol/kgBB</b> dilarutkan dalam <b>20 mL/kgBB</b> Dextrose 10%'},
+    {list:['2 mL NaCl 3% = 1 mEq Natrium','Contoh: BB 2,115 kg → koreksi 6 × 2,115 = 12,69 mEq','Campur ±30 mL NaCl 3% dalam 40 mL D10% → habis dalam 6 jam']},
+    {warn:'Koreksi Na cepat bisa pakai NaCl 3% via PICC. Koreksi JANGAN > 10 mEq/L per 24 jam.'}
+  ]},
+  {t:'Koreksi Hipoalbuminemia',b:[
+    {formula:'<b>(Target Albumin − Albumin Sekarang) × 0,8 × 4 × BB</b>'},
+    {list:['Plasbumin 25% → kalikan 4','Plasbumin 5% → kalikan 20']}
+  ]},
+  {t:'Koreksi Magnesium Sulfat 20%',b:[
+    {list:['Sediaan MgSO4 20% = 200 mg/mL','Kebutuhan (gram) ÷ 200 = jumlah mL diberikan per 6 jam']}
+  ]},
+  {t:'Transfusi Darah & Komponen Darah',b:[
+    {table:{head:['Komponen','Dosis','Durasi','Frekuensi'],rows:[
+      ['PRC','20 mL/kgBB','Sesuai kondisi','1 kali'],
+      ['FFP','15 mL/kgBB','Sesuai kondisi','1 kali'],
+      ['TC (Trombosit)','15 mL/kgBB','Sesuai kondisi','3 hari']]}},
+    {warn:'Transfusi berulang (≥2x) dapat menyebabkan hiperferritinemia → tunda Fe hingga usia 2 bulan, atau periksa ferritin dahulu.'}
+  ]},
+  {t:'Pemberian Zat Besi (Fe) — Prematur & BBLR',b:[
+    {list:['Dosis: 3 mg/kgBB/hari oral','Mulai usia 1 bulan, KECUALI transfusi ≥2x → tunda hingga 2 bulan','Tanpa fasilitas cek ferritin: tunggu hingga 2 bulan agar ferritin menurun','Contoh BB 1,3 kg → Ferlin drops (15 mg Fe/mL), hitung sesuai BB']}
+  ]},
+  {t:'Vitamin & Suplemen Rutin',b:[
+    {table:{head:['Obat','Dosis','Rute','Keterangan'],rows:[
+      ['Zamel','1 mL/24 jam','Oral','Vitamin D'],
+      ['Apyalis','0,6 mL/24 jam','Oral','Vit D (sesuai target kadar)'],
+      ['Ferlin drops','0,3 mL/24 jam','Oral','Zat besi (mulai usia 1 bln)']]}},
+    {sub:'Vitamin K'},
+    {list:['Injeksi Vit K: 3 hari berturut-turut pada BBL','Tujuan: mencegah HDN (Hemorrhagic Disease of the Newborn)']},
+    {sub:'Antikoagulan'},
+    {list:['Clopidogrel (CPG): 0,2 mg/kgBB/hari']}
+  ]},
+  {t:'Nutrisi Neonatus — Kalori Susu / mL',b:[
+    {table:{head:['Jenis Susu','Kalori/mL','Keterangan'],rows:[
+      ['ASI','0,67 kkal','Standar 20'],
+      ['Sufor BBLR','0,8 kkal','Standar 24, prematur'],
+      ['Nutramigen','—','BBLR pasca operasi']]}},
+    {list:['Kenaikan BB minimal: 15 g/kgBB/hari','GIR minimal: 4–6 mg/kgBB/menit']}
+  ]},
+  {t:'Menghitung GIR (Glucose Infusion Rate)',b:[
+    {sub:'Dari Infus IV'},
+    {formula:'Rumus 1: <b>[0,167 × Kecepatan(mL/jam) × %Dextrose] ÷ BB</b>'},
+    {formula:'Rumus 2: <b>[Kecepatan(mL/jam) × %Dextrose] ÷ (6 × BB)</b>'},
+    {sub:'Dari Minum Oral'},
+    {formula:'<b>(Total minum 24 jam ÷ 24) × 7 (ASI) atau 8 (SF) ÷ BB ÷ 6</b>'}
+  ]},
+  {t:'Balance Cairan & IWL',b:[
+    {formula:'IWL = <b>BB × 26</b> (dalam inkubator/modalitas) atau <b>BB × 20</b> (tanpa modalitas)'},
+    {formula:'Balance = <b>Total masuk − Total keluar − IWL</b>'},
+    {list:['Target balance: ±20 mL/kgBB/24 jam','< 20 mL/kgBB → risiko AKI','> 20 mL/kgBB → risiko overload cairan','Produksi urin normal: 1–3 mL/kgBB/jam (poliuria jika >3)']},
+    {warn:'Untuk menghitung kebutuhan cairan & minum, gunakan berat badan TERBERAT yang pernah tercatat.'}
+  ]},
+  {t:'Kurva Pertumbuhan Bayi',b:[
+    {table:{head:['Kondisi','Kurva'],rows:[
+      ['Prematur < 40 minggu','Fenton (plot tiap minggu)'],
+      ['≥ 40 mgg / BBLR / 0–2 bln','WHO Z-score 0–2 bln (per minggu)'],
+      ['Setelah 40 mgg koreksi','WHO Z-score 0–6 bulan']]}},
+    {sub:'Cara Plot Fenton'},
+    {list:['Lahir < persentil 10: arahkan BB masuk antara persentil 10–90','Lahir di persentil 10–90: ikuti alur persentil 50 sebagai target']}
+  ]},
+  {t:'Penurunan BB Fisiologis BBL',b:[
+    {table:{head:['Hari ke-','Penurunan Normal'],rows:[
+      ['Hari 1','3–5%'],['Hari 2','2–3%'],['Hari 3','Maksimal 10% dari BB lahir']]}}
+  ]},
+  {t:'Kateter Umbilikus & ETT',b:[
+    {table:{head:['Parameter','Rumus / Target'],rows:[
+      ['Kedalaman kateter umbilikalis','1,5 × BB + 5,5 cm'],
+      ['Posisi ujung kateter','Setinggi Thorakal 8–10 (X-ray)'],
+      ['Ukuran ETT','Usia gestasi ÷ 10'],
+      ['Kedalaman ETT','BB + 6 cm']]}},
+    {sub:'Posisi Ideal Alat (X-ray)'},
+    {table:{head:['Device','Posisi Ideal'],rows:[
+      ['Endotracheal Tube','T1–T3 (1–2 cm di atas carina)'],
+      ['Umbilical venous line','0,5–1 cm di atas diafragma (IVC–RA)'],
+      ['Umbilical arterial (High)','T6–T10'],
+      ['Umbilical arterial (Low)','L3–L4'],
+      ['PICC (Upper limb)','T3–T5 (SVC–RA)'],
+      ['PICC (Lower limb)','T8–T10 (IVC)']]}}
+  ]},
+  {t:'Surfaktan',b:[
+    {sub:'Fungsi'},
+    {list:['Menurunkan tegangan permukaan alveoli','Mencegah kolaps alveoli saat ekspirasi','Meningkatkan komplians paru','Memfasilitasi rekrutmen alveolus kolaps','Menurunkan kebutuhan O₂ & meningkatkan oksigenasi','Menurunkan kebocoran udara & meningkatkan keselamatan']},
+    {sub:'Waktu Pemberian'},
+    {list:['Idealnya DALAM 8 jam pertama kelahiran','> 8 jam: sebagian alveolus kolaps, sebagian baik → beda tegangan → risiko PNEUMOTHORAKS']},
+    {warn:'Indikasi profilaksis segera: Down Score tinggi, usia gestasi <32 minggu. Berikan dosis maintenance langsung.'}
+  ]},
+  {t:'Capneu (Kafein Sitrat)',b:[
+    {formula:'Loading <b>20 mg/kgBB</b> → maintenance <b>5 mg/kgBB</b>'},
+    {list:['Indikasi: usia gestasi <32 minggu','Berikan langsung dosis maintenance (tanpa loading khusus)','Lanjutkan hingga usia 34–40 minggu PMA','Efek samping: takikardia, perdarahan']},
+    {sub:'Apnea of Prematurity'},
+    {list:['Definisi: napas berhenti >20 detik, atau <20 detik disertai desaturasi/bradikardia','Periodic breathing: henti napas <20 detik, tanpa bradikardia/desaturasi (NORMAL pada prematur)','Penyebab tersering: obstruktif (posisi bayi — midline / semi-ekstensi)']}
+  ]},
+  {t:'Setting Ventilator',b:[
+    {formula:'Delta Support = <b>PIP − PEEP</b> (delta support harus < hasil ini)'},
+    {p:'Contoh: PIP 15, PEEP 5 → Delta 10 → delta support harus <10.'},
+    {list:['Target PCO₂ anak & bayi: 35–45 mmHg; pH tidak boleh <7,25']},
+    {sub:'Koreksi RR'},
+    {formula:'<b>(PCO₂ sebelum ÷ PCO₂ target) × RR saat ini</b>'}
+  ]},
+  {t:'Hipoglikemia — 3 Mekanisme',b:[
+    {list:['Cadangan glikogen kurang (prematur, BBLR)','Utilisasi glukosa berlebihan (infeksi, hipotermia)','Hiperinsulinemia (IDM, Beckwith-Wiedemann)']}
+  ]},
+  {t:'Klasifikasi Bayi Prematur',b:[
+    {table:{head:['Kategori','Usia Gestasi'],rows:[
+      ['Early Preterm','< 28 minggu'],['Very Preterm','28–32 minggu'],
+      ['Moderately Preterm','32–34 minggu'],['Late Preterm','34–36 minggu']]}}
+  ]},
+  {t:'Deksametason Pra-Ekstubasi',b:[
+    {list:['Dosis profilaksis: 250 mcg/kgBB/8 jam → 3 dosis','Tujuan: mengurangi edema subglotis agar ekstubasi berhasil']}
+  ]},
+  {t:'Interpretasi Foto Thoraks Bayi',b:[
+    {sub:'Syarat Layak Dibaca (MIMICS)'},
+    {list:['Marker: identitas & lateralisasi lengkap','Inspirasi cukup: tampak 7–8 kosta posterior / 5–6 anterior','Integritas: mengisi seluruh hemitoraks','Cahaya: tampak vertebra Th3/4, di bawahnya putih','Simetris kiri & kanan']},
+    {sub:'Urutan Interpretasi (ABCDE)'},
+    {list:['A – Airway: posisi trakea & bronkus','B – Bones: tulang intak','C – Cardiac: CTR, bentuk jantung','D – Diaphragm: bentuk kubah, mendatar?','E – Else: temuan lain']},
+    {warn:'Foto terlalu terang → infiltrat palsu. Foto terlalu gelap → kelainan tersembunyi.'}
+  ]}
+]},
+/* 2 PICU */
+{id:'picu',name:'PICU',full:'Pediatric Intensive Care Unit',icon:'picu',sec:[
+  {t:'Obat Vasoaktif — Dosis & Pengenceran',b:[
+    {table:{head:['Obat','Rentang Dosis','Rumus mL/jam'],rows:[
+      ['Epinefrin (kontinu)','0,05–0,3 mcg/kgBB/mnt','Dosis × BB × 60 ÷ 100'],
+      ['Norepinefrin','0,05–0,3 mcg/kgBB/mnt','Dosis × BB × 60 ÷ 80'],
+      ['Dopamin','2–10 mcg/kgBB/mnt','Dosis × BB × 60 ÷ 4.000'],
+      ['Dobutamin','5–10 mcg/kgBB/mnt','Dosis × BB × 60 ÷ 5.000']]}}
+  ]},
+  {t:'Nikardipin (Hipertensi)',b:[
+    {list:['Pengenceran: 10 mL Nikardipin + 40 mL NaCl 0,9%']},
+    {formula:'<b>Dosis × BB × 50 × 60 ÷ 10.000</b> = mL/jam'},
+    {p:'Contoh: dosis 2,5 mcg, BB 18 kg → 2,5 × 18 × 50 × 60 ÷ 10.000 = 13,5 mL/jam.'}
+  ]},
+  {t:'Hiperkalemia',b:[
+    {table:{head:['Kadar Kalium','Tatalaksana'],rows:[
+      ['> 6,5 mEq/L','Insulin 0,1 IU/kgBB + D40% 1 mL/kgBB → habis 1 jam'],
+      ['6,0–6,5 mEq/L','Nebulisasi Salbutamol (Ventolin) 3 kali']]}}
+  ]},
+  {t:'PCO₂ & Koreksi RR di Ventilator',b:[
+    {list:['Target PCO₂ anak: 35–45 mmHg; pH tidak boleh <7,25']},
+    {formula:'Koreksi RR = <b>(PCO₂ terukur ÷ PCO₂ target) × RR saat ini</b>'}
+  ]},
+  {t:'IVIG (Imunoglobulin Intravena)',b:[
+    {list:['Dosis: 1 g/kgBB IV','Pengenceran IVIG 5%: 1 g/kgBB = 20 mL/kgBB']},
+    {sub:'Kecepatan Pemberian (Bertahap)'},
+    {table:{head:['Durasi','Kecepatan'],rows:[
+      ['30 menit ke-1','0,5 mg/kgBB/mnt (0,01 mL/kgBB/mnt)'],
+      ['30 menit ke-2','1 mg/kgBB/mnt (0,02 mL/kgBB/mnt)'],
+      ['30 menit ke-3','2 mg/kgBB/mnt (0,04 mL/kgBB/mnt)'],
+      ['30 menit ke-4','3 mg/kgBB/mnt (0,06 mL/kgBB/mnt)'],
+      ['Selanjutnya','4 mg/kgBB/mnt (0,08 mL/kgBB/mnt) s.d. selesai']]}}
+  ]},
+  {t:'ARDS pada Anak (Kriteria Berlin)',b:[
+    {table:{head:['Parameter','Non-Invasif','Invasif (AGD)'],rows:[
+      ['Rasio','SF = SaO₂ ÷ FiO₂','PF = PaO₂ ÷ FiO₂'],
+      ['Mild','SF ≤ 264','PF ≤ 300']]}},
+    {sub:'FiO₂ berdasarkan Modalitas'},
+    {table:{head:['Modalitas','FiO₂'],rows:[
+      ['Nasal kanul','0,3–0,4'],['Simple mask','0,6'],
+      ['Non-rebreather (NRM)','0,8'],['Jackson-Rees / Sungkup','0,8'],['Intubasi (ventilator)','1,0']]}},
+    {sub:'OSI & OI'},
+    {formula:'OSI (tanpa AGD) = <b>FiO₂ × MAP × 100 ÷ SaO₂</b>'},
+    {formula:'OI (dengan AGD) = <b>FiO₂ × MAP ÷ PaO₂</b>'},
+    {table:{head:['Derajat','OSI','OI'],rows:[
+      ['Mild','5–7,5','4–8'],['Moderate','7,5–12,3','8–16'],['Severe','≥ 12,3','> 16']]}},
+    {formula:'MAP ventilator = <b>[(Ti × PIP) + (Te × PEEP)] ÷ (Ti + Te)</b>'}
+  ]}
+]},
+/* 3 HEMATO */
+{id:'hemato',name:'Hemato-Onkologi',full:'Hematologi & Onkologi',icon:'hemato',sec:[
+  {t:'Nilai Normal Hemoglobin per Usia',b:[
+    {p:'Anemia = kadar Hb di bawah nilai normal sesuai usia.'},
+    {table:{head:['Usia','Hb Normal (g/dL)'],rows:[
+      ['Tali pusar (BBL)','13,5 – 18,5'],['1–3 hari','14,5 – 22,5'],
+      ['2–3 bulan','9,0 – 12,5'],['6 bln – 6 thn','11,0 – 14,0'],
+      ['6–12 tahun','12,0 – 15,5'],['13–18 tahun','≥ 13,0']]}}
+  ]},
+  {t:'Klasifikasi Anemia berdasarkan Penyebab',b:[
+    {table:{head:['Mekanisme','Jenis','Contoh'],rows:[
+      ['Kehilangan darah','Pasca perdarahan','Perdarahan akut/masif (>30%)'],
+      ['Penghancuran SDM','Hemolitik','Thalasemia, G6PD, SLE'],
+      ['Kegagalan produksi','Aplastik','Obat, infeksi, radiasi'],
+      ['Desakan sumsum','Leukemia','Limfoblastik, mieloblastik'],
+      ['Defisiensi bahan baku','Defisiensi','Fe, B12, asam folat'],
+      ['Penyakit kronik','APK','Infeksi kronik, gagal ginjal, PEM']]}}
+  ]},
+  {t:'Pendekatan Diagnosis (MCV/MCH)',b:[
+    {table:{head:['Morfologi','DD','Petunjuk'],rows:[
+      ['Mikrositik hipokrom','ADB, APK, Thalasemia, Pb','Ferritin <30 → ADB; >100 → APK'],
+      ['Normositik + Ret↑','Hemolitik','ADT: fragmentasi, sferosit, normoblast'],
+      ['Normositik + Ret↓','Aplastik, Leukemia','Cek BMP'],
+      ['Makrositik','Megaloblastik','Cek B12 & asam folat']]}},
+    {sub:'Indeks Mentzer (MCV ÷ Eritrosit)'},
+    {list:['> 13 → Anemia Defisiensi Besi (ADB)','< 13 → Thalasemia atau APK']}
+  ]},
+  {t:'Target Hb untuk Transfusi PRC',b:[
+    {table:{head:['Kondisi','Target Hb (g/dL)'],rows:[
+      ['APK','10'],['ADB / Hiperleukositosis','8'],['Aplastik','9–9,5'],['CML','8'],
+      ['Persiapan kemoterapi','9'],['Thalasemia/keganasan','Sesuai usia (transfusi bila <9)'],
+      ['Operasi minor','10'],['Operasi besar','12']]}},
+    {formula:'Volume PRC (mL) = <b>ΔHb × 4 × BB</b>'},
+    {p:'Contoh: Hb 6,8 → target 11, BB 12 kg → (11−6,8) × 4 × 12 = 201,6 mL. Berikan bertahap: Tahap I 100 mL, Tahap II sisanya.'}
+  ]},
+  {t:'Derajat Neutropenia (ANC)',b:[
+    {table:{head:['Derajat','ANC (/mm³)'],rows:[
+      ['Normal','> 2.000'],['Ringan','1.000 – 2.000'],['Sedang','500 – 1.000'],
+      ['Berat','100 – 500'],['Sangat berat (profound)','< 100']]}},
+    {formula:'ANC = <b>Leukosit total × % Neutrofil ÷ 100</b>'}
+  ]},
+  {t:'Thalasemia',b:[
+    {list:['Tersering: Thalasemia Beta (kekurangan rantai globin β)','Gejala muncul usia 6 bulan (transisi Hb F → Hb A)']},
+    {sub:'Gambaran Khas'},
+    {list:['Anemia mikrositik hipokrom + retikulosit ↑','Hepatosplenomegali (hipersplenisme)','Facies Cooley (hidung pesek, pipi menonjol)','Hair-brush appearance foto tengkorak']},
+    {sub:'Indikasi Kelasi Besi'},
+    {list:['Ferritin >1.000 ng/mL, ATAU saturasi transferin >50%, ATAU transfusi >5 liter']},
+    {sub:'Indikasi Splenektomi'},
+    {list:['Usia >5 tahun, lien >Schufner IV, interval transfusi makin pendek']}
+  ]},
+  {t:'Anemia Aplastik',b:[
+    {list:['DD utama: Leukemia subleukemik','Gambaran khas: pansitopenia + BMP hiposeluler','ADT: normositik, limfositosis relatif, retikulosit ↓']},
+    {sub:'Tata Laksana'},
+    {list:['Tekan limfosit T autoreaktif: Cyclosporin A (Sandimun) 10 mg/kgBB','Sebelum rujuk: transfusi PRC target Hb 8–9,5','Transfusi trombosit: BB × 0,4 unit']}
+  ]},
+  {t:'Penyakit Perdarahan — Skrining Lab',b:[
+    {table:{head:['Gangguan','BT','Trombosit','PT/APTT','Rumple Leede'],rows:[
+      ['Vaskuler','Normal','Normal','Normal','+'],
+      ['Trombositopenia','↑ memanjang','↓ turun','Normal','+'],
+      ['Trombopati','↑ memanjang','Normal','Normal','+'],
+      ['Gangguan pembekuan','Normal','Normal','↑ memanjang','−']]}},
+    {list:['Hemofilia: PT normal, APTT memanjang','Defisiensi Vit K (HDN): PT & APTT memanjang']},
+    {warn:'Trombosit <20.000 → risiko perdarahan SSP & saluran cerna. <50.000 → tindakan hati-hati.'}
+  ]},
+  {t:'Hiperleukositosis',b:[
+    {list:['Definisi: Leukosit >30.000/mm³','Tatalaksana: hidrasi intensif sampai leukosit minimal 15.000','Target Hb: 8 g/dL (hindari transfusi berlebih → viskositas ↑)','Hidrasi 1,5× kebutuhan cairan harian']}
+  ]}
+]},
+/* 4 KARDIO */
+{id:'kardio',name:'Kardiologi',full:'Kardiologi Anak',icon:'kardio',sec:[
+  {t:'Dosis Obat Kardiologi',b:[
+    {table:{head:['Obat','Dosis','Frekuensi','Ket'],rows:[
+      ['Furosemid','0,5 mg/kgBB/dosis','Per 8–12 jam','Diuretik loop'],
+      ['Spironolakton','3,125–25 mg (sesuai BB)','Per 24 jam','0–4 kg: 3,125; 5–10 kg: 6,25'],
+      ['Captopril','0,1–0,3 mg/kgBB/dosis','Per 8–24 jam','ACE inhibitor'],
+      ['Digoxin','5 mcg/kgBB/dosis','Per 12 jam','Bila EF <50%'],
+      ['Propranolol','0,3–0,5 mg/kgBB','Per 6–8 jam','Spell ToF'],
+      ['Bisoprolol','0,2–0,4 mg/kgBB','Per 24 jam (oral)','Beta-blocker'],
+      ['PCT (PDA prematur)','15 mg/kgBB','Per 6 jam × 2 siklus','1 siklus = 3 hari'],
+      ['Sildenafil','0,3–2 mg/kgBB','Per 3–8 jam','Hipertensi pulmonal'],
+      ['Amiodarone','15 mg/kgBB','Infus 4 jam → 1 mL/jam','Dalam 50 cc D5%'],
+      ['Dobutamin','3–5 mcg → vasodilator; >5 → inotropik','Infus kontinu','—']]}}
+  ]},
+  {t:'Tatalaksana Spell ToF (Hipoksia Sianotik)',b:[
+    {list:['Posisi knee-chest → meningkatkan SVR','Bolus NaCl 0,9% 10 mL/kgBB','Morfin 0,2 mg/kgBB']},
+    {p:'Pencampuran morfin: 1 mg/kgBB dalam 50 mL NaCl 0,9%, kecepatan 1–4 mL/jam.'},
+    {warn:'Jika bolus: ambil 1 mL dari pencampuran tersebut dan bolus segera.'}
+  ]},
+  {t:'Tanda Gagal Jantung',b:[
+    {table:{head:['Jenis','Tanda Khas'],rows:[
+      ['Gagal jantung kanan','Hepatomegali, edema pretibial'],
+      ['Gagal jantung kiri','Sesak napas, edema paru (ronki basah)']]}},
+    {note:'Echo khas PJR: Mitral Regurgitasi (MR) / Aortic Regurgitasi (AR). Jarang mengenai trikuspid.'}
+  ]},
+  {t:'Perhitungan MAP',b:[
+    {formula:'MAP = <b>(Sistolik + 2 × Diastolik) ÷ 3</b>'},
+    {list:['Target MAP anak: sesuai usia','Neonatus: >40 mmHg','Anak besar: >65 mmHg']}
+  ]}
+]},
+/* 5 GASTRO */
+{id:'gastro',name:'Gastroenterologi',full:'Gastroenterologi Anak',icon:'gastro',sec:[
+  {t:'Asetilsistein — Gagal Hati / OD Parasetamol',b:[
+    {table:{head:['Tahap','Dosis','Pelarut','Durasi'],rows:[
+      ['Loading','150 mg/kgBB','D5% 200 mL','15–60 mnt (IV)'],
+      ['Maintenance 1','50 mg/kgBB','D5% 500 mL','4 jam'],
+      ['Maintenance 2','100 mg/kgBB','D5% 1000 mL (2 botol)','16 jam (per 8 jam/botol)']]}}
+  ]},
+  {t:'Nutrisi Enteral — Holliday-Segar (NWL)',b:[
+    {table:{head:['Usia / Triwulan','NWL (mL/kgBB/hari)'],rows:[
+      ['Triwulan I (0–3 bln)','150–175'],['Triwulan II (3–6 bln)','140–150'],
+      ['Triwulan III (6–9 bln)','125–140'],['Triwulan IV (9–12 bln)','110–125'],
+      ['1–3 tahun','100'],['4–6 tahun','90'],['7–9 tahun','80'],
+      ['10–12 tahun','70'],['13–19 tahun','60']]}}
+  ]},
+  {t:'Kebutuhan Cairan pada Diare',b:[
+    {formula:'Dehidrasi = <b>(PWL + NWL + CWL) × BB</b>'},
+    {formula:'Tanpa dehidrasi, masih diare = <b>(NWL + CWL) × BB</b>'},
+    {formula:'Tanpa dehidrasi, tanpa diare = <b>NWL × BB</b>'},
+    {table:{head:['Parameter','Nilai'],rows:[
+      ['PWL (3–10 kg)','75 mL/kgBB'],['PWL (10–15 kg)','50 mL/kgBB'],
+      ['PWL (>15 kg)','30 mL/kgBB'],['CWL','25 mL/kgBB']]}}
+  ]},
+  {t:'Konstipasi & Laksatif',b:[
+    {list:['Lactulosa: 1 mL/kgBB/hari','Anak >10 kg: Bisacodyl 5 mg / 8 jam','Konstipasi kronik: Dulcolax / rektal']}
+  ]}
+]},
+/* 6 NUTRISI */
+{id:'nutrisi',name:'Nutrisi Metabolik',full:'Nutrisi & Penyakit Metabolik',icon:'nutrisi',sec:[
+  {t:'Kalori Berbagai Susu Formula',b:[
+    {table:{head:['Produk','Kalori/mL','1 SDT = ? mL air'],rows:[
+      ['ASI','0,67 kkal','—'],['Infatrini','1 kkal','22,5 mL'],
+      ['Pediasure','0,8 kkal','40 mL'],['Nutridrink','1,5 kkal','20 mL'],
+      ['Peptamen / Nephrisol / Peptisol','1 kkal','40 mL'],['Lactogen','0,67 kkal','30 mL'],
+      ['Chilmil','0,64 kkal','40 mL'],['Lactogrow','0,66 kkal','25 mL'],['SGM LLM','0,66 kkal','30 mL']]}},
+    {warn:'Lepas nutrisi parenteral jika sudah terpenuhi 70% kebutuhan kalori via oral/enteral.'}
+  ]},
+  {t:'Menghitung Kenaikan Berat Badan',b:[
+    {list:['Hitung kenaikan BB per hari (gram)','Hitung rata-rata BB awal & akhir','Bagi kenaikan/hari dengan rata-rata BB → g/kgBB/hari']},
+    {p:'Contoh: naik 500 g dalam 10 hari, BB rata-rata 10,25 kg → 50 ÷ 10,25 = 4,87 g/kgBB/hari.'}
+  ]}
+]},
+/* 7 NEURO */
+{id:'neuro',name:'Neurologi',full:'Neurologi Anak',icon:'neuro',sec:[
+  {t:'Dosis Obat Neurologi',b:[
+    {table:{head:['Obat','Dosis','Frekuensi','Rute'],rows:[
+      ['Trihexylphenidil (THP)','0,01–0,1 mg/kgBB/kali','2× sehari','Oral'],
+      ['Citicolin','7,5–15 mg/kgBB/kali','Per 12 jam','Oral/IV'],
+      ['Gabapentin','2 mg/kgBB/kali','Per 8 jam','Oral'],
+      ['Piracetam','10–20 mg/kgBB/kali (oral); 100 mg/kgBB (IV)','Per 8 jam','Oral/IV'],
+      ['Valproat','15–40 mg/kgBB/hari','Bagi 2–3 dosis','Oral'],
+      ['Fenobarbital','4–6 mg/kgBB/hari','Bagi 2–3 dosis','Oral'],
+      ['Karbamazepin','10–30 mg/kgBB/hari','Bagi 2–3 dosis','Oral'],
+      ['Fenitoin','5–7 mg/kgBB/hari','Bagi 2–3 dosis','Oral'],
+      ['Oxcarbazepine','10–30 mg/kgBB/hari','Bagi 2–3 dosis','Oral'],
+      ['Topiramat (lini 2)','4–8 mg/kgBB/hari','Titrasi bertahap','Oral'],
+      ['Levetiracetam (lini 2)','3–50 mg/kgBB/hari','Titrasi bertahap','Oral'],
+      ['Midazolam','0,1 mg/kgBB','Sesuai kondisi','IV']]}}
+  ]},
+  {t:'Perkembangan Motorik (CLAMS & CAT)',b:[
+    {table:{head:['Skala','Fungsi','Normal'],rows:[
+      ['CLAMS','Bahasa / kasar','>85'],['CAT','Motorik halus / kognitif','>85']]}}
+  ]},
+  {t:'EEG',b:[
+    {list:['Indikasi: kejang neonatal, epilepsi refrakter, status epileptikus','Pasang EEG segera setelah kondisi stabil']}
+  ]}
+]},
+/* 8 RESPI */
+{id:'respi',name:'Respirologi',full:'Respirologi Anak',icon:'respi',sec:[
+  {t:'Derajat Retraksi',b:[
+    {sub:'Ringan'},{list:['Retraksi subkostal / interkostal ringan','Tanpa penggunaan otot bantu napas jelas']},
+    {sub:'Sedang'},{list:['Retraksi interkostal & subkostal jelas','± retraksi suprasternal','Frekuensi napas meningkat']},
+    {sub:'Berat'},{list:['Retraksi multipel: suprasternal, interkostal, subkostal, ± supraklavikula','Otot bantu napas sangat jelas','± napas cuping hidung, grunting, head bobbing, sianosis']},
+    {sub:'Lokasi yang Dinilai'},
+    {list:['Suprasternal','Supraklavikula','Interkostal','Subkostal','Subxifoid / epigastrik']}
+  ]},
+  {t:'Asma & Obstruksi Saluran Napas',b:[
+    {list:['Zafirlukast: TIDAK BOLEH untuk anak <5 tahun','<12 tahun: Montelukast','Anak <5 tahun: WAJIB spacer dengan katup']},
+    {sub:'Dosis Budesonide (ICS)'},
+    {list:['Dosis rendah: 100–200 mcg/hari','Dosis sedang: 200–400 mcg/hari']},
+    {sub:'Asma'},
+    {list:['Salbutamol','Budesonid intravena']}
+  ]},
+  {t:'Croup',b:[
+    {list:['Nebulisasi Epinefrin 1:1000 → 0,5 mL/kgBB (=2,5 mL)','Nebulisasi Budesonid 2 mg/8 jam','Injeksi Dexametason 0,15 mg/kgBB']}
+  ]}
+]},
+/* 9 ENDO */
+{id:'endo',name:'Endokrinologi',full:'Endokrinologi Anak',icon:'endo',sec:[
+  {t:'Catatan Cepat Endokrin',b:[
+    {table:{head:['Hal','Catatan'],rows:[
+      ['CAH','Clitoris >1 cm = megaloclitoris; periksa testosteron; waspada hiperkalemia & hiponatremia'],
+      ['Vitamin D','10 mcg = 400 IU; 15 mcg = 500 IU'],
+      ['Konversi steroid','4 mg Methylprednisolon = 5 mg Prednison']]}}
+  ]},
+  {t:'Hipoglikemia Refrakter',b:[
+    {list:['Octreotide (blind therapy) dosis inisial: 6 mcg/kg/hari IV = 3 mcg/8 jam IV']}
+  ]},
+  {t:'Hipotiroid',b:[
+    {list:['Levothyroxin 7,5 mcg/kgBB = 37,5 mcg/24 jam/oral','Cek FT4 & TSHs ulang 2 minggu setelah mulai levothyroxin','Pemeriksaan Vitamin D']}
+  ]},
+  {t:'Diabetes Mellitus (DM)',b:[
+    {sub:'Diagnosis'},
+    {list:['Trias klasik: polidipsi, poliuria, polifagia','Contoh GDS: 341 mg/dL','Anak dikatakan DM bila HbA1c ≥ 8%']},
+    {sub:'Membedakan Tipe 1 vs Tipe 2'},
+    {list:['Tipe 1: tubuh kurus, perjalanan akut, autoimun terhadap sel beta pankreas','Tipe 2: obesitas, acanthosis nigricans, perjalanan kronik']},
+    {p:'Sulit dibedakan bila tidak obesitas. 3 indikator pembantu: gejala lengkap (full blown), penurunan BB, GDS tinggi (penyakit sudah lama).'},
+    {sub:'Follow-up & Komplikasi'},
+    {list:['HbA1c tiap 3 bulan','Jangka pendek: hipoglikemia, KAD','Jangka panjang: mikrovaskular & makrovaskular']},
+    {sub:'Faktor Risiko Komplikasi'},
+    {list:['Lama menderita DM','Usia saat diagnosis','Kontrol metabolik (HbA1c)','Pola nutrisi']},
+    {sub:'Kontrol Metabolik (idealnya 7×/hari, minimal 4×)'},
+    {list:['Sebelum & 2 jam sesudah makan pagi','Sebelum & 2 jam sesudah makan siang','Sebelum & 2 jam sesudah makan malam','Tengah malam (00.00–02.00)']},
+    {sub:'Jenis Insulin'},
+    {list:['Basal (long-acting): 1× malam sebelum tidur — stabilkan glukosa puasa','Bolus (short-acting): sebelum makan — kontrol lonjakan post-prandial']},
+    {list:['Dawn Phenomenon: kenaikan glukosa dini hari akibat hormon kontra-insulin','Somogyi Effect: hiperglikemia rebound setelah hipoglikemia malam']}
+  ]},
+  {t:'Tinggi Potensi Genetik (TPG)',b:[
+    {formula:'Perempuan = <b>(TB Ayah + TB Ibu − 13) ÷ 2 ± 8,5 cm</b>'},
+    {formula:'Laki-laki = <b>(TB Ayah + TB Ibu + 13) ÷ 2 ± 8,5 cm</b>'}
+  ]}
+]},
+/* 10 NEFRO */
+{id:'nefro',name:'Nefrologi',full:'Nefrologi Anak',icon:'nefro',sec:[
+  {t:'Tatalaksana Konservatif AKI',b:[
+    {sub:'1. Pertahankan Perfusi Ginjal'},
+    {list:['Hipovolemia & oliguria (tanpa kontraindikasi overload/gagal jantung): bolus cairan IV (NaCl/albumin)','Oliguria menetap: Furosemid IV 2–5 mg/kg/dosis (maks 240 mg) atau infus kontinu 0,1–1 mg/kg/jam']},
+    {sub:'2. Keseimbangan Cairan'},
+    {list:['Kebutuhan cairan: IWL + UO','Batasi natrium: 2–3 mmol/kg/hari','Overload + hipertensi (GNA): antihipertensi IV']},
+    {sub:'3. Hiperkalemia Emergency (K ≥7, atau 6–7 dengan pelepasan cepat)'},
+    {list:['Ca glukonat 10%: 0,5 mL/kg (maks 20 mL) IV perlahan 15–30 menit','Salbutamol nebul (BB <25 kg: 2,5 mg; ≥25 kg: 5 mg)','Salbutamol IV: 4 mcg/kg','Insulin IV: 0,1 IU/kg + dekstrosa 0,5 g/kg (pantau GD tiap 15 menit)']},
+    {sub:'Hiperkalemia Non-Emergency (K 6–7 tanpa pelepasan cepat)'},
+    {list:['Resonium (polystyrene sulfonate): oral/rektal 1 g/kg (maks 30 g)','Patiromer (Veltassa): anak ≥12 thn, onset lambat. Awal 4 g/kg/hari (maks 25,2 g), titrasi +4 g']},
+    {sub:'4. Koreksi Elektrolit Lain'},
+    {list:['Hiponatremia: batasi cairan + diuretik loop bila overload','Hipokalsemia & hiperfosfatemia: calcium-based phosphate binder']},
+    {sub:'5. Koreksi Asidosis Metabolik'},
+    {list:['Cairan RL','NaBic IV bila asidosis berat: bikarbonat ≤12 mmol/L dan/atau pH <7,2']},
+    {sub:'6. Nutrisi Adekuat (kalori s.d. 150% pemeliharaan)'},
+    {list:['BB 3–10 kg: 100 × BB','BB 10–20 kg: 50 × BB + 1000','BB >20 kg: 20 × BB + 1500','Protein: 3 g/kg/hari']},
+    {sub:'7 & 8. Renal Adjustment & Hindari Nefrotoksik'},
+    {list:['Sesuaikan dosis obat yang diekskresi ginjal','Hindari: NSAID; aminoglikosida/antivirus/antijamur nefrotoksik','Pip-tazo + vancomycin (lebih nefrotoksik)','ACEi/ARB, calcineurin inhibitor, kontras osmolalitas tinggi']}
+  ]},
+  {t:'Ringkasan Dosis Obat ISK',b:[
+    {list:['Pielonefritis akut + komplikasi: Sefalosporin gen-3 IV (pilihan utama)','ISK oral: Cefixim','Sistitis sederhana: Kotrimoksazol']},
+    {warn:'Gentamisin bersifat nefrotoksik — gunakan dengan pantau fungsi ginjal ketat.'}
+  ]}
+]},
+/* 11 INFEKSI */
+{id:'infeksi',name:'Infeksi & Tropis',full:'Infeksi & Penyakit Tropis',icon:'infeksi',sec:[
+  {t:'PCT (Paracetamol) Kontinu',b:[
+    {formula:'<b>15 × BB × 4 ÷ 24</b> → hasilnya <b>÷ 10</b> = mL/jam'},
+    {p:'Contoh BB 26 kg: 15 × 26 × 4 ÷ 24 = 65 → 65 ÷ 10 = 6,5 mL/jam.'}
+  ]},
+  {t:'Kotrimoksazol',b:[
+    {list:['Dosis berdasarkan komponen TMP (Trimetoprim)','TMP: 4 mg/kgBB/kali → Sulfa = TMP × 5','Dosis total Kotri = TMP + Sulfa','Dosis Toksoplasma: TMP 10 mg/kgBB']},
+    {p:'Contoh BB 23 kg: TMP = 4×23 = 92 mg; Sulfa = 460 mg; Total = 552 mg.'}
+  ]},
+  {t:'Antivirus & Antipiretik Lain',b:[
+    {list:['Valgansiklovir: 16 mg/kgBB/oral/24 jam','Metamizole: 1 amp + D5 500 cc, kecepatan 20 cc/jam (dosis 10 mg/kgBB)']}
+  ]}
+]},
+/* 12 ALERGI */
+{id:'alergi',name:'Alergi Imunologi',full:'Alergi & Imunologi',icon:'alergi',sec:[
+  {t:'Anafilaksis',b:[
+    {list:['Injeksi Epinefrin 1:1000 → 0,01–0,03 mL/kgBB IM (umumnya 0,3 mL IM)','Dapat diulang 3× dengan interval 5–15 menit','Injeksi Difenhidramin 10 mg IV','Injeksi Dexametason 5 mg IV']},
+    {p:'Dexametason 5 mg/8 jam IV rutin selama 3 hari.'}
+  ]},
+  {t:'HSP (Henoch-Schönlein Purpura)',b:[
+    {list:['Methylprednisolone 2 mg/kgBB/24 jam oral']}
+  ]}
+]},
+/* 13 PEDSOS */
+{id:'pedsos',name:'Pedsos',full:'Pediatri Sosial',icon:'pedsos',sec:[
+  {t:'Interpretasi DQ (Developmental Quotient)',b:[
+    {table:{head:['DQ','Interpretasi & Tindak Lanjut'],rows:[
+      ['> 85%','Umumnya normal — edukasi, lanjutkan stimulasi'],
+      ['75–85%','Suspek, mungkin terlambat — latih, pantau ketat, evaluasi, cari penyebab'],
+      ['< 75%','Umumnya terlambat — cari faktor penyebab; latih / rujuk / evaluasi ulang']]}}
+  ]},
+  {t:'Retardasi Mental',b:[
+    {p:'Inteligensi umum di bawah rata-rata, dimulai dari masa perkembangan, disertai gangguan tingkah laku penyesuaian.'},
+    {sub:'Gejala'},
+    {list:['Keterlambatan berbahasa','Gangguan motorik halus & adaptasi','Gangguan perilaku: agresi, menyakiti diri, deviasi perilaku','Keterlambatan motorik kasar']},
+    {sub:'Derajat'},
+    {table:{head:['Ringan','Sedang','Berat'],rows:[
+      ['Gejala minimal di luar kriteria diagnosis; dampak fungsi sosial/pekerjaan ringan','Antara kriteria ringan & berat','Banyak gejala kriteria, atau beberapa gejala berat; gangguan fungsi sosial/pekerjaan berat']]}}
+  ]},
+  {t:'Autism Spectrum Disorder (DSM-V)',b:[
+    {p:'Memenuhi kriteria A, B, C, D yang ditemukan saat ini atau dari riwayat.'},
+    {sub:'A. Hambatan Komunikasi & Interaksi Sosial (semua gejala)'},
+    {list:['Defisit hubungan sosial-emosional timbal balik (pendekatan aneh, percakapan tidak 2 arah, sulit berbagi minat/emosi)','Defisit komunikasi non-verbal (kontak mata, gestur, ekspresi wajah)','Defisit mengembangkan/mempertahankan relasi sosial']},
+    {sub:'B. Perilaku/Minat Terbatas & Repetitif (≥2 gejala)'},
+    {list:['Gerak/perkataan repetitif/stereotipi (deret mainan, ekolalia, flapping)','Perilaku ritual, tidak fleksibel, pola pikir kaku, kebiasaan monoton','Minat terbatas, terfiksasi, abnormal intensitas/fokus','Hiper/hiporeaktivitas sensorik']},
+    {list:['C. Gejala timbul tahap perkembangan awal','D. Hambatan bermakna pada kehidupan sosial & fungsional','E. Bukan disebabkan disabilitas intelektual / global developmental delay']}
+  ]}
+]}
+];
+/* ============ CALCULATORS ============ */
+function fmt(n,d){ if(!isFinite(n)) return '–'; d=(d==null?2:d); let r=Math.round(n*Math.pow(10,d))/Math.pow(10,d); return String(r).replace('.',','); }
+const CALC=[
+ {id:'gir',cat:'NICU & Cairan',ab:'GIR',name:'GIR (Glucose Infusion Rate)',desc:'Dari infus IV dextrose',
+  in:[{id:'rate',l:'Kecepatan infus',u:'mL/jam'},{id:'conc',l:'Konsentrasi dextrose',u:'%',v:10},{id:'bb',l:'Berat badan',u:'kg'}],
+  fn:v=>{let g=(v.rate*v.conc)/(6*v.bb); return {v:fmt(g),u:'mg/kgBB/menit',s:'Rumus: (kecepatan × %dextrose) ÷ (6 × BB). Target neonatus ≥ 4–6.'};}},
+
+ {id:'rumatan',cat:'NICU & Cairan',ab:'💧',name:'Cairan Rumatan (Holliday-Segar)',desc:'Metode berat badan 100/50/20',
+  in:[{id:'bb',l:'Berat badan',u:'kg'}],
+  fn:v=>{let bb=v.bb,t;if(bb<=10)t=100*bb;else if(bb<=20)t=1000+50*(bb-10);else t=1500+20*(bb-20);
+   return {v:fmt(t,0),u:'mL/24 jam',s:'≈ '+fmt(t/24,1)+' mL/jam. (≤10kg: 100/kg · 10–20kg: 1000+50/kg · >20kg: 1500+20/kg)'};}},
+
+ {id:'iwl',cat:'NICU & Cairan',ab:'BAL',name:'IWL & Balance Cairan',desc:'Hitung IWL dan balans 24 jam',
+  in:[{id:'bb',l:'Berat badan',u:'kg'},{id:'mod',l:'Modalitas',type:'sel',opts:[{v:26,l:'Inkubator / modalitas (×26)'},{v:20,l:'Tanpa modalitas (×20)'}],v:26},
+      {id:'in',l:'Total masuk',u:'mL'},{id:'out',l:'Total keluar',u:'mL'}],
+  fn:v=>{let iwl=v.bb*v.mod;let bal=v.in-v.out-iwl;let perkg=bal/v.bb;
+   let st=perkg<-20?'⚠ < −20 mL/kg → risiko AKI':perkg>20?'⚠ > +20 mL/kg → risiko overload':'Dalam target ±20 mL/kg';
+   return {v:fmt(bal,0),u:'mL balance',s:'IWL = '+fmt(iwl,0)+' mL · Balance/kg = '+fmt(perkg,1)+' mL/kgBB. '+st};}},
+
+ {id:'bicnat',cat:'NICU & Cairan',ab:'HCO',name:'Koreksi Bikarbonat',desc:'Bicnat / Meylon — habis 24 jam',
+  in:[{id:'be',l:'Base Excess (BE)',u:''},{id:'bb',l:'Berat badan',u:'kg'}],
+  fn:v=>{let m=0.3*Math.abs(v.be)*v.bb;return {v:fmt(m),u:'mEq',s:'Rumus 0,3 × BE × BB → habis 24 jam. Alt NICU 0,6 × BB × BE dalam D10%. Via CVC encerkan 1:1.'};}},
+
+ {id:'prc',cat:'Hematologi',ab:'PRC',name:'Volume Transfusi PRC',desc:'ΔHb × 4 × BB',
+  in:[{id:'now',l:'Hb saat ini',u:'g/dL'},{id:'tgt',l:'Hb target',u:'g/dL'},{id:'bb',l:'Berat badan',u:'kg'}],
+  fn:v=>{let vol=(v.tgt-v.now)*4*v.bb;return {v:fmt(vol,1),u:'mL',s:'Berikan bertahap: Tahap I ±100 mL, Tahap II sisanya.'};}},
+
+ {id:'anc',cat:'Hematologi',ab:'ANC',name:'Absolute Neutrophil Count',desc:'Derajat neutropenia',
+  in:[{id:'wbc',l:'Leukosit total',u:'/mm³'},{id:'neu',l:'Neutrofil (segmen+batang)',u:'%'}],
+  fn:v=>{let a=v.wbc*v.neu/100;let g=a>2000?'Normal':a>=1000?'Neutropenia ringan':a>=500?'Neutropenia sedang':a>=100?'Neutropenia berat':'Sangat berat (profound)';
+   return {v:fmt(a,0),u:'/mm³',s:'Derajat: '+g};}},
+
+ {id:'mentzer',cat:'Hematologi',ab:'MZ',name:'Indeks Mentzer',desc:'Bedakan ADB vs Thalasemia',
+  in:[{id:'mcv',l:'MCV',u:'fL'},{id:'rbc',l:'Jumlah eritrosit',u:'juta/µL'}],
+  fn:v=>{let i=v.mcv/v.rbc;let g=i>13?'> 13 → cenderung ADB (Defisiensi Besi)':'< 13 → cenderung Thalasemia / APK';
+   return {v:fmt(i,1),u:'',s:g};}},
+
+ {id:'vaso',cat:'PICU & Kardiologi',ab:'VAS',name:'Drip Obat Vasoaktif',desc:'Kecepatan infus mL/jam',
+  in:[{id:'obat',l:'Obat',type:'sel',opts:[{v:100,l:'Epinefrin (÷100)'},{v:80,l:'Norepinefrin (÷80)'},{v:4000,l:'Dopamin (÷4000)'},{v:5000,l:'Dobutamin (÷5000)'}],v:100},
+      {id:'dose',l:'Dosis',u:'mcg/kgBB/menit'},{id:'bb',l:'Berat badan',u:'kg'}],
+  fn:v=>{let r=v.dose*v.bb*60/v.obat;return {v:fmt(r),u:'mL/jam',s:'Rumus: dosis × BB × 60 ÷ faktor pengenceran. Pastikan sediaan/pengenceran sesuai.'};}},
+
+ {id:'nikardipin',cat:'PICU & Kardiologi',ab:'NIK',name:'Drip Nikardipin',desc:'10 mL + 40 mL NaCl 0,9%',
+  in:[{id:'dose',l:'Dosis',u:'mcg/kgBB/menit',v:2.5},{id:'bb',l:'Berat badan',u:'kg'}],
+  fn:v=>{let r=v.dose*v.bb*50*60/10000;return {v:fmt(r),u:'mL/jam',s:'Rumus: dosis × BB × 50 × 60 ÷ 10.000.'};}},
+
+ {id:'map',cat:'PICU & Kardiologi',ab:'MAP',name:'Mean Arterial Pressure',desc:'(Sis + 2×Dia) ÷ 3',
+  in:[{id:'sis',l:'Sistolik',u:'mmHg'},{id:'dia',l:'Diastolik',u:'mmHg'}],
+  fn:v=>{let m=(v.sis+2*v.dia)/3;return {v:fmt(m,0),u:'mmHg',s:'Target: neonatus >40 · anak besar >65.'};}},
+
+ {id:'rr',cat:'PICU & Kardiologi',ab:'RR',name:'Koreksi RR Ventilator',desc:'Sesuaikan RR target PCO₂',
+  in:[{id:'pco2',l:'PCO₂ terukur',u:'mmHg'},{id:'tgt',l:'PCO₂ target',u:'mmHg',v:40},{id:'rr',l:'RR saat ini',u:'x/mnt'}],
+  fn:v=>{let n=(v.pco2/v.tgt)*v.rr;return {v:fmt(n,0),u:'x/menit',s:'RR baru = (PCO₂ terukur ÷ target) × RR sekarang.'};}},
+
+ {id:'epi',cat:'Kegawatan',ab:'EPI',name:'Epinefrin Anafilaksis',desc:'1:1000 intramuskular',
+  in:[{id:'bb',l:'Berat badan',u:'kg'}],
+  fn:v=>{let ml=0.01*v.bb;let cap=Math.min(ml,0.5);return {v:fmt(cap,2),u:'mL IM (1:1000)',s:'0,01 mL/kgBB (rentang 0,01–0,03). Maks ±0,3–0,5 mL. Ulang tiap 5–15 menit bila perlu.'};}},
+
+ {id:'pct',cat:'Kegawatan',ab:'PCT',name:'PCT (Parasetamol) Kontinu',desc:'Infus kontinu mL/jam',
+  in:[{id:'bb',l:'Berat badan',u:'kg'}],
+  fn:v=>{let t=15*v.bb*4/24;let r=t/10;return {v:fmt(r,1),u:'mL/jam',s:'Total = 15 × BB × 4 ÷ 24 = '+fmt(t,1)+' → ÷10 = mL/jam.'};}},
+
+ {id:'ett',cat:'Kegawatan',ab:'ETT',name:'ETT & Kateter Umbilikus',desc:'Ukuran & kedalaman',
+  in:[{id:'bb',l:'Berat badan',u:'kg'},{id:'ga',l:'Usia gestasi',u:'minggu'}],
+  fn:v=>{let size=v.ga/10;let depth=v.bb+6;let uvc=1.5*v.bb+5.5;
+   return {v:'ETT '+fmt(size,1),u:'(ukuran)',s:'Kedalaman ETT = BB + 6 = '+fmt(depth,1)+' cm · Kateter umbilikalis = 1,5×BB+5,5 = '+fmt(uvc,1)+' cm. Konfirmasi X-ray.'};}}
+];
+/* ============ APP ============ */
+const view=document.getElementById('view');
+const qEl=document.getElementById('q');
+const clearBtn=document.getElementById('clearq');
+let state={v:'home',div:null,calc:null};
+
+function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+function svg(p){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>';}
+const chevD=svg('<path d="m6 9 6 6 6-6"/>');
+const arrR=svg('<path d="m9 18 6-6-6-6"/>');
+const arrL=svg('<path d="m15 18-6-6 6-6"/>');
+
+/* ---- block renderer ---- */
+function renderBlocks(blocks){
+  return blocks.map(b=>{
+    if(b.sub) return '<div class="sub">'+esc(b.sub)+'</div>';
+    if(b.p) return '<p class="txt blk">'+esc(b.p)+'</p>';
+    if(b.note) return '<div class="note">'+esc(b.note)+'</div>';
+    if(b.formula) return '<div class="formula blk">'+b.formula+'</div>';
+    if(b.warn) return '<div class="warn blk">'+esc(b.warn)+'</div>';
+    if(b.list) return '<ul class="lst blk">'+b.list.map(i=>'<li>'+esc(i)+'</li>').join('')+'</ul>';
+    if(b.table){
+      let h='<div class="tw blk"><table><thead><tr>'+b.table.head.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>';
+      h+=b.table.rows.map(r=>'<tr>'+r.map(c=>'<td>'+esc(c)+'</td>').join('')+'</tr>').join('');
+      return h+'</tbody></table></div>';
+    }
+    return '';
+  }).join('');
+}
+function blockText(blocks){
+  let t=[];
+  blocks.forEach(b=>{
+    if(b.sub)t.push(b.sub); if(b.p)t.push(b.p); if(b.note)t.push(b.note);
+    if(b.formula)t.push(b.formula.replace(/<[^>]+>/g,'')); if(b.warn)t.push(b.warn);
+    if(b.list)t.push(b.list.join(' '));
+    if(b.table){t.push(b.table.head.join(' '));b.table.rows.forEach(r=>t.push(r.join(' ')));}
+  });
+  return t.join(' ');
+}
+
+/* ---- HOME ---- */
+function renderHome(){
+  let h='<div class="hello"><div class="k">Halo, Dokter 👋</div><div class="s">Pilih divisi atau cari catatan & rumus dengan cepat.</div></div>';
+  h+='<div class="tile" onclick="goCalc()"><div class="ti">'+svg('<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h2M14 10h2M8 14h2M14 14h2M8 18h2M14 18h2"/>')+'</div><div><h3>Kalkulator Bedside</h3><p>GIR, transfusi, vasoaktif, dosis &amp; lainnya</p></div><div class="arr">'+arrR+'</div></div>';
+  h+='<div class="eyebrow">13 Divisi</div><div class="grid">';
+  DATA.forEach((d,i)=>{
+    h+='<div class="dcard" onclick="goDivision(\''+d.id+'\')">'+
+       '<div class="num">'+(i+1<10?'0':'')+(i+1)+'</div>'+
+       '<div class="ic">'+svg(IC[d.icon])+'</div>'+
+       '<h3>'+esc(d.name)+'</h3><div class="full">'+esc(d.full)+'</div>'+
+       '<div class="cnt">'+d.sec.length+' topik</div></div>';
+  });
+  h+='</div>';
+  view.innerHTML=h;
+}
+
+/* ---- DIVISION ---- */
+function renderDivision(id,openIndex){
+  const d=DATA.find(x=>x.id===id); if(!d)return goHome();
+  const idx=DATA.indexOf(d)+1;
+  const oi=(openIndex==null?0:openIndex);
+  let h='<button class="back" onclick="goHome()">'+arrL+'Beranda</button>';
+  h+='<div class="dhead"><span class="tag">Divisi '+idx+'</span><h2>'+esc(d.name)+'</h2><p class="full">'+esc(d.full)+'</p></div>';
+  d.sec.forEach((s,i)=>{
+    h+='<div class="sec'+(i===oi?' open':'')+'" data-i="'+i+'"><div class="sec-h" onclick="toggleSec(this)">'+
+       '<span class="dot"></span><h4>'+esc(s.t)+'</h4><span class="chev">'+chevD+'</span></div>'+
+       '<div class="sec-b">'+renderBlocks(s.b)+'</div></div>';
+  });
+  view.innerHTML=h;
+  window.scrollTo(0,0);
+  if(openIndex!=null){ const tgt=view.querySelector('.sec[data-i="'+openIndex+'"]');
+    if(tgt) setTimeout(()=>tgt.scrollIntoView({behavior:'smooth',block:'center'}),80); }
+}
+function toggleSec(el){ el.parentElement.classList.toggle('open'); }
+
+/* ---- SEARCH ---- */
+let INDEX=[];
+DATA.forEach(d=>d.sec.forEach((s,si)=>INDEX.push({div:d.name,divId:d.id,si:si,title:s.t,body:blockText(s.b)})));
+function hl(text,terms){
+  let t=esc(text);
+  terms.forEach(w=>{ if(w.length<2)return; t=t.replace(new RegExp('('+w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','ig'),'<mark>$1</mark>'); });
+  return t;
+}
+function renderSearch(q){
+  const terms=q.toLowerCase().split(/\s+/).filter(Boolean);
+  const res=INDEX.map(it=>{
+    const hay=(it.title+' '+it.div+' '+it.body).toLowerCase();
+    let score=0; terms.forEach(w=>{ if(it.title.toLowerCase().includes(w))score+=5; else if(hay.includes(w))score+=1; });
+    return {it,score};
+  }).filter(r=>r.score>0).sort((a,b)=>b.score-a.score);
+  let h='';
+  if(!res.length){ h='<div class="empty">'+svg('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>')+'<div>Tidak ada hasil untuk &ldquo;'+esc(q)+'&rdquo;.</div></div>'; view.innerHTML=h; return; }
+  h+='<div class="rescount">'+res.length+' hasil untuk &ldquo;'+esc(q)+'&rdquo;</div>';
+  res.slice(0,40).forEach(r=>{
+    let snippet=r.it.body.slice(0,140);
+    h+='<div class="rescard" onclick="goDivision(\''+r.it.divId+'\','+r.it.si+')">'+
+       '<div class="d">'+esc(r.it.div)+'</div><h4>'+hl(r.it.title,terms)+'</h4>'+
+       '<p>'+hl(snippet,terms)+'…</p></div>';
+  });
+  view.innerHTML=h;
+}
+
+/* ---- CALC LIST ---- */
+function renderCalcList(){
+  let h='<button class="back" onclick="goHome()">'+arrL+'Beranda</button>';
+  h+='<div class="dhead"><span class="tag">Alat Hitung</span><h2>Kalkulator</h2><p class="full">Masukkan nilai, hasil tampil otomatis.</p></div>';
+  let cats=[...new Set(CALC.map(c=>c.cat))];
+  cats.forEach(cat=>{
+    h+='<div class="calc-cat">'+esc(cat)+'</div>';
+    CALC.filter(c=>c.cat===cat).forEach(c=>{
+      h+='<div class="calc-li" onclick="goCalcOne(\''+c.id+'\')"><div class="ci">'+esc(c.ab)+'</div>'+
+         '<div><h4>'+esc(c.name)+'</h4><p>'+esc(c.desc)+'</p></div><div class="arr">'+arrR+'</div></div>';
+    });
+  });
+  view.innerHTML=h; window.scrollTo(0,0);
+}
+
+/* ---- CALC DETAIL ---- */
+function renderCalc(id){
+  const c=CALC.find(x=>x.id===id); if(!c)return renderCalcList();
+  let h='<button class="back" onclick="goCalc()">'+arrL+'Semua kalkulator</button>';
+  h+='<div class="calc-card"><h3>'+esc(c.name)+'</h3><p class="desc">'+esc(c.desc)+'</p>';
+  c.in.forEach(f=>{
+    h+='<div class="field"><label>'+esc(f.l)+(f.u?' <span class="unit">('+esc(f.u)+')</span>':'')+'</label>';
+    if(f.type==='sel'){
+      h+='<select data-f="'+f.id+'" oninput="runCalc(\''+c.id+'\')">'+f.opts.map(o=>'<option value="'+o.v+'"'+(o.v===f.v?' selected':'')+'>'+esc(o.l)+'</option>').join('')+'</select>';
+    } else {
+      h+='<input type="number" inputmode="decimal" step="any" data-f="'+f.id+'" value="'+(f.v!=null?f.v:'')+'" placeholder="0" oninput="runCalc(\''+c.id+'\')">';
+    }
+    h+='</div>';
+  });
+  h+='<div class="result" id="cres"><div class="rl">Hasil</div><div class="rv">–</div><div class="rsub">Lengkapi nilai di atas.</div></div>';
+  h+='<div class="calc-note">Verifikasi selalu dengan sediaan aktual, pengenceran, dan protokol setempat.</div></div>';
+  view.innerHTML=h; window.scrollTo(0,0);
+  runCalc(id);
+}
+function runCalc(id){
+  const c=CALC.find(x=>x.id===id);
+  let v={},ok=true;
+  c.in.forEach(f=>{
+    const el=view.querySelector('[data-f="'+f.id+'"]');
+    let val=el?el.value:'';
+    if(val===''||val==null){ if(f.type!=='sel')ok=false; v[f.id]=0; }
+    else v[f.id]=parseFloat(val);
+  });
+  const box=document.getElementById('cres');
+  if(!ok){ box.innerHTML='<div class="rl">Hasil</div><div class="rv">–</div><div class="rsub">Lengkapi nilai di atas.</div>'; return; }
+  let r=c.fn(v);
+  box.innerHTML='<div class="rl">Hasil</div><div class="rv">'+r.v+' <small>'+esc(r.u)+'</small></div><div class="rsub">'+esc(r.s)+'</div>';
+}
+
+/* ---- NAV ---- */
+function goHome(){ state={v:'home'}; qEl.value=''; toggleClear(); renderHome(); window.scrollTo(0,0); }
+function goDivision(id,openIndex){
+  state={v:'division',div:id}; qEl.value=''; toggleClear(); renderDivision(id,openIndex);
+}
+function goCalc(){ state={v:'calc-list'}; qEl.value=''; toggleClear(); renderCalcList(); }
+function goCalcOne(id){ state={v:'calc',calc:id}; renderCalc(id); }
+
+function toggleClear(){ clearBtn.classList.toggle('show', qEl.value.length>0); }
+qEl.addEventListener('input',()=>{
+  toggleClear();
+  const q=qEl.value.trim();
+  if(q.length===0){ if(state.v==='search'){goHome();} return; }
+  if(q.length>=2){ state={v:'search'}; renderSearch(q); }
+});
+clearBtn.addEventListener('click',()=>{ qEl.value=''; toggleClear(); goHome(); qEl.focus(); });
+
+/* init */
+renderHome();
+</script>
+</body>
+</html>

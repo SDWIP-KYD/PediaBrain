@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Referensi Obat Pada Anak</title>
+<style>
+  :root{
+    --bg:#ffffff;
+    --sky:#0ea5e9;
+    --sky-dark:#0369a1;
+    --sky-soft:#e0f2fe;
+    --sky-softer:#f0f9ff;
+    --line:#bae6fd;
+    --ink:#0f172a;
+    --muted:#475569;
+    --emer:#dc2626;
+    --emer-soft:#fee2e2;
+    --ok:#059669;
+    --warn:#d97706;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(2,132,199,.06),0 8px 24px rgba(2,132,199,.08);
+    --font:"Segoe UI",-apple-system,BlinkMacSystemFont,"Helvetica Neue",Roboto,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:var(--font);
+    color:var(--ink);
+    background:
+      radial-gradient(1200px 500px at 80% -10%, var(--sky-soft), transparent 60%),
+      linear-gradient(180deg,#fbfdff 0%, #ffffff 40%);
+    min-height:100vh;
+    font-size:15px;
+    line-height:1.45;
+  }
+  a{color:var(--sky-dark)}
+
+  /* ===== HEADER ===== */
+  header{
+    background:linear-gradient(135deg,var(--sky) 0%, var(--sky-dark) 100%);
+    color:#fff;
+    padding:18px 20px;
+    box-shadow:var(--shadow);
+    position:sticky; top:0; z-index:50;
+  }
+  .head-inner{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .logo{
+    width:54px;height:54px;border-radius:14px;background:rgba(255,255,255,.16);
+    border:1px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;
+    font-size:26px;flex:0 0 auto;
+  }
+  .head-text h1{margin:0;font-size:21px;letter-spacing:.2px}
+  .head-text .sub{margin:2px 0 0;font-size:12.5px;opacity:.92}
+  .refs{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+  .ref-badge{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);
+    padding:5px 11px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap}
+
+  .container{max-width:1180px;margin:0 auto;padding:18px 16px 80px}
+
+  .disclaimer{
+    background:#fffbeb;border:1px solid #fcd34d;color:#92400e;border-radius:12px;
+    padding:10px 14px;font-size:12.5px;margin:14px 0;display:flex;gap:8px;align-items:flex-start
+  }
+
+  /* ===== PATIENT PANEL ===== */
+  .panel{
+    background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:16px;margin-bottom:16px;
+  }
+  .panel h2{margin:0 0 12px;font-size:15px;color:var(--sky-dark);display:flex;align-items:center;gap:8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .field label{display:block;font-size:11.5px;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+  .field input,.field select{
+    width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:9px;font-size:14px;
+    background:var(--sky-softer);color:var(--ink);font-family:var(--font);
+  }
+  .field input:focus,.field select:focus{outline:2px solid var(--sky);background:#fff;border-color:var(--sky)}
+  .calc-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+  .pill{background:var(--sky-soft);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;color:var(--sky-dark)}
+  .pill b{color:var(--ink)}
+  .pill.status-ok{background:#dcfce7;border-color:#86efac;color:#166534}
+  .pill.status-warn{background:#fef3c7;border-color:#fcd34d;color:#92400e}
+  .pill.status-bad{background:var(--emer-soft);border-color:#fca5a5;color:#991b1b}
+
+  /* ===== TABS ===== */
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .tab{
+    border:1px solid var(--line);background:#fff;color:var(--sky-dark);
+    padding:9px 15px;border-radius:999px;font-size:13.5px;font-weight:700;cursor:pointer;transition:.15s;
+  }
+  .tab:hover{background:var(--sky-softer)}
+  .tab.active{background:var(--sky);color:#fff;border-color:var(--sky)}
+  .tab.emer.active{background:var(--emer);border-color:var(--emer)}
+  .tab.emer{color:var(--emer);border-color:#fca5a5}
+
+  .search-box{position:relative;margin-bottom:14px}
+  .search-box input{width:100%;padding:11px 14px 11px 38px;border:1px solid var(--line);border-radius:11px;font-size:14px;background:#fff}
+  .search-box::before{content:"🔍";position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;opacity:.6}
+
+  /* ===== SYSTEM GROUP ===== */
+  .sys-group{margin-bottom:12px;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:#fff;box-shadow:var(--shadow)}
+  .sys-head{
+    background:linear-gradient(90deg,var(--sky-soft),var(--sky-softer));
+    padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;user-select:none;
+    border-left:5px solid var(--sky);
+  }
+  .sys-head .ico{font-size:18px}
+  .sys-head h3{margin:0;font-size:14.5px;color:var(--sky-dark);flex:1}
+  .sys-head .cnt{font-size:11.5px;color:var(--muted);font-weight:600}
+  .sys-head .chev{transition:.2s;color:var(--sky-dark)}
+  .sys-group.open .chev{transform:rotate(90deg)}
+  .sys-body{display:none;padding:6px}
+  .sys-group.open .sys-body{display:block}
+
+  /* emergency variant */
+  .sys-group.emer .sys-head{background:linear-gradient(90deg,var(--emer-soft),#fff5f5);border-left-color:var(--emer)}
+  .sys-group.emer .sys-head h3{color:var(--emer)}
+
+  /* ===== DRUG CARD ===== */
+  .drug{border:1px solid #e2e8f0;border-radius:11px;margin:7px 4px;padding:0;overflow:hidden;background:#fff}
+  .drug-top{display:flex;align-items:flex-start;gap:10px;padding:11px 13px;cursor:pointer}
+  .drug-top:hover{background:var(--sky-softer)}
+  .drug-name{flex:1}
+  .drug-name .nm{font-weight:800;font-size:14.5px;color:var(--ink)}
+  .drug-name .active{font-size:12px;color:var(--sky-dark);font-style:italic;font-weight:600}
+  .route-tag{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;align-self:center}
+  .r-oral{background:#dbeafe;color:#1e40af}
+  .r-iv{background:#fee2e2;color:#991b1b}
+  .r-inh{background:#dcfce7;color:#166534}
+  .r-top{background:#fef3c7;color:#92400e}
+  .r-rect{background:#f3e8ff;color:#6b21a8}
+  .dose-now{font-size:12.5px;color:var(--ok);font-weight:800;background:#ecfdf5;padding:4px 9px;border-radius:7px;white-space:nowrap;align-self:center}
+  .dose-now.none{color:var(--muted);background:#f1f5f9}
+
+  .drug-detail{display:none;padding:0 13px 13px;font-size:13px}
+  .drug.open .drug-detail{display:block}
+  .drow{display:flex;gap:8px;padding:5px 0;border-top:1px dashed #e2e8f0}
+  .drow .k{flex:0 0 118px;font-weight:700;color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.3px}
+  .drow .v{flex:1}
+  .latin{font-family:"Cambria","Georgia",serif;font-style:italic;color:var(--sky-dark);background:var(--sky-softer);padding:3px 7px;border-radius:6px;display:inline-block}
+  .forms-list span{display:inline-block;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:6px;padding:2px 8px;margin:2px 4px 2px 0;font-size:12px}
+  .brand span{display:inline-block;background:#eff6ff;border:1px solid #dbeafe;color:#1e40af;border-radius:6px;padding:2px 8px;margin:2px 4px 2px 0;font-size:12px;font-weight:600}
+  .add-rx{margin-top:9px;background:var(--sky);color:#fff;border:none;padding:8px 14px;border-radius:9px;font-weight:700;cursor:pointer;font-size:13px}
+  .add-rx:hover{background:var(--sky-dark)}
+  .note{font-size:12px;color:var(--warn);background:#fffbeb;border:1px solid #fde68a;border-radius:7px;padding:6px 9px;margin-top:8px}
+
+  /* ===== EQUIPMENT ===== */
+  .eq-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+  .eq-card{border:1px solid var(--line);border-radius:var(--radius);padding:15px;background:#fff;box-shadow:var(--shadow)}
+  .eq-card h3{margin:0 0 4px;font-size:14.5px;color:var(--sky-dark);display:flex;align-items:center;gap:8px}
+  .eq-card .formula{font-size:11.5px;color:var(--muted);margin-bottom:10px;font-style:italic}
+  .eq-result{font-size:26px;font-weight:800;color:var(--ink)}
+  .eq-result small{font-size:13px;color:var(--muted);font-weight:600}
+  .eq-sub{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.6}
+  table.ref{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:8px}
+  table.ref th,table.ref td{border:1px solid var(--line);padding:6px 8px;text-align:left}
+  table.ref th{background:var(--sky-soft);color:var(--sky-dark);font-size:11.5px}
+  table.ref tr:nth-child(even){background:var(--sky-softer)}
+
+  /* ===== RESEP ===== */
+  .rx-wrap{display:grid;grid-template-columns:1fr;gap:16px}
+  @media(min-width:880px){.rx-wrap{grid-template-columns:1fr 1.1fr}}
+  .rx-paper{
+    background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);
+    font-family:"Cambria","Georgia",serif;min-height:420px;
+  }
+  .rx-letterhead{text-align:center;border-bottom:2px solid var(--sky-dark);padding-bottom:10px;margin-bottom:12px}
+  .rx-letterhead .dr{font-size:18px;font-weight:800;color:var(--sky-dark);font-family:var(--font)}
+  .rx-letterhead .meta{font-size:11.5px;color:var(--muted);font-family:var(--font)}
+  .rx-patient{font-size:13px;margin-bottom:14px;font-family:var(--font)}
+  .rx-patient span{display:inline-block;min-width:140px}
+  .rx-item{margin-bottom:14px;font-size:15px;line-height:1.6}
+  .rx-item .recipe{font-weight:700}
+  .rx-item .signa{padding-left:26px}
+  .rx-item .paraf{padding-left:26px;color:var(--muted)}
+  .rx-empty{color:var(--muted);text-align:center;padding:60px 0;font-family:var(--font);font-style:italic}
+  .rx-foot{margin-top:28px;text-align:right;font-family:var(--font);font-size:13px}
+  .rx-list-item{display:flex;gap:8px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;background:var(--sky-softer)}
+  .rx-list-item .x{cursor:pointer;color:var(--emer);font-weight:800;font-size:16px;line-height:1}
+  .rx-list-item input,.rx-list-item select,.rx-list-item textarea{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:7px;font-size:12.5px;font-family:var(--font);margin-top:4px}
+  .rx-list-item label{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase}
+  .rx-list-item .body{flex:1}
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .btn{border:1px solid var(--line);background:#fff;color:var(--sky-dark);padding:9px 15px;border-radius:9px;font-weight:700;cursor:pointer;font-size:13px}
+  .btn.primary{background:var(--sky);color:#fff;border-color:var(--sky)}
+  .btn.primary:hover{background:var(--sky-dark)}
+  .btn.ghost:hover{background:var(--sky-softer)}
+  .add-manual{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+
+  .legend{font-size:11.5px;color:var(--muted);margin:6px 0 14px;display:flex;gap:14px;flex-wrap:wrap}
+  .legend b{color:var(--ink)}
+
+  footer{text-align:center;font-size:11.5px;color:var(--muted);padding:24px 0 10px}
+
+  .hidden{display:none!important}
+
+  @media print{
+    header,.tabs,.search-box,.disclaimer,.panel,.btn-row,.rx-list-panel,footer,.legend{display:none!important}
+    .rx-wrap{grid-template-columns:1fr}
+    .rx-paper{border:none;box-shadow:none;padding:0}
+    body{background:#fff}
+  }
+  @media(max-width:600px){
+    .drow .k{flex:0 0 92px}
+    .head-text h1{font-size:17px}
+    .refs{width:100%;margin-left:0}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="head-inner">
+    <div class="logo">⚕️</div>
+    <div class="head-text">
+      <h1>Referensi Obat Pada Anak</h1>
+      <div class="sub">Alat bantu referensi cepat obat pediatric · Berbasis IDAI / AAP / Frank Shann (Drug Doses)</div>
+    </div>
+    <div class="refs">
+      <span class="ref-badge">📘 IDAI</span>
+      <span class="ref-badge">📗 AAP</span>
+      <span class="ref-badge">📕 Frank Shann — Drug Doses</span>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="disclaimer">
+    <span>⚠️</span>
+    <div><b>Perhatian klinis:</b> Aplikasi ini adalah alat bantu referensi cepat, bukan pengganti pertimbangan klinis.
+    Selalu verifikasi dosis, kontraindikasi, dan interaksi terhadap kondisi pasien, fungsi ginjal/hati, serta sumber resmi terbaru (IDAI/AAP/Frank Shann) sebelum meresepkan. Dosis dihitung otomatis dari berat badan dan harus dicek ulang.</div>
+  </div>
+
+  <!-- ===== PATIENT PANEL ===== -->
+  <div class="panel">
+    <h2>👶 Data Pasien</h2>
+    <div class="grid">
+      <div class="field"><label>Nama</label><input id="pNama" type="text" placeholder="Nama pasien"></div>
+      <div class="field"><label>Tanggal Lahir</label><input id="pTgl" type="date"></div>
+      <div class="field"><label>Usia (manual / otomatis)</label><input id="pUsia" type="text" placeholder="cth: 2 thn 4 bln"></div>
+      <div class="field"><label>Jenis Kelamin</label>
+        <select id="pSex"><option value="">— pilih —</option><option>Laki-laki</option><option>Perempuan</option></select>
+      </div>
+      <div class="field"><label>Berat Badan (kg)</label><input id="pBB" type="number" step="0.1" min="0" placeholder="kg"></div>
+      <div class="field"><label>Tinggi/Panjang (cm)</label><input id="pTB" type="number" step="0.1" min="0" placeholder="cm"></div>
+      <div class="field"><label>Status Gizi</label>
+        <select id="pGizi">
+          <option value="">— otomatis/pilih —</option>
+          <option>Gizi baik</option>
+          <option>Gizi kurang (underweight)</option>
+          <option>Gizi buruk (severe wasting)</option>
+          <option>Wasted / kurus</option>
+          <option>Risiko gizi lebih</option>
+          <option>Gizi lebih (overweight)</option>
+          <option>Obesitas</option>
+          <option>Stunting</option>
+        </select>
+      </div>
+    </div>
+    <div class="calc-row">
+      <span class="pill">Usia: <b id="oUsia">—</b></span>
+      <span class="pill">BB untuk dosis: <b id="oBB">—</b></span>
+      <span class="pill" id="oBMIp">IMT: <b id="oBMI">—</b></span>
+      <span class="pill" id="oStatus">Status gizi: <b>—</b></span>
+    </div>
+  </div>
+
+  <!-- ===== TABS ===== -->
+  <div class="tabs">
+    <button class="tab active" data-view="sistem">🫀 Per Sistem Organ</button>
+    <button class="tab emer" data-view="emergensi">🚨 Obat Emergensi</button>
+    <button class="tab" data-view="alat">📏 Alat (NGT/IV/ETT)</button>
+    <button class="tab" data-view="singkatan">✒️ Singkatan Latin</button>
+  </div>
+
+  <!-- ===== VIEW: SISTEM ===== -->
+  <div id="view-sistem">
+    <div class="search-box"><input id="search" type="text" placeholder="Cari obat / bahan aktif / merk dagang…"></div>
+    <div class="legend">
+      <span>Rute: <b class="route-tag r-oral">Oral</b> <b class="route-tag r-iv">IV/IM</b> <b class="route-tag r-inh">Inhalasi</b> <b class="route-tag r-top">Oles/Topikal</b> <b class="route-tag r-rect">Rektal</b></span>
+      <span>💚 = dosis terhitung otomatis dari BB</span>
+    </div>
+    <div id="sysContainer"></div>
+  </div>
+
+  <!-- ===== VIEW: EMERGENSI ===== -->
+  <div id="view-emergensi" class="hidden">
+    <div class="disclaimer" style="background:var(--emer-soft);border-color:#fca5a5;color:#991b1b">
+      <span>🚨</span><div><b>Obat Emergensi / Resusitasi.</b> Dosis berbasis berat badan pasien aktif. Sediakan APLS/PALS dan timbang/estimasi BB sebelum tindakan.</div>
+    </div>
+    <div id="emerContainer"></div>
+  </div>
+
+  <!-- ===== VIEW: ALAT ===== -->
+  <div id="view-alat" class="hidden">
+    <div class="panel" style="margin-bottom:14px">
+      <h2>📏 Ukuran Alat Berdasarkan Usia &amp; Berat Badan</h2>
+      <div class="eq-sub">Perhitungan otomatis memakai data pasien aktif (usia &amp; BB). Untuk neonatus, gunakan tabel berbasis berat.</div>
+    </div>
+    <div class="eq-grid" id="eqGrid"></div>
+    <div class="panel" style="margin-top:14px">
+      <h2>👶 Tabel Neonatus (berbasis berat)</h2>
+      <table class="ref">
+        <tr><th>Berat lahir</th><th>ETT (ID mm)</th><th>Kedalaman ETT (cm di bibir)</th><th>OGT/NGT (Fr)</th><th>Kateter isap (Fr)</th></tr>
+        <tr><td>&lt; 1 kg</td><td>2,5</td><td>6,5–7</td><td>5</td><td>5</td></tr>
+        <tr><td>1 – 2 kg</td><td>3,0</td><td>7–8</td><td>5–6</td><td>6</td></tr>
+        <tr><td>2 – 3 kg</td><td>3,0 – 3,5</td><td>8–9</td><td>6–8</td><td>6–8</td></tr>
+        <tr><td>&gt; 3 kg</td><td>3,5 – 4,0</td><td>9–10</td><td>8</td><td>8</td></tr>
+      </table>
+      <div class="eq-sub" style="margin-top:8px">Kedalaman ETT neonatus ≈ <b>BB (kg) + 6</b> cm. NGT/OGT panjang insersi ≈ dari ujung hidung → telinga → prosesus xifoid (NEMU).</div>
+    </div>
+  </div>
+
+  <!-- ===== VIEW: SINGKATAN ===== -->
+  <div id="view-singkatan" class="hidden">
+    <div class="panel">
+      <h2>✒️ Singkatan Bahasa Latin pada Resep</h2>
+      <table class="ref">
+        <tr><th>Singkatan</th><th>Latin</th><th>Arti</th></tr>
+        <tr><td>R/</td><td>recipe</td><td>ambillah / tuliskan</td></tr>
+        <tr><td>S</td><td>signa</td><td>tandai (aturan pakai untuk pasien)</td></tr>
+        <tr><td>m.f.</td><td>misce fac</td><td>campur dan buatlah</td></tr>
+        <tr><td>pulv</td><td>pulveres / pulvis</td><td>serbuk terbagi / serbuk</td></tr>
+        <tr><td>caps</td><td>capsula</td><td>kapsul</td></tr>
+        <tr><td>dtd</td><td>da tales doses</td><td>berikan sebanyak dosis demikian</td></tr>
+        <tr><td>no.</td><td>numero</td><td>sebanyak (jumlah)</td></tr>
+        <tr><td>fl / fls</td><td>flacon / flask</td><td>botol</td></tr>
+        <tr><td>dd</td><td>de die</td><td>per hari (frekuensi)</td></tr>
+        <tr><td>cth</td><td>cochlear theae</td><td>sendok teh (5 mL)</td></tr>
+        <tr><td>C</td><td>cochlear</td><td>sendok makan (15 mL)</td></tr>
+        <tr><td>gtt</td><td>guttae</td><td>tetes</td></tr>
+        <tr><td>p.r.n.</td><td>pro re nata</td><td>bila perlu</td></tr>
+        <tr><td>a.c.</td><td>ante coenam</td><td>sebelum makan</td></tr>
+        <tr><td>p.c.</td><td>post coenam</td><td>sesudah makan</td></tr>
+        <tr><td>d.c.</td><td>durante coenam</td><td>saat makan</td></tr>
+        <tr><td>o.m.</td><td>omni mane</td><td>tiap pagi</td></tr>
+        <tr><td>o.n.</td><td>omni nocte</td><td>tiap malam</td></tr>
+        <tr><td>h.s.</td><td>hora somni</td><td>menjelang tidur</td></tr>
+        <tr><td>q.s.</td><td>quantum satis</td><td>secukupnya</td></tr>
+        <tr><td>u.e.</td><td>usus externus</td><td>pemakaian luar</td></tr>
+        <tr><td>u.c.</td><td>usus cognitus</td><td>aturan pakai diketahui</td></tr>
+        <tr><td>aa</td><td>ana</td><td>masing-masing sama banyak</td></tr>
+        <tr><td>iter</td><td>iteratie / iteretur</td><td>dapat diulang</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <footer>
+    Referensi Obat Pada Anak · Berbasis IDAI / AAP / Frank Shann (Drug Doses) · Dapat dibuka offline.<br>
+    Verifikasi setiap dosis sebelum penggunaan klinis. Versi alat bantu edukasi.
+  </footer>
+</div>
+
+<script>
+/* =========================================================
+   DATA OBAT
+   doseType: 'perdose' (mg/kg/kali) atau 'perday' (mg/kg/hari)
+   r: rute -> 'oral','iv','inh','top','rect'
+   ========================================================= */
+const SYSTEMS = [
+  {id:'analgesik', ico:'🌡️', name:'Analgesik · Antipiretik · Antiinflamasi'},
+  {id:'infeksi',   ico:'🦠', name:'Antimikroba (Antibiotik · Antivirus · Antijamur · Antiparasit)'},
+  {id:'respirasi', ico:'🫁', name:'Sistem Respirasi'},
+  {id:'gastro',    ico:'🍽️', name:'Sistem Gastrointestinal'},
+  {id:'saraf',     ico:'🧠', name:'Sistem Saraf (Neurologi · Antikonvulsan · Sedasi)'},
+  {id:'kardio',    ico:'🫀', name:'Sistem Kardiovaskular'},
+  {id:'renal',     ico:'🩺', name:'Sistem Genitourinari / Renal'},
+  {id:'alergi',    ico:'🤧', name:'Alergi · Imunologi · Kortikosteroid'},
+  {id:'endokrin',  ico:'⚗️', name:'Endokrin · Metabolik'},
+  {id:'hema',      ico:'🩸', name:'Hematologi · Nutrisi · Suplemen'},
+  {id:'topikal',   ico:'🧴', name:'Dermatologi · Mata · THT (Topikal)'}
+];
+
+const ROUTES = {oral:['Oral','r-oral'], iv:['IV/IM','r-iv'], inh:['Inhalasi','r-inh'], top:['Oles','r-top'], rect:['Rektal','r-rect']};
+
+const DRUGS = [
+/* ---------- ANALGESIK ---------- */
+{s:'analgesik',n:'Parasetamol',a:'Paracetamol/Acetaminophen',r:'oral',
+ dLo:10,dHi:15,unit:'mg/kg/kali',type:'perdose',freq:'tiap 4–6 jam',max:'maks 90 mg/kg/hari atau 4 g/hari',
+ sed:['Tab 500 mg','Syr 120 mg/5 mL','Syr 250 mg/5 mL','Drops 100 mg/mL','Supp 125/250 mg','Inj 10 mg/mL'],
+ merk:['Sanmol','Tempra','Pamol','Praxion','Panadol'],dur:'3–5 hari p.r.n.',
+ latin:'Paracetamol',rx:'R/ Paracetamol syr fl No. I — S 3–4 dd cth I p.r.n. febris'},
+{s:'analgesik',n:'Ibuprofen',a:'Ibuprofen',r:'oral',
+ dLo:5,dHi:10,unit:'mg/kg/kali',type:'perdose',freq:'tiap 6–8 jam',max:'maks 40 mg/kg/hari',
+ sed:['Tab 200/400 mg','Syr 100 mg/5 mL','Syr 200 mg/5 mL'],merk:['Proris','Bufect','Farsifen'],dur:'≤5 hari',
+ latin:'Ibuprofen',rx:'R/ Ibuprofen syr fl No. I — S 3 dd cth I (p.c.) p.r.n.',
+ note:'Hindari pada dehidrasi/gangguan ginjal, demam berdarah, &lt;6 bulan.'},
+{s:'analgesik',n:'Metamizol',a:'Metamizole/Antalgin',r:'iv',
+ dLo:10,dHi:15,unit:'mg/kg/kali',type:'perdose',freq:'tiap 6–8 jam',max:'',
+ sed:['Tab 500 mg','Inj 500 mg/mL'],merk:['Antalgin','Novalgin'],dur:'p.r.n.',
+ latin:'Metamizolum natricum',rx:'R/ Metamizol amp No. I — S i.m.m.'},
+{s:'analgesik',n:'Asam Mefenamat',a:'Mefenamic acid',r:'oral',
+ dLo:'',dHi:'',unit:'',type:'fixed',freq:'tiap 8 jam (≥6 thn)',max:'',custom:'3–6,5 mg/kg/kali; biasanya ≥6 thn',
+ sed:['Tab 250/500 mg','Syr 50 mg/5 mL'],merk:['Mefinal','Ponstan'],dur:'p.r.n.',
+ latin:'Acidum mefenamicum',rx:'R/ Asam mefenamat tab 250 mg No. X — S 3 dd tab I p.r.n.'},
+{s:'analgesik',n:'Ketorolak',a:'Ketorolac',r:'iv',
+ dLo:0.5,dHi:1,unit:'mg/kg/kali',type:'perdose',freq:'tiap 6–8 jam',max:'maks 30 mg/dosis, ≤5 hari, ≥2 thn',
+ sed:['Inj 10/30 mg/mL'],merk:['Toradol','Ketorolac'],dur:'≤5 hari',
+ latin:'Ketorolacum',rx:'R/ Ketorolac amp No. I — S i.v.'},
+
+/* ---------- INFEKSI ---------- */
+{s:'infeksi',n:'Amoksisilin',a:'Amoxicillin',r:'oral',
+ dLo:25,dHi:50,unit:'mg/kg/hari',type:'perday',freq:'÷ tiap 8–12 jam',max:'dosis tinggi 80–90 mg/kg/hari (OMA/pneumonia)',
+ sed:['Cap 250/500 mg','Syr 125 mg/5 mL','Syr 250 mg/5 mL','Drops 100 mg/mL'],merk:['Amoxsan','Yusimox','Kalmoxillin'],dur:'5–10 hari',
+ latin:'Amoxicillinum',rx:'R/ Amoxicillin syr fl No. I — S 3 dd cth I (habiskan)'},
+{s:'infeksi',n:'Amoksisilin-Klavulanat',a:'Amoxicillin + Clavulanic acid',r:'oral',
+ dLo:25,dHi:45,unit:'mg/kg/hari',type:'perday',freq:'÷ tiap 12 jam (komponen amoksisilin)',max:'',
+ sed:['Tab 500/625 mg','Syr 125/228/457 mg/5 mL'],merk:['Augmentin','Claneksi','Clavamox'],dur:'5–10 hari',
+ latin:'Amoxicillinum + Acidum clavulanicum',rx:'R/ Co-amoxiclav syr fl No. I — S 2 dd cth I'},
+{s:'infeksi',n:'Sefadroksil',a:'Cefadroxil',r:'oral',
+ dLo:30,dHi:30,unit:'mg/kg/hari',type:'perday',freq:'÷ tiap 12 jam',max:'',
+ sed:['Cap 500 mg','Syr 125/250 mg/5 mL'],merk:['Cefat','Lapicef','Droxefa'],dur:'7–10 hari',
+ latin:'Cefadroxilum',rx:'R/ Cefadroxil syr fl No. I — S 2 dd cth I'},
+{s:'infeksi',n:'Sefiksim',a:'Cefixime',r:'oral',
+ dLo:8,dHi:8,unit:'mg/kg/hari',type:'perday',freq:'÷ tiap 12–24 jam',max:'maks 400 mg/hari',
+ sed:['Cap 100/200 mg','Syr 100 mg/5 mL'],merk:['Cefspan','Fixiphar','Sporetik'],dur:'5–10 hari',
+ latin:'Cefiximum',rx:'R/ Cefixime syr fl No. I — S 2 dd cth I'},
+{s:'infeksi',n:'Seftriakson',a:'Ceftriaxone',r:'iv',
+ dLo:50,dHi:100,unit:'mg/kg/hari',type:'perday',freq:'÷ tiap 12–24 jam',max:'maks 2–4 g/hari',
+ sed:['Inj 1 g vial'],merk:['Broadced','Rocephin','Cefriex'],dur:'sesuai indikasi',
+ latin:'Ceftriaxonum',rx:'R/ Ceftriaxone vial 1 g No. I — S i.v.',
+ note:'Hindari bersamaan kalsium IV pada neonatus.'},
+{s:'infeksi',n:'Sefotaksim',a:'Cefotaxime',r:'iv',
+ dLo:100,dHi:200,unit:'mg/kg/hari',type:'perday',freq:'÷ tiap 6–8 jam',max:'',
+ sed:['Inj 1 g vial'],merk:['Claforan','Cefotaxime'],dur:'sesuai indikasi',
+ latin:'Cefotaximum',rx:'R/ Cefotaxime vial 1 g No. I — S i.v.'},
+{s:'infeksi',n:'Ampisilin',a:'Ampicillin',r:'iv',
+ dLo:100,dHi:200,unit:'mg/kg/hari',type:'perday',freq:'÷ tiap 6 jam',max:'',
+ sed:['Inj 1 g vial','Cap 250/500 mg'],merk:['Ampicillin','Standacillin'],dur:'sesuai indikasi',
+ latin:'Ampicillinum',rx:'R/ Ampicillin vial 1 g No. I — S i.v.'},
+{s:'infeksi',n:'Gentamisin',a:'Gentamicin',r:'iv',
+ dLo:5,dHi:7.5,unit:'mg/kg/hari',type:'perday',freq:'1× sehari (atau ÷8 jam)',max:'',
+ sed:['Inj 40 mg/mL (10/80 mg)'],merk:['Garamycin','Gentamicin'],dur:'≤7 hari (cek kadar)',
+ latin:'Gentamicinum',rx:'R/ Gentamicin amp No. I — S i.v. 1 dd',note:'Nefro/ototoksik — pantau fungsi ginjal.'},
+{s:'infeksi',n:'Amikasin',a:'Amikacin',r:'iv',
+ dLo:15,dHi:15,unit:'mg/kg/hari',type:'perday',freq:'1× sehari',max:'',
+ sed:['Inj 250 mg/mL'],merk:['Amikin','Mikasin'],dur:'≤7 hari',
+ latin:'Amikacinum',rx:'R/ Amikacin amp No. I — S i.v. 1 dd'},
+{s:'infeksi',n:'Meropenem',a:'Meropenem',r:'iv',
+ dLo:60,dHi:60,unit:'mg/kg/hari',type:'perday',freq:'÷ tiap 8 jam',max:'meningitis 120 mg/kg/hari',
+ sed:['Inj 1 g vial'],merk:['Meronem','Caprenem'],dur:'sesuai indikasi',
+ latin:'Meropenemum',rx:'R/ Meropenem vial 1 g No. I — S i.v.'},
+{s:'infeksi',n:'Azitromisin',a:'Azithromycin',r:'oral',
+ dLo:10,dHi:10,unit:'mg/kg/hari',type:'perday',freq:'1× sehari (hari 1 lalu 5 mg/kg hari 2–5)',max:'maks 500 mg/hari',
+ sed:['Tab 250/500 mg','Syr 200 mg/5 mL'],merk:['Zithromax','Zibramax','Azomax'],dur:'3–5 hari',
+ latin:'Azithromycinum',rx:'R/ Azithromycin syr fl No. I — S 1 dd cth I'},
+{s:'infeksi',n:'Eritromisin',a:'Erythromycin',r:'oral',
+ dLo:30,dHi:50,unit:'mg/kg/hari',type:'perday',freq:'÷ tiap 6 jam',max:'',
+ sed:['Tab 250/500 mg','Syr 200 mg/5 mL'],merk:['Erysanbe','Erythromycin'],dur:'7–10 hari',
+ latin:'Erythromycinum',rx:'R/ Erythromycin syr fl No. I — S 4 dd cth I'},
+{s:'infeksi',n:'Kotrimoksazol',a:'Trimethoprim-Sulfamethoxazole',r:'oral',
+ dLo:6,dHi:12,unit:'mg TMP/kg/hari',type:'perday',freq:'÷ tiap 12 jam',max:'',
+ sed:['Tab 480/960 mg','Syr 240 mg/5 mL'],merk:['Bactrim','Primadex','Cotrimoxazole'],dur:'5–14 hari',
+ latin:'Cotrimoxazolum',rx:'R/ Cotrimoxazole syr fl No. I — S 2 dd cth I'},
+{s:'infeksi',n:'Metronidazol',a:'Metronidazole',r:'oral',
+ dLo:30,dHi:30,unit:'mg/kg/hari',type:'perday',freq:'÷ tiap 8 jam',max:'maks 4 g/hari',
+ sed:['Tab 250/500 mg','Syr 125 mg/5 mL','Infus 5 mg/mL','Supp'],merk:['Flagyl','Trichodazol'],dur:'7–10 hari',
+ latin:'Metronidazolum',rx:'R/ Metronidazole syr fl No. I — S 3 dd cth I (p.c.)'},
+{s:'infeksi',n:'Sefuroksim',a:'Cefuroxime',r:'oral',
+ dLo:20,dHi:30,unit:'mg/kg/hari',type:'perday',freq:'÷ tiap 12 jam',max:'',
+ sed:['Tab 250/500 mg','Syr 125 mg/5 mL'],merk:['Cefuroxime','Anbacim'],dur:'7–10 hari',
+ latin:'Cefuroximum',rx:'R/ Cefuroxime syr fl No. I — S 2 dd cth I'},
+{s:'infeksi',n:'Asiklovir',a:'Acyclovir',r:'oral',
+ dLo:'',dHi:'',unit:'',type:'fixed',custom:'20 mg/kg/kali 4×/hari (varisela); IV HSV 30–60 mg/kg/hari',freq:'4× sehari',max:'maks 800 mg/dosis',
+ sed:['Tab 200/400 mg','Syr 200 mg/5 mL','Inj 250 mg'],merk:['Zovirax','Clinovir'],dur:'5–7 hari',
+ latin:'Aciclovirum',rx:'R/ Acyclovir tab 400 mg No. XX — S 4 dd tab I'},
+{s:'infeksi',n:'Albendazol',a:'Albendazole',r:'oral',
+ dLo:'',dHi:'',unit:'',type:'fixed',custom:'>2 thn: 400 mg dosis tunggal; 1–2 thn: 200 mg',freq:'dosis tunggal (ulang 2 mgg bila perlu)',max:'',
+ sed:['Tab 400 mg','Syr 200 mg/5 mL'],merk:['Albendazole','Helmizol'],dur:'1 hari',
+ latin:'Albendazolum',rx:'R/ Albendazole tab 400 mg No. I — S 1 dd tab I (dikunyah)'},
+{s:'infeksi',n:'Flukonazol',a:'Fluconazole',r:'oral',
+ dLo:3,dHi:6,unit:'mg/kg/hari',type:'perday',freq:'1× sehari',max:'',
+ sed:['Cap 50/150 mg','Syr 50 mg/5 mL','Inf 2 mg/mL'],merk:['Diflucan','Govazol'],dur:'sesuai indikasi',
+ latin:'Fluconazolum',rx:'R/ Fluconazole cap 50 mg No. VII — S 1 dd cap I'},
+{s:'infeksi',n:'Vankomisin',a:'Vancomycin',r:'iv',
+ dLo:40,dHi:60,unit:'mg/kg/hari',type:'perday',freq:'÷ tiap 6–8 jam',max:'pantau kadar (trough)',
+ sed:['Inj 500 mg/1 g vial'],merk:['Vancep','Vancomycin'],dur:'sesuai indikasi',
+ latin:'Vancomycinum',rx:'R/ Vancomycin vial No. I — S i.v. (infus ≥60 menit)'},
+
+/* ---------- RESPIRASI ---------- */
+{s:'respirasi',n:'Salbutamol (nebul)',a:'Salbutamol/Albuterol',r:'inh',
+ dLo:'',dHi:'',unit:'',type:'fixed',custom:'Nebul: 2,5 mg (<5 thn) / 5 mg (≥5 thn) per nebulisasi',freq:'tiap 4–6 jam / p.r.n.',max:'',
+ sed:['Respule 2,5 mg/2,5 mL','Syr 2 mg/5 mL','Tab 2/4 mg','MDI 100 mcg/puff'],merk:['Ventolin','Salbron','Lasal'],dur:'p.r.n.',
+ latin:'Salbutamolum',rx:'R/ Salbutamol respule 2,5 mg No. V — S nebulisasi p.r.n. sesak'},
+{s:'respirasi',n:'Salbutamol (oral)',a:'Salbutamol',r:'oral',
+ dLo:0.1,dHi:0.15,unit:'mg/kg/kali',type:'perdose',freq:'tiap 6–8 jam',max:'maks 4 mg/dosis',
+ sed:['Syr 2 mg/5 mL','Tab 2/4 mg'],merk:['Ventolin','Salbron'],dur:'p.r.n.',
+ latin:'Salbutamolum',rx:'R/ Salbutamol syr fl No. I — S 3 dd cth I'},
+{s:'respirasi',n:'Ipratropium Bromida',a:'Ipratropium bromide',r:'inh',
+ dLo:'',dHi:'',unit:'',type:'fixed',custom:'250 mcg (<5 thn) / 250–500 mcg (≥5 thn) per nebul',freq:'tiap 6–8 jam',max:'',
+ sed:['Respule 250 mcg/mL'],merk:['Atrovent','Ipratropium'],dur:'p.r.n.',
+ latin:'Ipratropii bromidum',rx:'R/ Ipratropium respule No. V — S nebul (kombinasi salbutamol)'},
+{s:'respirasi',n:'Budesonide (nebul)',a:'Budesonide',r:'inh',
+ dLo:'',dHi:'',unit:'',type:'fixed',custom:'0,25–0,5 mg per nebul, 1–2×/hari',freq:'1–2× sehari',max:'',
+ sed:['Respule 0,25/0,5 mg/mL'],merk:['Pulmicort','Budenofalk'],dur:'pemeliharaan',
+ latin:'Budesonidum',rx:'R/ Budesonide respule 0,5 mg No. X — S nebul 2 dd'},
+{s:'respirasi',n:'Deksametason (croup)',a:'Dexamethasone',r:'oral',
+ dLo:0.15,dHi:0.6,unit:'mg/kg/kali',type:'perdose',freq:'dosis tunggal',max:'maks 16 mg',
+ sed:['Tab 0,5 mg','Inj 5 mg/mL','Syr'],merk:['Dexamethasone','Kalmethasone'],dur:'1 dosis',
+ latin:'Dexamethasonum',rx:'R/ Dexamethasone No. I — S dosis tunggal (croup)'},
+{s:'respirasi',n:'Ambroxol',a:'Ambroxol',r:'oral',
+ dLo:'',dHi:'',unit:'',type:'fixed',custom:'<2 thn: 7,5 mg 2×; 2–5 thn: 7,5 mg 3×; >5 thn: 15 mg 2–3×',freq:'2–3× sehari',max:'',
+ sed:['Syr 15 mg/5 mL','Drops 7,5 mg/mL','Tab 30 mg'],merk:['Mucos','Mucera','Epexol'],dur:'p.r.n. batuk',
+ latin:'Ambroxoli hydrochloridum',rx:'R/ Ambroxol syr fl No. I — S 3 dd cth I'},
+{s:'respirasi',n:'N-Asetilsistein',a:'N-Acetylcysteine',r:'oral',
+ dLo:'',dHi:'',unit:'',type:'fixed',custom:'<2 thn: 100 mg 2×; 2–6 thn: 100 mg 2–3×; >6 thn: 200 mg 2–3×',freq:'2–3× sehari',max:'',
+ sed:['Sachet 100/200 mg','Cap 200 mg'],merk:['Fluimucil','Hidonac'],dur:'p.r.n.',
+ latin:'Acetylcysteinum',rx:'R/ Acetylcysteine sach 200 mg No. X — S 3 dd sach I'},
+
+/* ---------- GASTRO ---------- */
+{s:'gastro',n:'Ondansetron',a:'Ondansetron',r:'iv',
+ dLo:0.1,dHi:0.15,unit:'mg/kg/kali',type:'perdose',freq:'tiap 8 jam',max:'maks 4 mg (<12 thn) / 8 mg',
+ sed:['Tab 4/8 mg','Syr 4 mg/5 mL','Inj 2 mg/mL'],merk:['Narfoz','Invomit','Vometron'],dur:'p.r.n.',
+ latin:'Ondansetronum',rx:'R/ Ondansetron amp No. I — S i.v. p.r.n. muntah'},
+{s:'gastro',n:'Domperidon',a:'Domperidone',r:'oral',
+ dLo:0.25,dHi:0.5,unit:'mg/kg/kali',type:'perdose',freq:'3× sehari (a.c.)',max:'',
+ sed:['Tab 10 mg','Syr 5 mg/5 mL','Drops 5 mg/mL'],merk:['Vometa','Motilium'],dur:'p.r.n.',
+ latin:'Domperidonum',rx:'R/ Domperidone syr fl No. I — S 3 dd cth I (a.c.)'},
+{s:'gastro',n:'Omeprazol',a:'Omeprazole',r:'oral',
+ dLo:1,dHi:1,unit:'mg/kg/hari',type:'perday',freq:'1× sehari (a.c.)',max:'maks 20–40 mg',
+ sed:['Cap 20 mg','Inj 40 mg vial'],merk:['Pumpitor','Losec','OMZ'],dur:'2–4 minggu',
+ latin:'Omeprazolum',rx:'R/ Omeprazole cap 20 mg No. XIV — S 1 dd cap I (a.c. pagi)'},
+{s:'gastro',n:'Ranitidin',a:'Ranitidine',r:'oral',
+ dLo:2,dHi:4,unit:'mg/kg/hari',type:'perday',freq:'÷ tiap 12 jam',max:'',
+ sed:['Tab 150 mg','Inj 25 mg/mL'],merk:['Ranitidine','Rantin'],dur:'sesuai indikasi',
+ latin:'Ranitidinum',rx:'R/ Ranitidine tab 150 mg No. X — S 2 dd tab ½'},
+{s:'gastro',n:'Zinc',a:'Zinc sulfate',r:'oral',
+ dLo:'',dHi:'',unit:'',type:'fixed',custom:'<6 bln: 10 mg/hari; ≥6 bln: 20 mg/hari (diare)',freq:'1× sehari × 10–14 hari',max:'',
+ sed:['Tab dispersible 20 mg','Syr 10 mg/5 mL'],merk:['Zinkid','Zinc','L-Zinc'],dur:'10–14 hari',
+ latin:'Zinci sulfas',rx:'R/ Zinc tab 20 mg No. X — S 1 dd tab I (diare, 10–14 hari)'},
+{s:'gastro',n:'Oralit',a:'Oral Rehydration Salt (ORS)',r:'oral',
+ dLo:'',dHi:'',unit:'',type:'fixed',custom:'Diare: <2 thn 50–100 mL/BAB; ≥2 thn 100–200 mL/BAB',freq:'tiap BAB cair',max:'',
+ sed:['Sachet (larut 200 mL air)'],merk:['Oralit','Pharolit','Aqua-rolyte'],dur:'selama diare',
+ latin:'—',rx:'R/ Oralit sach No. X — S larutkan 1 sach dalam 200 mL air, tiap BAB cair'},
+{s:'gastro',n:'Probiotik (Lactobacillus)',a:'Lactobacillus/Saccharomyces',r:'oral',
+ dLo:'',dHi:'',unit:'',type:'fixed',custom:'1 sachet 1–2×/hari',freq:'1–2× sehari',max:'',
+ sed:['Sachet'],merk:['Lacto-B','L-Bio','Interlac'],dur:'5–7 hari',
+ latin:'—',rx:'R/ Lacto-B sach No. X — S 2 dd sach I'},
+{s:'gastro',n:'Loperamid',a:'Loperamide',r:'oral',
+ dLo:'',dHi:'',unit:'',type:'fixed',custom:'Tidak rutin pada anak (<2 thn KONTRAINDIKASI)',freq:'—',max:'',
+ sed:['Tab 2 mg'],merk:['Imodium','Lodia'],dur:'—',
+ latin:'Loperamidum',rx:'—',note:'Hindari pada diare akut anak / disentri / <2 tahun.'},
+
+/* ---------- SARAF ---------- */
+{s:'saraf',n:'Diazepam (kejang)',a:'Diazepam',r:'iv',
+ dLo:0.2,dHi:0.5,unit:'mg/kg/kali',type:'perdose',freq:'dapat diulang 1×',max:'IV maks 10 mg; rektal 0,5 mg/kg',
+ sed:['Inj 5 mg/mL','Rektal tube 5/10 mg','Tab 2/5 mg'],merk:['Stesolid','Valisanbe','Valium'],dur:'akut',
+ latin:'Diazepamum',rx:'R/ Diazepam rektal 5 mg No. I — S 1 supp rektal bila kejang',
+ note:'Rektal: 0,5 mg/kg. Awasi depresi napas.'},
+{s:'saraf',n:'Midazolam',a:'Midazolam',r:'iv',
+ dLo:0.1,dHi:0.2,unit:'mg/kg/kali',type:'perdose',freq:'akut / drip',max:'bukal 0,2–0,3 mg/kg',
+ sed:['Inj 1/5 mg/mL'],merk:['Miloz','Dormicum','Sedacum'],dur:'akut',
+ latin:'Midazolamum',rx:'R/ Midazolam amp No. I — S i.v. bila kejang'},
+{s:'saraf',n:'Fenitoin',a:'Phenytoin',r:'iv',
+ dLo:15,dHi:20,unit:'mg/kg (loading)',type:'perdose',freq:'loading lalu 5–8 mg/kg/hari',max:'maks laju 1 mg/kg/menit',
+ sed:['Inj 50 mg/mL','Cap 100 mg'],merk:['Dilantin','Phenytoin','Kutoin'],dur:'rumatan',
+ latin:'Phenytoinum',rx:'R/ Phenytoin amp No. I — S i.v. loading (monitor jantung)'},
+{s:'saraf',n:'Fenobarbital',a:'Phenobarbital',r:'iv',
+ dLo:15,dHi:20,unit:'mg/kg (loading)',type:'perdose',freq:'rumatan 3–5 mg/kg/hari',max:'',
+ sed:['Inj 100 mg/mL','Tab 30/100 mg'],merk:['Sibital','Phenobarbital'],dur:'rumatan',
+ latin:'Phenobarbitalum',rx:'R/ Phenobarbital amp No. I — S i.v. loading'},
+{s:'saraf',n:'Asam Valproat',a:'Valproic acid/Sodium valproate',r:'oral',
+ dLo:10,dHi:15,unit:'mg/kg/hari (mulai)',type:'perday',freq:'÷ 2× (titrasi s/d 30–60 mg/kg/hari)',max:'',
+ sed:['Syr 250 mg/5 mL','Tab 250/500 mg'],merk:['Depakene','Depakote','Falpro'],dur:'jangka panjang',
+ latin:'Acidum valproicum',rx:'R/ Asam valproat syr fl No. I — S 2 dd cth I'},
+{s:'saraf',n:'Parasetamol (lihat Analgesik)',a:'—',r:'oral',
+ dLo:'',dHi:'',unit:'',type:'fixed',custom:'Lihat tab Analgesik untuk antipiretik kejang demam',freq:'',max:'',
+ sed:['—'],merk:['—'],dur:'',latin:'—',rx:'—'},
+
+/* ---------- KARDIO ---------- */
+{s:'kardio',n:'Furosemid',a:'Furosemide',r:'iv',
+ dLo:1,dHi:2,unit:'mg/kg/kali',type:'perdose',freq:'tiap 6–12 jam',max:'maks 6 mg/kg/hari',
+ sed:['Tab 40 mg','Inj 10 mg/mL'],merk:['Lasix','Furosemide','Uresix'],dur:'sesuai indikasi',
+ latin:'Furosemidum',rx:'R/ Furosemide amp No. I — S i.v. (pantau K+)'},
+{s:'kardio',n:'Spironolakton',a:'Spironolactone',r:'oral',
+ dLo:1,dHi:3,unit:'mg/kg/hari',type:'perday',freq:'÷ 1–2×',max:'',
+ sed:['Tab 25/100 mg'],merk:['Aldactone','Spirola','Letonal'],dur:'sesuai indikasi',
+ latin:'Spironolactonum',rx:'R/ Spironolactone tab 25 mg No. X — S 1 dd tab I'},
+{s:'kardio',n:'Kaptopril',a:'Captopril',r:'oral',
+ dLo:0.3,dHi:0.5,unit:'mg/kg/kali',type:'perdose',freq:'÷ tiap 8 jam (titrasi)',max:'neonatus mulai 0,1 mg/kg',
+ sed:['Tab 12,5/25/50 mg'],merk:['Capoten','Captopril','Farmoten'],dur:'jangka panjang',
+ latin:'Captoprilum',rx:'R/ Captopril tab 12,5 mg No. X — S 3 dd tab ½'},
+{s:'kardio',n:'Digoksin',a:'Digoxin',r:'oral',
+ dLo:'',dHi:'',unit:'',type:'fixed',custom:'Rumatan 8–10 mcg/kg/hari ÷2; digitalisasi sesuai protokol',freq:'÷ 2×',max:'cek kadar',
+ sed:['Tab 0,25 mg','Elixir 0,05 mg/mL','Inj'],merk:['Fargoxin','Lanoxin'],dur:'jangka panjang',
+ latin:'Digoxinum',rx:'R/ Digoxin tab 0,25 mg No. X — S sesuai dosis (mcg) terbagi 2'},
+{s:'kardio',n:'Propranolol',a:'Propranolol',r:'oral',
+ dLo:0.5,dHi:1,unit:'mg/kg/hari (mulai)',type:'perday',freq:'÷ tiap 8 jam',max:'titrasi s/d 2–4 mg/kg/hari',
+ sed:['Tab 10/40 mg'],merk:['Inderal','Propranolol'],dur:'sesuai indikasi',
+ latin:'Propranololum',rx:'R/ Propranolol tab 10 mg No. X — S 3 dd tab I'},
+
+/* ---------- RENAL ---------- */
+{s:'renal',n:'Prednison (sindrom nefrotik)',a:'Prednisone',r:'oral',
+ dLo:'',dHi:'',unit:'',type:'fixed',custom:'60 mg/m²/hari (≈2 mg/kg/hari) fase inisial',freq:'sesuai protokol',max:'maks 60–80 mg/hari',
+ sed:['Tab 5 mg'],merk:['Prednison','Eltazon'],dur:'sesuai protokol',
+ latin:'Prednisonum',rx:'R/ Prednison tab 5 mg No. XXX — S sesuai protokol SN'},
+{s:'renal',n:'Hidroklorotiazid',a:'Hydrochlorothiazide (HCT)',r:'oral',
+ dLo:1,dHi:2,unit:'mg/kg/hari',type:'perday',freq:'÷ 1–2×',max:'',
+ sed:['Tab 25 mg'],merk:['HCT','Hidroklorotiazid'],dur:'sesuai indikasi',
+ latin:'Hydrochlorothiazidum',rx:'R/ HCT tab 25 mg No. X — S 1 dd tab ½'},
+{s:'renal',n:'Fosfomisin/Nitrofurantoin (ISK)',a:'Nitrofurantoin',r:'oral',
+ dLo:5,dHi:7,unit:'mg/kg/hari',type:'perday',freq:'÷ tiap 6 jam',max:'profilaksis 1–2 mg/kg malam',
+ sed:['Tab/Cap 50/100 mg'],merk:['Nitrofurantoin'],dur:'5–7 hari',
+ latin:'Nitrofurantoinum',rx:'R/ Nitrofurantoin cap 50 mg No. XX — S 4 dd cap I'},
+
+/* ---------- ALERGI ---------- */
+{s:'alergi',n:'Setirizin',a:'Cetirizine',r:'oral',
+ dLo:'',dHi:'',unit:'',type:'fixed',custom:'6 bln–2 thn: 2,5 mg; 2–6 thn: 2,5–5 mg; >6 thn: 5–10 mg',freq:'1× sehari',max:'',
+ sed:['Tab 10 mg','Syr 5 mg/5 mL','Drops 10 mg/mL'],merk:['Incidal','Cetirizine','Ozen'],dur:'p.r.n.',
+ latin:'Cetirizini dihydrochloridum',rx:'R/ Cetirizine syr fl No. I — S 1 dd cth I (malam)'},
+{s:'alergi',n:'Klorfeniramin (CTM)',a:'Chlorpheniramine maleate',r:'oral',
+ dLo:0.1,dHi:0.1,unit:'mg/kg/kali',type:'perdose',freq:'tiap 6–8 jam',max:'maks 4 mg/dosis',
+ sed:['Tab 4 mg','Syr'],merk:['CTM','Chlorpheniramine'],dur:'p.r.n.',
+ latin:'Chlorpheniramini maleas',rx:'R/ CTM tab 4 mg No. X — S 3 dd tab ¼–½'},
+{s:'alergi',n:'Loratadin',a:'Loratadine',r:'oral',
+ dLo:'',dHi:'',unit:'',type:'fixed',custom:'2–<6 thn (>30 kg): 5 mg; ≥6 thn / >30 kg: 10 mg',freq:'1× sehari',max:'',
+ sed:['Tab 10 mg','Syr 5 mg/5 mL'],merk:['Claritin','Loratadine','Alloris'],dur:'p.r.n.',
+ latin:'Loratadinum',rx:'R/ Loratadine syr fl No. I — S 1 dd cth I'},
+{s:'alergi',n:'Metilprednisolon',a:'Methylprednisolone',r:'oral',
+ dLo:1,dHi:2,unit:'mg/kg/hari',type:'perday',freq:'÷ 1–2×',max:'pulse 30 mg/kg (maks 1 g)',
+ sed:['Tab 4/8/16 mg','Inj 125/500 mg'],merk:['Medrol','Lameson','Sanexon'],dur:'sesuai indikasi',
+ latin:'Methylprednisolonum',rx:'R/ Methylprednisolone tab 4 mg No. X — S 2 dd tab I (p.c.)'},
+{s:'alergi',n:'Deksametason',a:'Dexamethasone',r:'iv',
+ dLo:0.15,dHi:0.6,unit:'mg/kg/hari',type:'perday',freq:'÷ tiap 6–12 jam',max:'',
+ sed:['Tab 0,5 mg','Inj 5 mg/mL'],merk:['Dexamethasone','Kalmethasone'],dur:'sesuai indikasi',
+ latin:'Dexamethasonum',rx:'R/ Dexamethasone amp No. I — S i.v.'},
+
+/* ---------- ENDOKRIN ---------- */
+{s:'endokrin',n:'Levotiroksin',a:'Levothyroxine (L-Thyroxine)',r:'oral',
+ dLo:'',dHi:'',unit:'',type:'fixed',custom:'Neonatus hipotiroid kongenital: 10–15 mcg/kg/hari',freq:'1× sehari (pagi, a.c.)',max:'turun sesuai usia',
+ sed:['Tab 25/50/100 mcg'],merk:['Euthyrox','Thyrax','Levothyroxine'],dur:'jangka panjang',
+ latin:'Levothyroxinum natricum',rx:'R/ Levothyroxine tab 50 mcg No. XXX — S 1 dd sesuai dosis (pagi)'},
+{s:'endokrin',n:'Insulin (DKA/rumatan)',a:'Insulin',r:'iv',
+ dLo:0.05,dHi:0.1,unit:'unit/kg/jam',type:'perdose',freq:'infus kontinyu (DKA)',max:'',
+ sed:['Vial/Pen rapid & long acting'],merk:['Novorapid','Lantus','Levemir'],dur:'sesuai protokol',
+ latin:'Insulinum',rx:'R/ Insulin — S infus 0,05–0,1 U/kg/jam (protokol DKA)'},
+
+/* ---------- HEMA / NUTRISI ---------- */
+{s:'hema',n:'Zat Besi (elemental)',a:'Ferrous sulfate/Iron',r:'oral',
+ dLo:3,dHi:6,unit:'mg Fe elemental/kg/hari',type:'perday',freq:'÷ 1–2× (a.c.)',max:'terapi ADB',
+ sed:['Drops','Syr','Tab'],merk:['Sangobion','Ferriz','Maltofer'],dur:'2–3 bulan',
+ latin:'Ferrosi sulfas',rx:'R/ Preparat besi syr fl No. I — S 1 dd sesuai dosis (a.c.)'},
+{s:'hema',n:'Asam Folat',a:'Folic acid',r:'oral',
+ dLo:'',dHi:'',unit:'',type:'fixed',custom:'1 mg/hari (terapi); profilaksis sesuai indikasi',freq:'1× sehari',max:'',
+ sed:['Tab 1/5 mg'],merk:['Folavit','Folic acid'],dur:'sesuai indikasi',
+ latin:'Acidum folicum',rx:'R/ Folic acid tab 1 mg No. XXX — S 1 dd tab I'},
+{s:'hema',n:'Vitamin A',a:'Retinol',r:'oral',
+ dLo:'',dHi:'',unit:'',type:'fixed',custom:'6–11 bln: 100.000 IU; ≥12 bln: 200.000 IU',freq:'sesuai jadwal/indikasi',max:'',
+ sed:['Kapsul biru 100.000 IU','Kapsul merah 200.000 IU'],merk:['Vitamin A (Program)'],dur:'dosis',
+ latin:'Retinolum',rx:'R/ Vitamin A kaps No. I — S dosis sesuai usia'},
+{s:'hema',n:'Vitamin D',a:'Cholecalciferol (D3)',r:'oral',
+ dLo:'',dHi:'',unit:'',type:'fixed',custom:'Profilaksis 400 IU/hari (bayi); defisiensi 1.000–2.000 IU/hari',freq:'1× sehari',max:'',
+ sed:['Drops','Tab 400/1.000 IU'],merk:['Cernevit','Prove-D3','D3 drops'],dur:'sesuai indikasi',
+ latin:'Colecalciferolum',rx:'R/ Vitamin D3 drops fl No. I — S 1 dd gtt sesuai dosis'},
+{s:'hema',n:'Vitamin K1 (neonatus)',a:'Phytomenadione (Vit K1)',r:'iv',
+ dLo:'',dHi:'',unit:'',type:'fixed',custom:'Profilaksis neonatus: 1 mg IM dosis tunggal',freq:'dosis tunggal lahir',max:'',
+ sed:['Inj 2 mg/mL (10 mg/mL)'],merk:['Vit K1','Phytomenadione'],dur:'1 dosis',
+ latin:'Phytomenadionum',rx:'R/ Vit K1 amp No. I — S 1 mg i.m. (profilaksis bayi baru lahir)'},
+
+/* ---------- TOPIKAL ---------- */
+{s:'topikal',n:'Hidrokortison krim',a:'Hydrocortisone 1–2,5%',r:'top',
+ dLo:'',dHi:'',unit:'',type:'fixed',custom:'Oles tipis pada lesi 1–2× sehari',freq:'1–2× sehari',max:'≤2 minggu',
+ sed:['Krim/Salep 1%; 2,5%'],merk:['Hydrocortisone','Dermacoid'],dur:'≤2 minggu',
+ latin:'Hydrocortisonum',rx:'R/ Hydrocortisone cream 1% tube No. I — S u.e. oles tipis 2 dd'},
+{s:'topikal',n:'Mupirosin salep',a:'Mupirocin 2%',r:'top',
+ dLo:'',dHi:'',unit:'',type:'fixed',custom:'Oles pada lesi impetigo 2–3× sehari',freq:'2–3× sehari',max:'',
+ sed:['Salep 2%'],merk:['Bactroban','Pibaksin'],dur:'5–10 hari',
+ latin:'Mupirocinum',rx:'R/ Mupirocin oint 2% tube No. I — S u.e. oles 3 dd'},
+{s:'topikal',n:'Kloramfenikol tetes mata',a:'Chloramphenicol 0,5%',r:'top',
+ dLo:'',dHi:'',unit:'',type:'fixed',custom:'1 tetes tiap 4–6 jam pada mata terinfeksi',freq:'tiap 4–6 jam',max:'',
+ sed:['Tetes mata 0,5%','Salep mata 1%'],merk:['Cendo Fenicol','Erlamycetin'],dur:'5–7 hari',
+ latin:'Chloramphenicolum',rx:'R/ Chloramphenicol e.d. 0,5% fl No. I — S 4 dd gtt I O.D.S.'},
+{s:'topikal',n:'Permetrin krim (skabies)',a:'Permethrin 5%',r:'top',
+ dLo:'',dHi:'',unit:'',type:'fixed',custom:'Oles seluruh tubuh, diamkan 8–12 jam, bilas. Ulang 7 hari',freq:'1× lalu ulang 1 minggu',max:'',
+ sed:['Krim 5%'],merk:['Scabimite','Permethrin'],dur:'2 aplikasi',
+ latin:'Permethrinum',rx:'R/ Permethrin cream 5% tube No. I — S u.e. oles seluruh tubuh malam hari'}
+];
+
+/* ---------- OBAT EMERGENSI ---------- */
+const EMERGENCY = [
+{n:'Adrenalin / Epinefrin — Henti Jantung',a:'Epinephrine 1:10.000',r:'iv',
+ calc:bb=>`${fmt(bb*0.01)} mg = ${fmt(bb*0.1)} mL (1:10.000) IV/IO`,
+ fixed:'0,01 mg/kg (0,1 mL/kg 1:10.000) IV/IO, ulang tiap 3–5 mnt',sed:['Inj 1 mg/mL (1:1.000)'],latin:'Adrenalinum',
+ rx:'Pengenceran: 1 mg dlm 10 mL NaCl = 1:10.000'},
+{n:'Adrenalin / Epinefrin — Anafilaksis',a:'Epinephrine 1:1.000',r:'iv',
+ calc:bb=>`${fmt(Math.min(bb*0.01,0.5))} mg = ${fmt(Math.min(bb*0.01,0.5))} mL (1:1.000) IM (maks 0,5 mg)`,
+ fixed:'0,01 mg/kg IM (1:1.000), paha anterolateral, ulang 5–15 mnt',sed:['Inj 1 mg/mL'],latin:'Adrenalinum',
+ rx:'Lini pertama anafilaksis — IM, bukan IV bolus'},
+{n:'Atropin',a:'Atropine sulfate',r:'iv',
+ calc:bb=>`${fmt(Math.max(0.1,Math.min(bb*0.02,0.5)))} mg IV (min 0,1 mg, maks 0,5 mg)`,
+ fixed:'0,02 mg/kg IV (min 0,1 mg, maks anak 0,5 mg)',sed:['Inj 0,25/0,5 mg/mL'],latin:'Atropini sulfas',
+ rx:'Bradikardia simtomatik / blokade vagal'},
+{n:'Adenosin',a:'Adenosine',r:'iv',
+ calc:bb=>`Dosis 1: ${fmt(bb*0.1)} mg; Dosis 2: ${fmt(bb*0.2)} mg IV cepat (bolus + flush)`,
+ fixed:'0,1 mg/kg (maks 6 mg) lalu 0,2 mg/kg (maks 12 mg)',sed:['Inj 3 mg/mL'],latin:'Adenosinum',
+ rx:'SVT — push cepat diikuti flush NaCl'},
+{n:'Amiodaron',a:'Amiodarone',r:'iv',
+ calc:bb=>`${fmt(bb*5)} mg IV/IO (5 mg/kg)`,
+ fixed:'5 mg/kg IV/IO (VF/VT tanpa nadi); maks 300 mg',sed:['Inj 50 mg/mL'],latin:'Amiodaronum',
+ rx:'Henti jantung shockable / takiaritmia'},
+{n:'Lidokain',a:'Lidocaine 2%',r:'iv',
+ calc:bb=>`${fmt(bb*1)} mg IV (1 mg/kg)`,
+ fixed:'1 mg/kg IV/IO (alternatif amiodaron)',sed:['Inj 20 mg/mL (2%)'],latin:'Lidocainum',
+ rx:'VF/VT; juga anestesi lokal'},
+{n:'Dekstrosa (hipoglikemia)',a:'Dextrose',r:'iv',
+ calc:bb=>`D10%: ${fmt(bb*2)}–${fmt(bb*5)} mL (2–5 mL/kg) IV`,
+ fixed:'D10% 2–5 mL/kg (≈0,2–0,5 g/kg) IV',sed:['D10%','D40% (encerkan)'],latin:'Glucosum',
+ rx:'Hipoglikemia: 0,2–0,5 g/kg, lanjut infus rumatan'},
+{n:'Kalsium Glukonas 10%',a:'Calcium gluconate 10%',r:'iv',
+ calc:bb=>`${fmt(bb*0.5)}–${fmt(bb*1)} mL (0,5–1 mL/kg) IV pelan`,
+ fixed:'0,5–1 mL/kg 10% IV lambat (pantau jantung)',sed:['Inj 100 mg/mL (10%)'],latin:'Calcii gluconas',
+ rx:'Hipokalsemia / hiperkalemia / overdosis CCB'},
+{n:'Natrium Bikarbonat',a:'Sodium bicarbonate 8,4%',r:'iv',
+ calc:bb=>`${fmt(bb*1)}–${fmt(bb*2)} mEq (1–2 mEq/kg) IV`,
+ fixed:'1–2 mEq/kg IV (1 mL 8,4% = 1 mEq)',sed:['Inj 8,4% (1 mEq/mL)'],latin:'Natrii bicarbonas',
+ rx:'Asidosis metabolik berat / hiperkalemia (encerkan pada neonatus)'},
+{n:'Magnesium Sulfat',a:'Magnesium sulfate',r:'iv',
+ calc:bb=>`${fmt(bb*25)}–${fmt(bb*50)} mg (25–50 mg/kg) IV`,
+ fixed:'25–50 mg/kg IV (maks 2 g) — asma berat / torsades',sed:['Inj 200/400 mg/mL'],latin:'Magnesii sulfas',
+ rx:'Status asmatikus, torsades de pointes'},
+{n:'Nalokson',a:'Naloxone',r:'iv',
+ calc:bb=>`${fmt(bb*0.1)} mg IV/IM (0,1 mg/kg, maks 2 mg)`,
+ fixed:'0,1 mg/kg IV/IM/IO (maks 2 mg), ulang p.r.n.',sed:['Inj 0,4 mg/mL'],latin:'Naloxonum',
+ rx:'Depresi napas akibat opioid'},
+{n:'Diazepam (kejang akut)',a:'Diazepam',r:'iv',
+ calc:bb=>`IV ${fmt(bb*0.2)}–${fmt(bb*0.3)} mg (maks 10 mg); Rektal ${fmt(bb*0.5)} mg`,
+ fixed:'IV 0,2–0,3 mg/kg / Rektal 0,5 mg/kg',sed:['Inj 5 mg/mL','Rektal 5/10 mg'],latin:'Diazepamum',
+ rx:'Status epileptikus lini pertama'},
+{n:'Midazolam (kejang)',a:'Midazolam',r:'iv',
+ calc:bb=>`IV/IM ${fmt(bb*0.1)}–${fmt(bb*0.2)} mg; Bukal ${fmt(bb*0.2)}–${fmt(bb*0.3)} mg`,
+ fixed:'IV 0,1–0,2 mg/kg; bukal/IN 0,2–0,3 mg/kg',sed:['Inj 1/5 mg/mL'],latin:'Midazolamum',
+ rx:'Alternatif benzodiazepin (akses IV sulit → bukal/IN)'},
+{n:'Salbutamol (asma berat)',a:'Salbutamol nebul',r:'inh',
+ calc:bb=>`Nebul 2,5 mg (<5 thn) atau 5 mg (≥5 thn), dapat kontinyu`,
+ fixed:'Nebul 2,5–5 mg, ulang/kontinyu pada serangan berat',sed:['Respule 2,5 mg'],latin:'Salbutamolum',
+ rx:'Bronkospasme / status asmatikus'},
+{n:'Hidrokortison',a:'Hydrocortisone',r:'iv',
+ calc:bb=>`${fmt(bb*4)}–${fmt(bb*8)} mg IV (4–8 mg/kg, maks 100–200 mg)`,
+ fixed:'4–8 mg/kg IV (anafilaksis/asma/krisis adrenal)',sed:['Inj 100 mg vial'],latin:'Hydrocortisonum',
+ rx:'Anafilaksis lini kedua, krisis adrenal'},
+{n:'Cairan Bolus (syok)',a:'NaCl 0,9% / Ringer Laktat',r:'iv',
+ calc:bb=>`Bolus ${fmt(bb*10)}–${fmt(bb*20)} mL (10–20 mL/kg) cepat, nilai ulang`,
+ fixed:'Kristaloid 10–20 mL/kg bolus (hati-hati pada gizi buruk: 10–15 mL/kg)',sed:['NaCl 0,9%','RL'],latin:'—',
+ rx:'Resusitasi syok hipovolemik/septik'},
+{n:'MgSO4 (eklampsia/asma) & lihat di atas',a:'—',r:'iv',
+ calc:bb=>`Lihat Magnesium Sulfat di atas`,fixed:'—',sed:['—'],latin:'—',rx:'—'}
+];
+
+/* ========================================================= */
+let patient = {bb:null, ageMonths:null};
+
+function fmt(x){
+  if(isNaN(x)) return '—';
+  return (Math.round(x*100)/100).toString().replace('.',',');
+}
+function $(id){return document.getElementById(id);}
+
+/* ---------- PATIENT CALC ---------- */
+function recalcPatient(){
+  const bb = parseFloat($('pBB').value);
+  const tb = parseFloat($('pTB').value);
+  patient.bb = (bb>0)?bb:null;
+
+  // usia dari tgl lahir
+  let ageMonths=null, ageTxt='—';
+  const tgl=$('pTgl').value;
+  if(tgl){
+    const d=new Date(tgl), now=new Date();
+    let mo=(now.getFullYear()-d.getFullYear())*12+(now.getMonth()-d.getMonth());
+    if(now.getDate()<d.getDate()) mo--;
+    if(mo>=0){
+      ageMonths=mo;
+      const y=Math.floor(mo/12), m=mo%12;
+      ageTxt=(y>0?y+' thn ':'')+(m>0?m+' bln':(y>0?'':'0 bln'));
+      $('pUsia').value=ageTxt.trim();
+    }
+  } else if($('pUsia').value){
+    ageTxt=$('pUsia').value;
+    const ym=ageTxt.match(/(\d+)\s*(thn|tahun|th|y)/i);
+    const mm=ageTxt.match(/(\d+)\s*(bln|bulan|bl|m)/i);
+    let mo=0; if(ym) mo+=parseInt(ym[1])*12; if(mm) mo+=parseInt(mm[1]);
+    if(mo>0) ageMonths=mo;
+  }
+  patient.ageMonths=ageMonths;
+
+  $('oUsia').textContent=ageTxt;
+  $('oBB').textContent = patient.bb? fmt(patient.bb)+' kg':'— (isi BB)';
+
+  // IMT / status gizi otomatis
+  let statusTxt='—', statusClass='';
+  if(bb>0 && tb>0){
+    const bmi=bb/((tb/100)*(tb/100));
+    $('oBMI').textContent=fmt(bmi)+' kg/m²';
+    // estimasi sederhana (rujuk kurva WHO untuk akurat)
+    if(bmi<13){statusTxt='cek: sangat rendah';statusClass='status-bad';}
+    else if(bmi<14.5){statusTxt='cenderung kurang';statusClass='status-warn';}
+    else if(bmi<=18){statusTxt='dalam rentang';statusClass='status-ok';}
+    else if(bmi<=21){statusTxt='cenderung lebih';statusClass='status-warn';}
+    else {statusTxt='cek: lebih/obesitas';statusClass='status-bad';}
+  } else {
+    $('oBMI').textContent='— (isi BB & TB)';
+  }
+  const manual=$('pGizi').value;
+  const statusPill=$('oStatus');
+  if(manual){
+    statusPill.innerHTML='Status gizi: <b>'+manual+'</b>';
+    statusPill.className='pill';
+  } else {
+    statusPill.innerHTML='Status gizi (est. IMT): <b>'+statusTxt+'</b>';
+    statusPill.className='pill '+statusClass;
+  }
+
+  renderDoses();
+  renderEmergency();
+  renderEquipment();
+}
+
+/* ---------- DOSE STRING ---------- */
+function doseString(d){
+  const bb=patient.bb;
+  if(d.type==='fixed'){
+    return {txt:d.custom||'lihat catatan', calc:false};
+  }
+  if(!bb){
+    if(d.type==='perdose') return {txt:`${fmt(d.dLo)}–${fmt(d.dHi)} ${d.unit}`, calc:false};
+    if(d.type==='perday')  return {txt:`${fmt(d.dLo)}–${fmt(d.dHi)} ${d.unit}`, calc:false};
+  }
+  if(d.type==='perdose'){
+    const lo=bb*d.dLo, hi=bb*d.dHi;
+    return {txt:`${fmt(lo)}–${fmt(hi)} mg/kali (${d.freq})`, calc:true,
+            sub:`@ ${fmt(d.dLo)}–${fmt(d.dHi)} ${d.unit}`};
+  }
+  if(d.type==='perday'){
+    const lo=bb*d.dLo, hi=bb*d.dHi;
+    return {txt:`${fmt(lo)}–${fmt(hi)} mg/hari (${d.freq})`, calc:true,
+            sub:`@ ${fmt(d.dLo)}–${fmt(d.dHi)} ${d.unit}`};
+  }
+  return {txt:'—', calc:false};
+}
+
+/* ---------- RENDER SISTEM ---------- */
+function renderDoses(){
+  const cont=$('sysContainer');
+  const q=($('search').value||'').toLowerCase();
+  cont.innerHTML='';
+  SYSTEMS.forEach(sys=>{
+    let drugs=DRUGS.filter(d=>d.s===sys.id);
+    if(q){
+      drugs=drugs.filter(d=>(d.n+' '+d.a+' '+(d.merk||[]).join(' ')).toLowerCase().includes(q));
+    }
+    if(drugs.length===0) return;
+    const g=document.createElement('div');
+    g.className='sys-group'+(q?' open':'');
+    g.innerHTML=`<div class="sys-head" onclick="this.parentNode.classList.toggle('open')">
+        <span class="ico">${sys.ico}</span><h3>${sys.name}</h3>
+        <span class="cnt">${drugs.length} obat</span><span class="chev">▸</span></div>
+      <div class="sys-body">${drugs.map(drugCard).join('')}</div>`;
+    cont.appendChild(g);
+  });
+  if(!cont.innerHTML) cont.innerHTML='<div class="rx-empty" style="font-family:var(--font)">Tidak ada obat yang cocok.</div>';
+}
+
+function drugCard(d){
+  const ds=doseString(d);
+  const route=ROUTES[d.r]||['—',''];
+  const idx=DRUGS.indexOf(d);
+  const doseBadge = ds.calc
+    ? `<span class="dose-now">💚 ${ds.txt}</span>`
+    : `<span class="dose-now none">${d.type==='fixed'?'dosis tetap':'isi BB →'}</span>`;
+  return `<div class="drug" id="drug-${idx}">
+    <div class="drug-top" onclick="document.getElementById('drug-${idx}').classList.toggle('open')">
+      <div class="drug-name"><div class="nm">${d.n}</div><div class="active">${d.a}</div></div>
+      ${doseBadge}
+      <span class="route-tag ${route[1]}">${route[0]}</span>
+    </div>
+    <div class="drug-detail">
+      <div class="drow"><div class="k">Dosis</div><div class="v"><b>${ds.txt}</b>${ds.sub?` <small style="color:var(--muted)">(${ds.sub})</small>`:''}${d.max?`<br><small style="color:var(--warn)">${d.max}</small>`:''}</div></div>
+      <div class="drow"><div class="k">Sediaan</div><div class="v forms-list">${(d.sed||[]).map(s=>`<span>${s}</span>`).join('')}</div></div>
+      <div class="drow"><div class="k">Merk Dagang</div><div class="v brand">${(d.merk||[]).map(m=>`<span>${m}</span>`).join('')}</div></div>
+      <div class="drow"><div class="k">Cara Pemberian</div><div class="v">${route[0]}</div></div>
+      <div class="drow"><div class="k">Durasi</div><div class="v">${d.dur||d.freq||'—'}</div></div>
+      <div class="drow"><div class="k">Nama Latin</div><div class="v"><span class="latin">${d.latin||'—'}</span></div></div>
+      ${d.note?`<div class="note">⚠️ ${d.note}</div>`:''}
+    </div></div>`;
+}
+
+/* ---------- EMERGENCY ---------- */
+function renderEmergency(){
+  const cont=$('emerContainer');
+  const bb=patient.bb;
+  cont.innerHTML=`<div class="sys-group emer open"><div class="sys-head" onclick="this.parentNode.classList.toggle('open')">
+      <span class="ico">🚨</span><h3>Obat Emergensi & Resusitasi ${bb?'(BB '+fmt(bb)+' kg)':'(isi BB pasien!)'}</h3>
+      <span class="cnt">${EMERGENCY.length} item</span><span class="chev">▸</span></div>
+    <div class="sys-body">${EMERGENCY.map(emerCard).join('')}</div></div>`;
+}
+function emerCard(e){
+  const route=ROUTES[e.r]||['—',''];
+  const bb=patient.bb;
+  const calc = bb? e.calc(bb) : e.fixed;
+  const idx=EMERGENCY.indexOf(e);
+  return `<div class="drug" id="emer-${idx}">
+    <div class="drug-top" onclick="document.getElementById('emer-${idx}').classList.toggle('open')">
+      <div class="drug-name"><div class="nm">${e.n}</div><div class="active">${e.a}</div></div>
+      <span class="dose-now ${bb?'':'none'}">${bb?'💉 '+calc:'isi BB →'}</span>
+      <span class="route-tag ${route[1]}">${route[0]}</span>
+    </div>
+    <div class="drug-detail">
+      <div class="drow"><div class="k">Dosis pasien</div><div class="v"><b style="color:var(--emer)">${calc}</b></div></div>
+      <div class="drow"><div class="k">Aturan dosis</div><div class="v">${e.fixed}</div></div>
+      <div class="drow"><div class="k">Sediaan</div><div class="v forms-list">${(e.sed||[]).map(s=>`<span>${s}</span>`).join('')}</div></div>
+      <div class="drow"><div class="k">Indikasi/Catatan</div><div class="v">${e.rx||'—'}</div></div>
+      <div class="drow"><div class="k">Nama Latin</div><div class="v"><span class="latin">${e.latin||'—'}</span></div></div>
+    </div></div>`;
+}
+
+/* ---------- EQUIPMENT ---------- */
+function renderEquipment(){
+  const grid=$('eqGrid');
+  const bb=patient.bb;
+  const m=patient.ageMonths;
+  const yrs = m!=null ? m/12 : null;
+
+  function card(title,ico,formula,result,sub){
+    return `<div class="eq-card"><h3>${ico} ${title}</h3>
+      <div class="formula">${formula}</div>
+      <div class="eq-result">${result}</div>
+      <div class="eq-sub">${sub}</div></div>`;
+  }
+  let cards='';
+
+  // ETT
+  if(yrs!=null && yrs>=1){
+    const unc=(yrs/4)+4, cuf=(yrs/4)+3.5, depth=(yrs/2)+12;
+    cards+=card('ETT (Pipa Endotrakeal)','🫁',
+      'ID uncuffed = (usia/4)+4 · cuffed = (usia/4)+3,5',
+      `${fmt(unc)} mm <small>uncuffed</small>`,
+      `Cuffed: <b>${fmt(cuf)} mm</b> · Kedalaman ± <b>${fmt(depth)} cm</b> di bibir (atau ID×3 = ${fmt(unc*3)} cm)`);
+  } else if(bb){
+    let id = bb<1?2.5: bb<2?3.0: bb<=3?3.5:3.5;
+    cards+=card('ETT (Neonatus)','🫁','Berbasis berat lahir',
+      `${fmt(id)} mm`,
+      `Kedalaman ± <b>${fmt(bb+6)} cm</b> (BB+6). Lihat tabel neonatus di bawah.`);
+  } else {
+    cards+=card('ETT (Pipa Endotrakeal)','🫁','(usia/4)+4','isi usia/BB','—');
+  }
+
+  // ETT depth + suction
+  if(yrs!=null && yrs>=1){
+    const unc=(yrs/4)+4;
+    cards+=card('Kateter Isap / Suction','🔧','≈ 2 × ukuran ETT (Fr)',
+      `${fmt(Math.round(unc*2))} Fr`,
+      `ETT ${fmt(unc)} → suction ${fmt(Math.round(unc*2))} Fr`);
+  }
+
+  // NGT/OGT
+  if(yrs!=null){
+    let ngt;
+    if(m<1) ngt='5–6 Fr';
+    else if(yrs<1) ngt='6–8 Fr';
+    else if(yrs<6) ngt='8–10 Fr';
+    else if(yrs<12) ngt='10–12 Fr';
+    else ngt='12–16 Fr';
+    cards+=card('NGT / OGT (Selang Lambung)','🍼','Berdasarkan usia',
+      ngt,
+      'Panjang insersi diukur: ujung hidung → daun telinga → prosesus xifoid (NEMU).');
+  } else {
+    cards+=card('NGT / OGT','🍼','Berdasarkan usia','isi usia','—');
+  }
+
+  // IV cannula
+  if(yrs!=null){
+    let iv;
+    if(yrs<1) iv='24 G (kuning)';
+    else if(yrs<6) iv='22–24 G';
+    else if(yrs<12) iv='20–22 G';
+    else iv='18–20 G';
+    cards+=card('IV Line / Kanul','💧','Berdasarkan usia & vena',
+      iv,
+      'Neonatus/bayi: 24 G. Anak: 22 G. Resusitasi cepat: ukuran terbesar yang muat / IO.');
+  } else {
+    cards+=card('IV Line / Kanul','💧','Berdasarkan usia','isi usia','—');
+  }
+
+  // Kateter urin
+  if(yrs!=null){
+    let fol;
+    if(yrs<1) fol='5–6 Fr';
+    else if(yrs<4) fol='6–8 Fr';
+    else if(yrs<8) fol='8–10 Fr';
+    else fol='10–12 Fr';
+    cards+=card('Kateter Urin (Foley)','💛','Berdasarkan usia',
+      fol,'Neonatus dapat memakai feeding tube 5 Fr bila Foley tidak tersedia.');
+  }
+
+  // LMA
+  if(bb){
+    let lma;
+    if(bb<5) lma='1';
+    else if(bb<10) lma='1,5';
+    else if(bb<20) lma='2';
+    else if(bb<30) lma='2,5';
+    else lma='3';
+    cards+=card('LMA (Sungkup Laring)','😮','Berdasarkan berat',
+      'Ukuran '+lma,
+      '<5 kg→1 · 5–10→1,5 · 10–20→2 · 20–30→2,5 · >30→3');
+  }
+
+  grid.innerHTML=cards||'<div class="rx-empty">Isi usia & BB pasien untuk perhitungan otomatis.</div>';
+}
+
+/* ---------- UI ---------- */
+function switchView(v){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.view===v));
+  ['sistem','emergensi','alat','singkatan'].forEach(x=>{
+    $('view-'+x).classList.toggle('hidden',x!==v);
+  });
+}
+let flashT;
+function flash(msg){
+  let el=document.getElementById('flash');
+  if(!el){el=document.createElement('div');el.id='flash';
+    el.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0369a1;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;z-index:200;box-shadow:0 6px 18px rgba(0,0,0,.2)';
+    document.body.appendChild(el);}
+  el.textContent=msg; el.style.opacity='1';
+  clearTimeout(flashT);
+  flashT=setTimeout(()=>el.style.opacity='0',1800);
+}
+
+/* ---------- INIT ---------- */
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>switchView(t.dataset.view)));
+['pBB','pTB','pTgl','pUsia','pSex','pGizi','pNama'].forEach(id=>{
+  $(id).addEventListener('input',recalcPatient);
+});
+$('search').addEventListener('input',renderDoses);
+
+recalcPatient();
+</script>
+</body>
+</html>

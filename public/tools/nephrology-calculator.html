@@ -1,0 +1,1852 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pediatric Nephrology Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400;500&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #f7f9fc;
+  --white:   #ffffff;
+  --s1:      #f0f4f8;
+  --s2:      #e8edf5;
+  --border:  #d8e2ef;
+  --text:    #1a2840;
+  --muted:   #6b7fa3;
+  --light:   #9badc8;
+
+  --kidney:  #2563eb;
+  --kidney-l:#dbeafe;
+  --teal:    #0d9488;
+  --teal-l:  #ccfbf1;
+  --amber:   #d97706;
+  --amber-l: #fef3c7;
+  --rose:    #e11d48;
+  --rose-l:  #ffe4e6;
+  --violet:  #7c3aed;
+  --violet-l:#ede9fe;
+  --emerald: #059669;
+  --emerald-l:#d1fae5;
+  --slate:   #475569;
+  --sky:     #0284c7;
+  --sky-l:   #e0f2fe;
+  --orange:  #ea580c;
+  --orange-l:#ffedd5;
+  --indigo:  #4338ca;
+  --indigo-l:#e0e7ff;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Nunito', sans-serif;
+  font-weight: 400;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse 70% 50% at 0% 0%, rgba(37,99,235,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 60% at 100% 100%, rgba(13,148,136,0.05) 0%, transparent 60%);
+}
+
+/* ── HEADER ── */
+.hdr {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 40%, #0d9488 100%);
+  color: white;
+  position: sticky; top: 0; z-index: 200;
+  box-shadow: 0 4px 24px rgba(30,58,138,0.25);
+}
+
+.hdr-top {
+  display: flex; align-items: center; gap: 1rem;
+  padding: 0.9rem 1.25rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.hdr-logo {
+  width: 42px; height: 42px;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem; flex-shrink: 0;
+}
+
+.hdr-brand h1 {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 1.05rem; font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.hdr-brand p {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem; color: rgba(255,255,255,0.55);
+  letter-spacing: 0.1em; text-transform: uppercase; margin-top: 0.1rem;
+}
+
+/* patient strip */
+.pt-strip {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.5rem 1.25rem; overflow-x: auto; scrollbar-width: none;
+}
+.pt-strip::-webkit-scrollbar { display: none; }
+
+.pf { display: flex; flex-direction: column; gap: 0.1rem; flex-shrink: 0; }
+.pf-lbl {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.52rem; letter-spacing: 0.12em;
+  text-transform: uppercase; color: rgba(255,255,255,0.5);
+}
+.pf-inp {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 7px; color: white;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.85rem; font-weight: 500;
+  padding: 0.3rem 0.55rem; width: 80px; outline: none;
+}
+.pf-inp:focus { border-color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.18); }
+.pf-inp.w100 { width: 100px; }
+
+.pt-sep { width: 1px; height: 28px; background: rgba(255,255,255,0.15); flex-shrink: 0; margin: 0 0.15rem; }
+
+.pt-badge {
+  font-family: 'DM Mono', monospace; font-size: 0.68rem; font-weight: 500;
+  padding: 0.28rem 0.75rem; border-radius: 6px; flex-shrink: 0;
+  white-space: nowrap; border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.1);
+}
+
+/* ── TABS ── */
+.tabs {
+  background: var(--white);
+  border-bottom: 2px solid var(--border);
+  display: flex; overflow-x: auto; scrollbar-width: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.tabs::-webkit-scrollbar { display: none; }
+
+.tb {
+  flex: 0 0 auto; background: none; border: none;
+  border-bottom: 3px solid transparent; margin-bottom: -2px;
+  color: var(--muted);
+  font-family: 'Nunito', sans-serif; font-size: 0.75rem; font-weight: 700;
+  padding: 0.7rem 1.1rem; cursor: pointer;
+  display: flex; align-items: center; gap: 0.4rem;
+  transition: all 0.15s; white-space: nowrap;
+}
+.tb:hover { color: var(--text); background: var(--s1); }
+.tb.active { color: var(--kidney); border-bottom-color: var(--kidney); }
+
+/* ── CONTENT ── */
+.tc { display: none; padding: 1.25rem; animation: up 0.25s ease; }
+.tc.active { display: block; }
+@keyframes up { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+
+/* ── GRID ── */
+.grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(320px,1fr)); gap: 1rem; }
+.grid-w { display: grid; grid-template-columns: repeat(auto-fill,minmax(400px,1fr)); gap: 1rem; }
+
+/* ── CARD ── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 16px; overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  transition: box-shadow 0.2s;
+}
+.card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
+
+.ch {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, rgba(37,99,235,0.03), transparent);
+}
+
+.cico {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; flex-shrink: 0;
+}
+
+.ct { font-size: 0.87rem; font-weight: 800; color: var(--text); }
+.cs { font-size: 0.65rem; color: var(--muted); margin-top: 0.1rem; }
+
+.cb { padding: 1rem; }
+
+/* inputs */
+.ir { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem; margin-bottom: 0.6rem; }
+.ir.s1 { grid-template-columns: 1fr; }
+.ir.s3 { grid-template-columns: 1fr 1fr 1fr; }
+.ir.s4 { grid-template-columns: repeat(4,1fr); }
+.ir.s5 { grid-template-columns: repeat(5,1fr); }
+
+.ig { display: flex; flex-direction: column; gap: 0.18rem; }
+.il {
+  font-size: 0.63rem; font-weight: 700; color: var(--muted);
+  font-family: 'DM Mono', monospace; letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.ii {
+  background: var(--s1); border: 1.5px solid var(--border);
+  border-radius: 8px; color: var(--text);
+  font-family: 'DM Mono', monospace; font-size: 0.83rem; font-weight: 500;
+  padding: 0.42rem 0.65rem; outline: none; width: 100%;
+  transition: border-color 0.15s, background 0.15s;
+}
+.ii:focus { border-color: var(--kidney); background: var(--white); box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
+select.ii { cursor: pointer; }
+
+/* buttons */
+.btn {
+  width: 100%; border: none; border-radius: 9px;
+  font-family: 'Nunito', sans-serif; font-size: 0.8rem; font-weight: 800;
+  padding: 0.6rem; cursor: pointer;
+  transition: filter 0.15s, transform 0.1s, box-shadow 0.15s;
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.02em;
+}
+.btn:hover { filter: brightness(1.08); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+.btn:active { transform: scale(0.98); }
+
+/* result */
+.res { display: none; border-radius: 11px; padding: 0.9rem; border: 1.5px solid; }
+.res.show { display: block; animation: ri 0.22s ease; }
+@keyframes ri { from{opacity:0;transform:scale(0.97);} to{opacity:1;transform:scale(1);} }
+
+.rg { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+.rg.s1 { grid-template-columns: 1fr; }
+.rg.s3 { grid-template-columns: repeat(3,1fr); }
+.rg.s4 { grid-template-columns: repeat(4,1fr); }
+
+.ri {
+  background: rgba(255,255,255,0.7);
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 8px; padding: 0.6rem 0.75rem;
+  backdrop-filter: blur(4px);
+}
+.rl {
+  font-family: 'DM Mono', monospace; font-size: 0.55rem;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+  margin-bottom: 0.2rem;
+}
+.rv {
+  font-family: 'DM Mono', monospace; font-size: 1rem; font-weight: 700;
+  line-height: 1; color: var(--text);
+}
+.rv.big { font-size: 1.3rem; }
+.rn { font-size: 0.62rem; color: var(--muted); margin-top: 0.2rem; line-height: 1.4; }
+
+/* alerts */
+.ralert {
+  border-radius: 8px; padding: 0.7rem 0.9rem;
+  font-size: 0.78rem; line-height: 1.75;
+  border: 1px solid; margin-top: 0.55rem;
+}
+.rwarn {
+  margin-top: 0.5rem; border-radius: 7px;
+  padding: 0.45rem 0.65rem; font-size: 0.7rem;
+  line-height: 1.55; display: flex; gap: 0.4rem;
+}
+
+/* info box */
+.ibox {
+  background: var(--sky-l); border: 1px solid #bae6fd;
+  border-radius: 8px; padding: 0.65rem 0.85rem;
+  font-size: 0.73rem; line-height: 1.7; color: #0c4a6e;
+  margin-bottom: 0.75rem;
+}
+.ibox strong { color: #1e3a8a; }
+
+/* section label */
+.slbl {
+  font-family: 'DM Mono', monospace; font-size: 0.58rem;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted);
+  margin: 1.2rem 0 0.75rem;
+  display: flex; align-items: center; gap: 0.6rem;
+}
+.slbl::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* table */
+.rtbl {
+  width: 100%; border-collapse: collapse;
+  font-size: 0.74rem;
+  border: 1px solid var(--border); border-radius: 9px; overflow: hidden;
+}
+.rtbl th {
+  background: var(--s1); font-family: 'DM Mono', monospace;
+  font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted); padding: 0.5rem 0.75rem; text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.rtbl td { padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(0,0,0,0.04); line-height: 1.5; }
+.rtbl tr:last-child td { border-bottom: none; }
+.rtbl tr:hover td { background: var(--s1); }
+
+/* disclaimer */
+.disc {
+  background: #fffbeb; border: 1px solid #fde68a;
+  border-radius: 10px; padding: 0.7rem 1rem;
+  font-size: 0.72rem; color: #92400e; line-height: 1.65;
+  margin-bottom: 1rem;
+}
+
+/* status */
+.ok     { color: var(--emerald); }
+.warn   { color: var(--amber); }
+.danger { color: var(--rose); }
+.info   { color: var(--kidney); }
+
+/* badge */
+.bdg {
+  display: inline-block; font-family: 'DM Mono', monospace;
+  font-size: 0.6rem; font-weight: 500; letter-spacing: 0.06em;
+  padding: 0.12rem 0.5rem; border-radius: 4px;
+}
+
+/* progress bar */
+.prog-wrap { background: var(--s2); border-radius: 999px; height: 10px; overflow: hidden; margin: 0.3rem 0; }
+.prog-bar  { height: 100%; border-radius: 999px; transition: width 0.4s ease; }
+
+@media(max-width:600px){
+  .grid,.grid-w { grid-template-columns: 1fr; }
+  .ir.s3,.ir.s4,.ir.s5 { grid-template-columns: 1fr 1fr; }
+  .rg.s3,.rg.s4 { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-top">
+    <div class="hdr-logo">🫘</div>
+    <div class="hdr-brand">
+      <h1>Pediatric Nephrology Calculator</h1>
+      <p>GFR · Elektrolit · AKI · Hipertensi · Dialisis · Proteinuria · Cairan</p>
+    </div>
+  </div>
+  <div class="pt-strip">
+    <div class="pf"><span class="pf-lbl">BB (kg)</span><input class="pf-inp" id="ptW" type="number" value="20" min="1" max="120" step="0.1" oninput="syncAll()"></div>
+    <div class="pf"><span class="pf-lbl">TB (cm)</span><input class="pf-inp" id="ptH" type="number" value="110" min="30" max="200" step="0.5" oninput="syncAll()"></div>
+    <div class="pf"><span class="pf-lbl">Usia (thn)</span><input class="pf-inp" id="ptAge" type="number" value="5" min="0" max="18" step="0.5" oninput="syncAll()"></div>
+    <div class="pf"><span class="pf-lbl">Jenis Kelamin</span>
+      <select class="pf-inp w100" id="ptSex" oninput="syncAll()">
+        <option value="m">Laki-laki</option>
+        <option value="f">Perempuan</option>
+      </select>
+    </div>
+    <div class="pf"><span class="pf-lbl">Kreatinin (mg/dL)</span><input class="pf-inp" id="ptCr" type="number" value="0.6" min="0.1" max="20" step="0.01" oninput="syncAll()"></div>
+    <div class="pt-sep"></div>
+    <div class="pt-badge" id="ptGFR">eGFR: — mL/mnt</div>
+    <div class="pt-badge" id="ptCKD">CKD: —</div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tb active" onclick="showTab('gfr',this)">🫘 GFR & CKD</button>
+  <button class="tb" onclick="showTab('elec',this)">⚡ Elektrolit</button>
+  <button class="tb" onclick="showTab('aki',this)">🚨 AKI</button>
+  <button class="tb" onclick="showTab('htn',this)">💓 Hipertensi</button>
+  <button class="tb" onclick="showTab('fluid',this)">💧 Cairan & Edema</button>
+  <button class="tb" onclick="showTab('urine',this)">🧪 Urin & Proteinuria</button>
+  <button class="tb" onclick="showTab('dialysis',this)">🔄 Dialisis</button>
+  <button class="tb" onclick="showTab('drugs',this)">💊 Obat Nefrologi</button>
+</div>
+
+<!-- ═══ GFR & CKD ═══ -->
+<div class="tc active" id="tab-gfr">
+  <div class="disc">⚠️ Kalkulasi untuk panduan klinis. Verifikasi dengan penilaian klinis lengkap. eGFR pada anak menggunakan formula Schwartz 2009 (revised bedside).</div>
+  <div class="grid">
+
+    <!-- GFR CALCULATOR -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:var(--kidney-l)">🧬</div><div><div class="ct">eGFR Multi-Formula</div><div class="cs">Schwartz, CKiD, CG, MDRD</div></div></div>
+      <div class="cb">
+        <div class="ir s3">
+          <div class="ig"><label class="il">TB (cm)</label><input class="ii" id="gfr-h" type="number" value="110" oninput="calcGFR()"></div>
+          <div class="ig"><label class="il">Kreatinin (mg/dL)</label><input class="ii" id="gfr-cr" type="number" value="0.6" step="0.01" oninput="calcGFR()"></div>
+          <div class="ig"><label class="il">Usia (thn)</label><input class="ii" id="gfr-age" type="number" value="5" oninput="calcGFR()"></div>
+        </div>
+        <div class="ir">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="gfr-w" type="number" value="20" oninput="calcGFR()"></div>
+          <div class="ig"><label class="il">Jenis Kelamin</label>
+            <select class="ii" id="gfr-sex" oninput="calcGFR()">
+              <option value="m">Laki-laki</option>
+              <option value="f">Perempuan</option>
+            </select>
+          </div>
+        </div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">BUN (mg/dL)</label><input class="ii" id="gfr-bun" type="number" value="15" oninput="calcGFR()"></div>
+          <div class="ig"><label class="il">Cystatin C (mg/L)</label><input class="ii" id="gfr-cys" type="number" value="" step="0.01" placeholder="opsional" oninput="calcGFR()"></div>
+          <div class="ig"><label class="il">Albumin (g/dL)</label><input class="ii" id="gfr-alb" type="number" value="4" step="0.1" oninput="calcGFR()"></div>
+        </div>
+        <button class="btn" style="background:var(--kidney);color:white" onclick="calcGFR()">Hitung eGFR</button>
+        <div class="res show" id="res-gfr" style="background:var(--kidney-l);border-color:#93c5fd">
+          <div class="rg s4">
+            <div class="ri"><div class="rl">Schwartz (bedside)</div><div class="rv big" id="gfr-s"></div><div class="rn">mL/mnt/1.73m²</div></div>
+            <div class="ri"><div class="rl">CKiD (Cr+BUN)</div><div class="rv" id="gfr-ckid"></div><div class="rn">mL/mnt/1.73m²</div></div>
+            <div class="ri"><div class="rl">CKiD+CysC</div><div class="rv" id="gfr-cysc"></div><div class="rn">mL/mnt/1.73m² (jika ada)</div></div>
+            <div class="ri"><div class="rl">CKD Stage</div><div class="rv big" id="gfr-ckd-stage"></div><div class="rn" id="gfr-ckd-name"></div></div>
+          </div>
+          <div style="margin-top:0.6rem">
+            <div class="rl" style="margin-bottom:0.3rem">Visualisasi Fungsi Ginjal</div>
+            <div class="prog-wrap"><div class="prog-bar" id="gfr-bar" style="width:0%;background:var(--emerald)"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:0.6rem;color:var(--muted);font-family:'DM Mono',monospace;margin-top:0.2rem">
+              <span>G5 (&lt;15)</span><span>G4</span><span>G3b</span><span>G3a</span><span>G2</span><span>G1 (≥90)</span>
+            </div>
+          </div>
+          <div class="ralert" id="gfr-alert" style="background:rgba(255,255,255,0.6);border-color:rgba(0,0,0,0.08)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CKD STAGING -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:var(--teal-l)">📊</div><div><div class="ct">Staging CKD Pediatrik (KDIGO)</div><div class="cs">GFR + Albuminuria staging</div></div></div>
+      <div class="cb">
+        <div class="ir">
+          <div class="ig"><label class="il">eGFR (mL/mnt/1.73m²)</label><input class="ii" id="ckd-gfr" type="number" value="75" oninput="calcCKDStage()"></div>
+          <div class="ig"><label class="il">Kategori Albuminuria</label>
+            <select class="ii" id="ckd-alb" oninput="calcCKDStage()">
+              <option value="A1">A1: Normal–ringan (&lt;30 mg/g)</option>
+              <option value="A2">A2: Sedang (30–300 mg/g)</option>
+              <option value="A3">A3: Berat (&gt;300 mg/g)</option>
+            </select>
+          </div>
+        </div>
+        <div class="ir">
+          <div class="ig"><label class="il">Durasi kelainan (&gt;3 bulan?)</label>
+            <select class="ii" id="ckd-dur" oninput="calcCKDStage()">
+              <option value="yes">Ya (CKD)</option>
+              <option value="no">Tidak / belum diketahui</option>
+            </select>
+          </div>
+          <div class="ig"><label class="il">Etiologi</label>
+            <select class="ii" id="ckd-etio" oninput="calcCKDStage()">
+              <option value="congenital">CAKUT (kongenital)</option>
+              <option value="glomerular">Glomerulonefritis</option>
+              <option value="hereditary">Herediter (Alport, dll)</option>
+              <option value="other">Lainnya</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" style="background:var(--teal);color:white" onclick="calcCKDStage()">Tentukan Stadium CKD</button>
+        <div class="res" id="res-ckd" style="background:var(--teal-l);border-color:#5eead4">
+          <div class="ralert" id="ckd-result"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCHWARTZ DETAIL -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:var(--violet-l)">📐</div><div><div class="ct">Formula Schwartz — Detail</div><div class="cs">Bedside 2009 & Full Age Spectrum</div></div></div>
+      <div class="cb">
+        <div class="ibox">
+          <strong>Revised Bedside Schwartz (2009):</strong> eGFR = 0.413 × TB(cm) / Cr(mg/dL)<br>
+          <strong>Full Age Spectrum (FAS):</strong> eGFR = 107.3 / (Cr / Q), di mana Q = nilai median kreatinin normal untuk usia/sex
+        </div>
+        <table class="rtbl">
+          <thead><tr><th>Usia</th><th>k (Schwartz lama)</th><th>Q (FAS median Cr)</th><th>Normal eGFR</th></tr></thead>
+          <tbody>
+            <tr><td>&lt;1 th (prematur)</td><td>0.33</td><td>0.38</td><td>40–65</td></tr>
+            <tr><td>&lt;1 th (aterm)</td><td>0.45</td><td>0.38</td><td>65–95</td></tr>
+            <tr><td>1–12 th</td><td>0.55</td><td>0.55</td><td>90–120</td></tr>
+            <tr><td>13–17 th (♂)</td><td>0.70</td><td>0.73</td><td>90–120</td></tr>
+            <tr><td>13–17 th (♀)</td><td>0.55</td><td>0.55</td><td>90–120</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ ELEKTROLIT ═══ -->
+<div class="tc" id="tab-elec">
+  <div class="grid">
+
+    <!-- SODIUM -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:var(--sky-l)">🧂</div><div><div class="ct">Gangguan Natrium</div><div class="cs">Hiponatremia & Hipernatremia + Koreksi</div></div></div>
+      <div class="cb">
+        <div class="ir s4">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="na-w" type="number" value="20" oninput="calcNa()"></div>
+          <div class="ig"><label class="il">Na aktual (mEq/L)</label><input class="ii" id="na-act" type="number" value="125" oninput="calcNa()"></div>
+          <div class="ig"><label class="il">Na target (mEq/L)</label><input class="ii" id="na-tgt" type="number" value="135" oninput="calcNa()"></div>
+          <div class="ig"><label class="il">Kondisi</label>
+            <select class="ii" id="na-cond" oninput="calcNa()">
+              <option value="hypo-acute">Hiponatremia akut</option>
+              <option value="hypo-chronic" selected>Hiponatremia kronik</option>
+              <option value="hyper">Hipernatremia</option>
+            </select>
+          </div>
+        </div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">Glukosa (mg/dL) — koreksi Na</label><input class="ii" id="na-glu" type="number" value="90" oninput="calcNa()"></div>
+          <div class="ig"><label class="il">Osmolalitas serum</label><input class="ii" id="na-osm" type="number" value="" placeholder="opsional" oninput="calcNa()"></div>
+          <div class="ig"><label class="il">Na urin (mEq/L)</label><input class="ii" id="na-urine" type="number" value="" placeholder="opsional" oninput="calcNa()"></div>
+        </div>
+        <button class="btn" style="background:var(--sky);color:white" onclick="calcNa()">Analisis & Koreksi Na</button>
+        <div class="res" id="res-na" style="background:var(--sky-l);border-color:#7dd3fc">
+          <div class="rg s3">
+            <div class="ri"><div class="rl">Na Terkoreksi (glu)</div><div class="rv big" id="na-corrected"></div><div class="rn">mEq/L</div></div>
+            <div class="ri"><div class="rl">Defisit / Kelebihan Na</div><div class="rv big" id="na-deficit"></div><div class="rn">mEq</div></div>
+            <div class="ri"><div class="rl">Volume NaCl 3%</div><div class="rv" id="na-nacl3"></div><div class="rn">mL (0.51 mEq/mL)</div></div>
+          </div>
+          <div class="ralert" id="na-interp"></div>
+          <div id="na-warn"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- POTASSIUM -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:var(--rose-l)">💛</div><div><div class="ct">Gangguan Kalium</div><div class="cs">Hipokalemia & Hiperkalemia + Tatalaksana</div></div></div>
+      <div class="cb">
+        <div class="ir s3">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="k-w" type="number" value="20" oninput="calcK()"></div>
+          <div class="ig"><label class="il">K aktual (mEq/L)</label><input class="ii" id="k-act" type="number" value="3.0" step="0.1" oninput="calcK()"></div>
+          <div class="ig"><label class="il">pH darah</label><input class="ii" id="k-ph" type="number" value="7.4" step="0.01" oninput="calcK()"></div>
+        </div>
+        <div class="ir">
+          <div class="ig"><label class="il">EKG perubahan?</label>
+            <select class="ii" id="k-ecg" oninput="calcK()">
+              <option value="none">Tidak ada</option>
+              <option value="peaked">T-wave peaked</option>
+              <option value="wide">QRS melebar</option>
+              <option value="sine">Sine wave / VF</option>
+            </select>
+          </div>
+          <div class="ig"><label class="il">Kondisi ginjal</label>
+            <select class="ii" id="k-renal" oninput="calcK()">
+              <option value="normal">Normal</option>
+              <option value="impaired">Gangguan ginjal</option>
+              <option value="esrd">ESRD / Dialisis</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" style="background:var(--rose);color:white" onclick="calcK()">Analisis & Tatalaksana K</button>
+        <div class="res" id="res-k" style="background:var(--rose-l);border-color:#fca5a5">
+          <div class="rg s3">
+            <div class="ri"><div class="rl">K Efektif (pH-adj)</div><div class="rv big" id="k-adj"></div><div class="rn">mEq/L</div></div>
+            <div class="ri"><div class="rl">Defisit K (mEq)</div><div class="rv" id="k-deficit"></div></div>
+            <div class="ri"><div class="rl">KCl oral (mEq)</div><div class="rv" id="k-oral"></div><div class="rn">jika PO</div></div>
+          </div>
+          <div class="ralert" id="k-interp"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CALCIUM & PHOSPHATE -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:var(--amber-l)">🦴</div><div><div class="ct">Kalsium, Fosfat & PTH</div><div class="cs">Homeostasis mineral pada CKD</div></div></div>
+      <div class="cb">
+        <div class="ir s3">
+          <div class="ig"><label class="il">Ca total (mg/dL)</label><input class="ii" id="ca-tot" type="number" value="9" step="0.1" oninput="calcCa()"></div>
+          <div class="ig"><label class="il">Albumin (g/dL)</label><input class="ii" id="ca-alb" type="number" value="4" step="0.1" oninput="calcCa()"></div>
+          <div class="ig"><label class="il">pH (opsional)</label><input class="ii" id="ca-ph" type="number" value="7.4" step="0.01" oninput="calcCa()"></div>
+        </div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">Fosfat (mg/dL)</label><input class="ii" id="ca-phos" type="number" value="4.5" step="0.1" oninput="calcCa()"></div>
+          <div class="ig"><label class="il">PTH (pg/mL)</label><input class="ii" id="ca-pth" type="number" value="65" oninput="calcCa()"></div>
+          <div class="ig"><label class="il">Vit D 25(OH) (ng/mL)</label><input class="ii" id="ca-vitd" type="number" value="30" oninput="calcCa()"></div>
+        </div>
+        <button class="btn" style="background:var(--amber);color:white" onclick="calcCa()">Analisis Mineral</button>
+        <div class="res" id="res-ca" style="background:var(--amber-l);border-color:#fcd34d">
+          <div class="rg s4">
+            <div class="ri"><div class="rl">Ca terkoreksi</div><div class="rv big" id="ca-corr"></div><div class="rn">mg/dL (albumin adj.)</div></div>
+            <div class="ri"><div class="rl">Ca × P produk</div><div class="rv big" id="ca-phos-prod"></div><div class="rn">mg²/dL² (≤55 target)</div></div>
+            <div class="ri"><div class="rl">Ca Ionized (est.)</div><div class="rv" id="ca-ion"></div><div class="rn">mmol/L</div></div>
+            <div class="ri"><div class="rl">Status PTH</div><div class="rv" id="ca-pth-status"></div></div>
+          </div>
+          <div class="ralert" id="ca-interp"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANION GAP -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:var(--emerald-l)">🧮</div><div><div class="ct">Anion Gap & Osmolal Gap</div><div class="cs">Analisis gangguan asam basa</div></div></div>
+      <div class="cb">
+        <div class="ir s4">
+          <div class="ig"><label class="il">Na (mEq/L)</label><input class="ii" id="ag-na" type="number" value="140" oninput="calcAG()"></div>
+          <div class="ig"><label class="il">Cl (mEq/L)</label><input class="ii" id="ag-cl" type="number" value="104" oninput="calcAG()"></div>
+          <div class="ig"><label class="il">HCO₃ (mEq/L)</label><input class="ii" id="ag-hco3" type="number" value="22" oninput="calcAG()"></div>
+          <div class="ig"><label class="il">Albumin (g/dL)</label><input class="ii" id="ag-alb" type="number" value="4" step="0.1" oninput="calcAG()"></div>
+        </div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">Osmolalitas terukur</label><input class="ii" id="ag-osm-meas" type="number" value="" placeholder="opsional" oninput="calcAG()"></div>
+          <div class="ig"><label class="il">Glukosa (mg/dL)</label><input class="ii" id="ag-glu" type="number" value="90" oninput="calcAG()"></div>
+          <div class="ig"><label class="il">BUN (mg/dL)</label><input class="ii" id="ag-bun" type="number" value="15" oninput="calcAG()"></div>
+        </div>
+        <button class="btn" style="background:var(--emerald);color:white" onclick="calcAG()">Hitung AG & Osmolal Gap</button>
+        <div class="res" id="res-ag" style="background:var(--emerald-l);border-color:#6ee7b7">
+          <div class="rg s4">
+            <div class="ri"><div class="rl">Anion Gap</div><div class="rv big" id="ag-result"></div><div class="rn">mEq/L (N: 8–12)</div></div>
+            <div class="ri"><div class="rl">AG terkoreksi albumin</div><div class="rv" id="ag-corr"></div><div class="rn">mEq/L</div></div>
+            <div class="ri"><div class="rl">Osmolalitas kalkulasi</div><div class="rv" id="ag-osm-calc"></div><div class="rn">mOsm/kg</div></div>
+            <div class="ri"><div class="rl">Osmolal Gap</div><div class="rv" id="ag-osm-gap"></div><div class="rn">N: &lt;10 mOsm/kg</div></div>
+          </div>
+          <div class="ralert" id="ag-interp"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ AKI ═══ -->
+<div class="tc" id="tab-aki">
+  <div class="grid">
+
+    <!-- AKI STAGING -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:var(--rose-l)">🚨</div><div><div class="ct">Staging AKI (KDIGO Pediatrik)</div><div class="cs">Berdasarkan kreatinin & urine output</div></div></div>
+      <div class="cb">
+        <div class="ibox">KDIGO AKI: ↑Cr ≥0.3 mg/dL dalam 48j, ATAU ↑Cr ≥1.5× baseline dalam 7 hari, ATAU UO &lt;0.5 mL/kg/jam ≥6 jam.</div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">Kreatinin baseline (mg/dL)</label><input class="ii" id="aki-crb" type="number" value="0.5" step="0.01" oninput="calcAKI()"></div>
+          <div class="ig"><label class="il">Kreatinin aktual (mg/dL)</label><input class="ii" id="aki-cra" type="number" value="1.5" step="0.01" oninput="calcAKI()"></div>
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="aki-w" type="number" value="20" oninput="calcAKI()"></div>
+        </div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">UO 6 jam (mL)</label><input class="ii" id="aki-uo6" type="number" value="40" oninput="calcAKI()"></div>
+          <div class="ig"><label class="il">UO 24 jam (mL)</label><input class="ii" id="aki-uo24" type="number" value="200" oninput="calcAKI()"></div>
+          <div class="ig"><label class="il">BUN (mg/dL)</label><input class="ii" id="aki-bun" type="number" value="40" oninput="calcAKI()"></div>
+        </div>
+        <button class="btn" style="background:var(--rose);color:white" onclick="calcAKI()">Staging AKI</button>
+        <div class="res" id="res-aki" style="background:var(--rose-l);border-color:#fca5a5">
+          <div class="rg s4">
+            <div class="ri"><div class="rl">Rasio Cr / Baseline</div><div class="rv big" id="aki-ratio"></div></div>
+            <div class="ri"><div class="rl">Stage AKI (Cr)</div><div class="rv big" id="aki-stage-cr"></div></div>
+            <div class="ri"><div class="rl">UO (mL/kg/jam)</div><div class="rv" id="aki-uo-rate"></div></div>
+            <div class="ri"><div class="rl">Stage AKI (UO)</div><div class="rv big" id="aki-stage-uo"></div></div>
+          </div>
+          <div class="rg" style="margin-top:0.5rem">
+            <div class="ri"><div class="rl">BUN/Cr Ratio</div><div class="rv" id="aki-bun-cr"></div><div class="rn">Pre-renal: &gt;20; Post-renal/Intrinsik: &lt;20</div></div>
+            <div class="ri"><div class="rl">Stage AKI Final</div><div class="rv big" id="aki-stage-final"></div></div>
+          </div>
+          <div class="ralert" id="aki-rec"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FENa / FEUrea -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:var(--orange-l)">🔬</div><div><div class="ct">FENa & FEUrea</div><div class="cs">Diferensiasi AKI pre-renal vs intrinsik</div></div></div>
+      <div class="cb">
+        <div class="ibox"><strong>FENa &lt;1%</strong>: pre-renal (atau AKI kontras/mioglobin). <strong>FEUrea &lt;35%</strong>: pre-renal (lebih valid bila pakai diuretik). FENa ≥2%: intrinsik/ATN.</div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">Na serum (mEq/L)</label><input class="ii" id="fena-nas" type="number" value="140" oninput="calcFENa()"></div>
+          <div class="ig"><label class="il">Na urin (mEq/L)</label><input class="ii" id="fena-nau" type="number" value="15" oninput="calcFENa()"></div>
+          <div class="ig"><label class="il">Cr serum (mg/dL)</label><input class="ii" id="fena-crs" type="number" value="1.5" step="0.01" oninput="calcFENa()"></div>
+        </div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">Cr urin (mg/dL)</label><input class="ii" id="fena-cru" type="number" value="80" oninput="calcFENa()"></div>
+          <div class="ig"><label class="il">BUN serum (mg/dL)</label><input class="ii" id="fena-buns" type="number" value="40" oninput="calcFENa()"></div>
+          <div class="ig"><label class="il">Urea urin (mg/dL)</label><input class="ii" id="fena-ureanu" type="number" value="800" oninput="calcFENa()"></div>
+        </div>
+        <button class="btn" style="background:var(--orange);color:white" onclick="calcFENa()">Hitung FENa & FEUrea</button>
+        <div class="res" id="res-fena" style="background:var(--orange-l);border-color:#fdba74">
+          <div class="rg s3">
+            <div class="ri"><div class="rl">FENa (%)</div><div class="rv big" id="fena-result"></div></div>
+            <div class="ri"><div class="rl">FEUrea (%)</div><div class="rv big" id="feurea-result"></div></div>
+            <div class="ri"><div class="rl">Interpretasi</div><div class="rv" id="fena-interp" style="font-size:0.8rem;line-height:1.4"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FLUID OVERLOAD -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:var(--sky-l)">⚖️</div><div><div class="ct">Fluid Overload Assessment</div><div class="cs">% kelebihan cairan pada AKI / PICU</div></div></div>
+      <div class="cb">
+        <div class="ibox">FO% = [(BB aktual – BB baseline) / BB baseline] × 100%. FO &gt;10% → outcome buruk. FO &gt;20% → pertimbangkan dialisis.</div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">BB baseline (kg)</label><input class="ii" id="fo-wt-base" type="number" value="20" oninput="calcFO()"></div>
+          <div class="ig"><label class="il">BB aktual (kg)</label><input class="ii" id="fo-wt-act" type="number" value="22" oninput="calcFO()"></div>
+          <div class="ig"><label class="il">Total input (mL)</label><input class="ii" id="fo-in" type="number" value="2000" oninput="calcFO()"></div>
+        </div>
+        <div class="ig" style="margin-bottom:0.6rem"><label class="il">Total output (mL)</label><input class="ii" id="fo-out" type="number" value="800" oninput="calcFO()"></div>
+        <button class="btn" style="background:var(--sky);color:white" onclick="calcFO()">Hitung Fluid Overload</button>
+        <div class="res" id="res-fo" style="background:var(--sky-l);border-color:#7dd3fc">
+          <div class="rg s3">
+            <div class="ri"><div class="rl">Fluid Overload (%)</div><div class="rv big" id="fo-pct"></div></div>
+            <div class="ri"><div class="rl">Balance Cairan (mL)</div><div class="rv" id="fo-balance"></div></div>
+            <div class="ri"><div class="rl">Status</div><div class="rv" id="fo-status"></div></div>
+          </div>
+          <div class="ralert" id="fo-rec"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ HIPERTENSI ═══ -->
+<div class="tc" id="tab-htn">
+  <div class="grid">
+
+    <!-- BP CLASSIFICATION -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:var(--rose-l)">💓</div><div><div class="ct">Klasifikasi Tekanan Darah</div><div class="cs">AAP 2017 — Normal, Elevasi, Hipertensi Std 1 & 2</div></div></div>
+      <div class="cb">
+        <div class="ibox">AAP 2017: Normal &lt;P90; Elevated P90–P95; HTN Stage 1: P95–P99+5mmHg; HTN Stage 2: &gt;P99+5mmHg. Persentil berdasarkan usia, jenis kelamin, tinggi.</div>
+        <div class="ir s4">
+          <div class="ig"><label class="il">Usia (thn)</label><input class="ii" id="bp-age" type="number" value="8" oninput="calcBP()"></div>
+          <div class="ig"><label class="il">Jenis Kelamin</label>
+            <select class="ii" id="bp-sex" oninput="calcBP()">
+              <option value="m">Laki-laki</option>
+              <option value="f">Perempuan</option>
+            </select>
+          </div>
+          <div class="ig"><label class="il">Persentil TB (%)</label>
+            <select class="ii" id="bp-ht-pct" oninput="calcBP()">
+              <option value="5">P5</option>
+              <option value="25">P25</option>
+              <option value="50" selected>P50</option>
+              <option value="75">P75</option>
+              <option value="90">P90</option>
+              <option value="95">P95</option>
+            </select>
+          </div>
+          <div class="ig"><label class="il">Jumlah pengukuran</label>
+            <select class="ii" id="bp-meas" oninput="calcBP()">
+              <option value="1">1×</option>
+              <option value="3" selected>Rata-rata 3×</option>
+            </select>
+          </div>
+        </div>
+        <div class="ir">
+          <div class="ig"><label class="il">Sistolik (mmHg)</label><input class="ii" id="bp-sys" type="number" value="120" oninput="calcBP()"></div>
+          <div class="ig"><label class="il">Diastolik (mmHg)</label><input class="ii" id="bp-dia" type="number" value="78" oninput="calcBP()"></div>
+        </div>
+        <button class="btn" style="background:var(--rose);color:white" onclick="calcBP()">Klasifikasi Tekanan Darah</button>
+        <div class="res" id="res-bp" style="background:var(--rose-l);border-color:#fca5a5">
+          <div class="ralert" id="bp-result"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANTIHYPERTENSIVE DRUGS -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:var(--violet-l)">💊</div><div><div class="ct">Antihipertensi Pediatrik</div><div class="cs">Dosis berdasarkan BB & indikasi</div></div></div>
+      <div class="cb">
+        <div class="ir">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="htn-w" type="number" value="20" oninput="calcHTN()"></div>
+          <div class="ig"><label class="il">Kondisi</label>
+            <select class="ii" id="htn-cond" oninput="calcHTN()">
+              <option value="crisis">Krisis Hipertensi (IV)</option>
+              <option value="stage2">HTN Stage 2 (oral)</option>
+              <option value="stage1">HTN Stage 1 (oral)</option>
+              <option value="ckd">HTN + CKD</option>
+              <option value="nephrotic">HTN + Sindrom Nefrotik</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" style="background:var(--violet);color:white" onclick="calcHTN()">Rekomendasi Antihipertensi</button>
+        <div class="res" id="res-htn" style="background:var(--violet-l);border-color:#c4b5fd">
+          <div class="ralert" id="htn-result" style="font-size:0.78rem;line-height:1.9;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAP & PERFUSION -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:var(--teal-l)">📈</div><div><div class="ct">MAP & Target Penurunan TD</div><div class="cs">Krisis hipertensi — panduan aman</div></div></div>
+      <div class="cb">
+        <div class="ibox"><strong>Prinsip:</strong> Krisis hipertensi — turunkan MAP maks 25% dalam 8 jam pertama. Jangan turunkan terlalu cepat (risiko iskemia organ).</div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">Sistolik (mmHg)</label><input class="ii" id="map-sys" type="number" value="160" oninput="calcMAP()"></div>
+          <div class="ig"><label class="il">Diastolik (mmHg)</label><input class="ii" id="map-dia" type="number" value="100" oninput="calcMAP()"></div>
+          <div class="ig"><label class="il">Target penurunan (%)</label>
+            <select class="ii" id="map-pct" oninput="calcMAP()">
+              <option value="25">25% (aman, 8 jam)</option>
+              <option value="15">15% (sangat hati-hati)</option>
+              <option value="10">10% (1 jam pertama)</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" style="background:var(--teal);color:white" onclick="calcMAP()">Hitung Target TD</button>
+        <div class="res" id="res-map" style="background:var(--teal-l);border-color:#5eead4">
+          <div class="rg s4">
+            <div class="ri"><div class="rl">MAP aktual</div><div class="rv big" id="map-actual"></div><div class="rn">mmHg</div></div>
+            <div class="ri"><div class="rl">MAP target</div><div class="rv big" id="map-target"></div><div class="rn">mmHg</div></div>
+            <div class="ri"><div class="rl">TD target Sistolik</div><div class="rv" id="map-sys-t"></div></div>
+            <div class="ri"><div class="rl">TD target Diastolik</div><div class="rv" id="map-dia-t"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ CAIRAN ═══ -->
+<div class="tc" id="tab-fluid">
+  <div class="grid">
+
+    <!-- MAINTENANCE FLUID -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:var(--sky-l)">💧</div><div><div class="ct">Kebutuhan Cairan Maintenance</div><div class="cs">Holliday-Segar & Isotonic recommendation</div></div></div>
+      <div class="cb">
+        <div class="ibox"><strong>Holliday-Segar:</strong> 100 mL/kg (0–10 kg) + 50 mL/kg (10–20 kg) + 20 mL/kg (&gt;20 kg). <strong>Rekomendasi modern:</strong> Gunakan cairan isotonik (NS atau RL) untuk maintenance, bukan hipotonik.</div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="mf-w" type="number" value="25" oninput="calcMF()"></div>
+          <div class="ig"><label class="il">Kondisi</label>
+            <select class="ii" id="mf-cond" oninput="calcMF()">
+              <option value="normal">Normal</option>
+              <option value="fever">Demam (+12.5%/°C di atas 38)</option>
+              <option value="restrict">Restriksi (CKD/gagal jantung)</option>
+              <option value="edema">Edema / Anasarka</option>
+            </select>
+          </div>
+          <div class="ig"><label class="il">Suhu (°C) — jika demam</label><input class="ii" id="mf-temp" type="number" value="38" step="0.5" oninput="calcMF()"></div>
+        </div>
+        <button class="btn" style="background:var(--sky);color:white" onclick="calcMF()">Hitung Kebutuhan Cairan</button>
+        <div class="res" id="res-mf" style="background:var(--sky-l);border-color:#7dd3fc">
+          <div class="rg s4">
+            <div class="ri"><div class="rl">Total/hari (mL)</div><div class="rv big" id="mf-total"></div></div>
+            <div class="ri"><div class="rl">Rate (mL/jam)</div><div class="rv big" id="mf-rate"></div></div>
+            <div class="ri"><div class="rl">mL/kg/hr</div><div class="rv" id="mf-pkg"></div></div>
+            <div class="ri"><div class="rl">Jenis cairan</div><div class="rv" id="mf-type" style="font-size:0.75rem;line-height:1.3"></div></div>
+          </div>
+          <div id="mf-warn"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEHYDRATION -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:var(--orange-l)">🏜️</div><div><div class="ct">Dehidrasi — Penilaian & Rehidrasi</div><div class="cs">Volume resusitasi berdasarkan derajat</div></div></div>
+      <div class="cb">
+        <div class="ir s3">
+          <div class="ig"><label class="il">BB aktual (kg)</label><input class="ii" id="deh-w" type="number" value="20" oninput="calcDeh()"></div>
+          <div class="ig"><label class="il">Derajat Dehidrasi</label>
+            <select class="ii" id="deh-deg" oninput="calcDeh()">
+              <option value="mild">Ringan (3–5%)</option>
+              <option value="mod" selected>Sedang (6–9%)</option>
+              <option value="sev">Berat (≥10%)</option>
+            </select>
+          </div>
+          <div class="ig"><label class="il">Jenis Dehidrasi</label>
+            <select class="ii" id="deh-type" oninput="calcDeh()">
+              <option value="iso">Isotonik (Na 130–150)</option>
+              <option value="hypo">Hipotonik (Na &lt;130)</option>
+              <option value="hyper">Hipertonik (Na &gt;150)</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" style="background:var(--orange);color:white" onclick="calcDeh()">Hitung Volume Rehidrasi</button>
+        <div class="res" id="res-deh" style="background:var(--orange-l);border-color:#fdba74">
+          <div class="ralert" id="deh-result" style="font-size:0.78rem;line-height:1.9;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDEMA / DIURETIC -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:var(--violet-l)">🫧</div><div><div class="ct">Diuretik — Dosis</div><div class="cs">Furosemid, Spironolakton, HCTZ</div></div></div>
+      <div class="cb">
+        <div class="ir">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="diu-w" type="number" value="20" oninput="calcDiu()"></div>
+          <div class="ig"><label class="il">eGFR (mL/mnt/1.73m²)</label><input class="ii" id="diu-gfr" type="number" value="80" oninput="calcDiu()"></div>
+        </div>
+        <button class="btn" style="background:var(--violet);color:white" onclick="calcDiu()">Hitung Dosis Diuretik</button>
+        <div class="res" id="res-diu" style="background:var(--violet-l);border-color:#c4b5fd">
+          <div class="ralert" id="diu-result" style="font-size:0.78rem;line-height:1.9;"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ URIN & PROTEINURIA ═══ -->
+<div class="tc" id="tab-urine">
+  <div class="grid">
+
+    <!-- PROTEIN:CREATININE RATIO -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:var(--indigo-l)">🧪</div><div><div class="ct">Rasio Protein/Kreatinin Urin</div><div class="cs">UPCR — skrining & monitoring</div></div></div>
+      <div class="cb">
+        <div class="ibox"><strong>Normal:</strong> UPCR &lt;0.2 (atau &lt;200 mg/g). <strong>Proteinuria signifikan:</strong> &gt;1. <strong>Nefrotik range:</strong> &gt;3.5 (dewasa) / &gt;2 (anak &gt;2 tahun).</div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">Protein urin (mg/dL)</label><input class="ii" id="upcr-pro" type="number" value="150" oninput="calcUPCR()"></div>
+          <div class="ig"><label class="il">Kreatinin urin (mg/dL)</label><input class="ii" id="upcr-cr" type="number" value="80" oninput="calcUPCR()"></div>
+          <div class="ig"><label class="il">BB (kg) — untuk mP/24j</label><input class="ii" id="upcr-w" type="number" value="20" oninput="calcUPCR()"></div>
+        </div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">Volume urin 24j (mL)</label><input class="ii" id="upcr-vol" type="number" value="800" placeholder="opsional" oninput="calcUPCR()"></div>
+          <div class="ig"><label class="il">Protein 24j (mg)</label><input class="ii" id="upcr-pro24" type="number" value="" placeholder="opsional" oninput="calcUPCR()"></div>
+          <div class="ig"><label class="il">Usia (thn)</label><input class="ii" id="upcr-age" type="number" value="5" oninput="calcUPCR()"></div>
+        </div>
+        <button class="btn" style="background:var(--indigo);color:white" onclick="calcUPCR()">Analisis Proteinuria</button>
+        <div class="res" id="res-upcr" style="background:var(--indigo-l);border-color:#a5b4fc">
+          <div class="rg s3">
+            <div class="ri"><div class="rl">UPCR</div><div class="rv big" id="upcr-result"></div><div class="rn">mg/mg (atau g/g)</div></div>
+            <div class="ri"><div class="rl">Estimasi 24j (mg/m²/hr)</div><div class="rv" id="upcr-24h"></div></div>
+            <div class="ri"><div class="rl">Klasifikasi</div><div class="rv big" id="upcr-class"></div></div>
+          </div>
+          <div class="ralert" id="upcr-interp"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OSMOLALITY URINE -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:var(--teal-l)">🔭</div><div><div class="ct">Osmolalitas & Indeks Ginjal Urin</div><div class="cs">Renal Failure Index, FENa, osmolalitas</div></div></div>
+      <div class="cb">
+        <div class="ir s3">
+          <div class="ig"><label class="il">Osmolalitas urin (mOsm/kg)</label><input class="ii" id="uosm-val" type="number" value="400" oninput="calcUOsm()"></div>
+          <div class="ig"><label class="il">Na urin (mEq/L)</label><input class="ii" id="uosm-nau" type="number" value="20" oninput="calcUOsm()"></div>
+          <div class="ig"><label class="il">Cr urin (mg/dL)</label><input class="ii" id="uosm-cru" type="number" value="80" oninput="calcUOsm()"></div>
+        </div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">Na serum (mEq/L)</label><input class="ii" id="uosm-nas" type="number" value="140" oninput="calcUOsm()"></div>
+          <div class="ig"><label class="il">Cr serum (mg/dL)</label><input class="ii" id="uosm-crs" type="number" value="1.5" step="0.01" oninput="calcUOsm()"></div>
+          <div class="ig"><label class="il">Osmolalitas serum</label><input class="ii" id="uosm-osms" type="number" value="290" oninput="calcUOsm()"></div>
+        </div>
+        <button class="btn" style="background:var(--teal);color:white" onclick="calcUOsm()">Hitung Indeks Urin</button>
+        <div class="res" id="res-uosm" style="background:var(--teal-l);border-color:#5eead4">
+          <div class="rg s4">
+            <div class="ri"><div class="rl">Osm ratio U/S</div><div class="rv big" id="uosm-ratio"></div><div class="rn">N: &gt;1.2 (konsentrasi)</div></div>
+            <div class="ri"><div class="rl">Renal Failure Index</div><div class="rv" id="uosm-rfi"></div><div class="rn">&lt;1: pre-renal</div></div>
+            <div class="ri"><div class="rl">Interpretasi Osm urin</div><div class="rv" id="uosm-interp"></div></div>
+            <div class="ri"><div class="rl">Kapasitas Konsentrasi</div><div class="rv" id="uosm-concap"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEPHROTIC SYNDROME -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:var(--amber-l)">🌊</div><div><div class="ct">Sindrom Nefrotik — Kriteria & Respon</div><div class="cs">Diagnosis, remisi, relaps</div></div></div>
+      <div class="cb">
+        <div class="ibox"><strong>Kriteria SN:</strong> Proteinuria masif (UPCR &gt;2 atau protein 24j &gt;40 mg/m²/jam) + Hipoalbuminemia (&lt;2.5 g/dL) + Edema.</div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">Albumin serum (g/dL)</label><input class="ii" id="ns-alb" type="number" value="1.8" step="0.1" oninput="calcNS()"></div>
+          <div class="ig"><label class="il">UPCR</label><input class="ii" id="ns-upcr" type="number" value="3.5" step="0.1" oninput="calcNS()"></div>
+          <div class="ig"><label class="il">Kolesterol (mg/dL)</label><input class="ii" id="ns-chol" type="number" value="320" oninput="calcNS()"></div>
+        </div>
+        <div class="ir">
+          <div class="ig"><label class="il">Status Steroid</label>
+            <select class="ii" id="ns-steroid" oninput="calcNS()">
+              <option value="naive">Naive (belum pernah)</option>
+              <option value="day7">Hari 7–14 terapi</option>
+              <option value="day28">Hari 28 terapi</option>
+              <option value="remission">Sudah remisi sebelumnya</option>
+            </select>
+          </div>
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="ns-w" type="number" value="20" oninput="calcNS()"></div>
+        </div>
+        <button class="btn" style="background:var(--amber);color:white" onclick="calcNS()">Evaluasi Sindrom Nefrotik</button>
+        <div class="res" id="res-ns" style="background:var(--amber-l);border-color:#fcd34d">
+          <div class="ralert" id="ns-result" style="font-size:0.78rem;line-height:1.9;"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ DIALISIS ═══ -->
+<div class="tc" id="tab-dialysis">
+  <div class="grid">
+
+    <!-- PERITONEAL DIALYSIS -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:var(--sky-l)">🔄</div><div><div class="ct">Peritoneal Dialisis (PD)</div><div class="cs">Volume, dwell time, dan Kt/V</div></div></div>
+      <div class="cb">
+        <div class="ibox"><strong>Volume dwell PD anak:</strong> 1000–1200 mL/m² per siklus (maks 50 mL/kg). CAPD: 4 siklus/hari. APD: 8–12 siklus/malam.</div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="pd-w" type="number" value="20" oninput="calcPD()"></div>
+          <div class="ig"><label class="il">TB (cm)</label><input class="ii" id="pd-h" type="number" value="110" oninput="calcPD()"></div>
+          <div class="ig"><label class="il">Mode PD</label>
+            <select class="ii" id="pd-mode" oninput="calcPD()">
+              <option value="capd">CAPD (manual)</option>
+              <option value="apd">APD (malam)</option>
+              <option value="acute">Acute PD (ICU)</option>
+            </select>
+          </div>
+        </div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">Urea darah (mg/dL)</label><input class="ii" id="pd-bun" type="number" value="80" oninput="calcPD()"></div>
+          <div class="ig"><label class="il">Urea dialisat (mg/dL)</label><input class="ii" id="pd-dbun" type="number" value="60" oninput="calcPD()"></div>
+          <div class="ig"><label class="il">Volume drained/siklus (mL)</label><input class="ii" id="pd-dvol" type="number" value="900" oninput="calcPD()"></div>
+        </div>
+        <button class="btn" style="background:var(--sky);color:white" onclick="calcPD()">Hitung Parameter PD</button>
+        <div class="res" id="res-pd" style="background:var(--sky-l);border-color:#7dd3fc">
+          <div class="rg s4">
+            <div class="ri"><div class="rl">Volume/siklus (mL)</div><div class="rv big" id="pd-vol"></div></div>
+            <div class="ri"><div class="rl">Volume maks (mL)</div><div class="rv" id="pd-vol-max"></div><div class="rn">50 mL/kg</div></div>
+            <div class="ri"><div class="rl">BSA (m²)</div><div class="rv" id="pd-bsa"></div></div>
+            <div class="ri"><div class="rl">Kt/V estimasi/hari</div><div class="rv" id="pd-ktv"></div><div class="rn">target &gt;1.7/mgg</div></div>
+          </div>
+          <div class="ralert" id="pd-notes"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HEMODIALYSIS -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:var(--violet-l)">🌀</div><div><div class="ct">Hemodialisis (HD) — Parameter</div><div class="cs">Dosis HD, akses, antikoagulan</div></div></div>
+      <div class="cb">
+        <div class="ir s3">
+          <div class="ig"><label class="il">BB kering (kg)</label><input class="ii" id="hd-w" type="number" value="20" oninput="calcHD()"></div>
+          <div class="ig"><label class="il">BB aktual (kg)</label><input class="ii" id="hd-wa" type="number" value="22" oninput="calcHD()"></div>
+          <div class="ig"><label class="il">Durasi sesi (jam)</label><input class="ii" id="hd-dur" type="number" value="4" step="0.5" oninput="calcHD()"></div>
+        </div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">BUN pre-HD (mg/dL)</label><input class="ii" id="hd-pre" type="number" value="80" oninput="calcHD()"></div>
+          <div class="ig"><label class="il">BUN post-HD (mg/dL)</label><input class="ii" id="hd-post" type="number" value="30" oninput="calcHD()"></div>
+          <div class="ig"><label class="il">Akses vaskular</label>
+            <select class="ii" id="hd-access" oninput="calcHD()">
+              <option value="avf">AVF</option>
+              <option value="cvl">CVC/CVC double lumen</option>
+              <option value="graft">Graft</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" style="background:var(--violet);color:white" onclick="calcHD()">Hitung Parameter HD</button>
+        <div class="res" id="res-hd" style="background:var(--violet-l);border-color:#c4b5fd">
+          <div class="rg s4">
+            <div class="ri"><div class="rl">UF Target (mL)</div><div class="rv big" id="hd-uf"></div></div>
+            <div class="ri"><div class="rl">UF Rate (mL/jam)</div><div class="rv" id="hd-uf-rate"></div></div>
+            <div class="ri"><div class="rl">URR (%)</div><div class="rv big" id="hd-urr"></div><div class="rn">target ≥65%</div></div>
+            <div class="ri"><div class="rl">spKt/V (Daugirdas)</div><div class="rv" id="hd-ktv"></div><div class="rn">target &gt;1.2</div></div>
+          </div>
+          <div class="ralert" id="hd-notes"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CRRT -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:var(--emerald-l)">🌿</div><div><div class="ct">CRRT — Continuous RRT</div><div class="cs">CVVH, CVVHD, CVVHDF — dosis & filter</div></div></div>
+      <div class="cb">
+        <div class="ibox"><strong>Dosis CRRT:</strong> 20–35 mL/kg/jam total efluent. AKI+sepsis: 35 mL/kg/jam. Antikoagulan: heparin 5–15 unit/kg/jam atau sitrat regional.</div>
+        <div class="ir s3">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="crrt-w" type="number" value="20" oninput="calcCRRT()"></div>
+          <div class="ig"><label class="il">Mode CRRT</label>
+            <select class="ii" id="crrt-mode" oninput="calcCRRT()">
+              <option value="cvvh">CVVH (konveksi)</option>
+              <option value="cvvhd">CVVHD (difusi)</option>
+              <option value="cvvhdf">CVVHDF (kombinasi)</option>
+            </select>
+          </div>
+          <div class="ig"><label class="il">Target dosis (mL/kg/jam)</label><input class="ii" id="crrt-dose" type="number" value="25" oninput="calcCRRT()"></div>
+        </div>
+        <button class="btn" style="background:var(--emerald);color:white" onclick="calcCRRT()">Hitung Setting CRRT</button>
+        <div class="res" id="res-crrt" style="background:var(--emerald-l);border-color:#6ee7b7">
+          <div class="rg s4">
+            <div class="ri"><div class="rl">Total efluent (mL/jam)</div><div class="rv big" id="crrt-efluent"></div></div>
+            <div class="ri"><div class="rl">Blood flow (mL/mnt)</div><div class="rv" id="crrt-qb"></div><div class="rn">3–5 mL/kg/mnt</div></div>
+            <div class="ri"><div class="rl">Heparin (unit/jam)</div><div class="rv" id="crrt-hep"></div><div class="rn">5–15 unit/kg/jam</div></div>
+            <div class="ri"><div class="rl">Ganti filter (jam)</div><div class="rv">24–72</div><div class="rn">tergantung clotting</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ DRUGS ═══ -->
+<div class="tc" id="tab-drugs">
+  <div class="grid">
+
+    <!-- IMMUNOSUPPRESSION -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:var(--violet-l)">💉</div><div><div class="ct">Imunosupresi Nefrologi</div><div class="cs">Prednisolon, Siklofosfamid, Takrolimus, MMF</div></div></div>
+      <div class="cb">
+        <div class="ir">
+          <div class="ig"><label class="il">BB (kg)</label><input class="ii" id="imm-w" type="number" value="20" oninput="calcImm()"></div>
+          <div class="ig"><label class="il">TB (cm)</label><input class="ii" id="imm-h" type="number" value="110" oninput="calcImm()"></div>
+        </div>
+        <div class="ig" style="margin-bottom:0.6rem"><label class="il">Indikasi</label>
+          <select class="ii" id="imm-ind" oninput="calcImm()">
+            <option value="ns-first">SN Onset Pertama (Prednisolon)</option>
+            <option value="ns-relapse">SN Relaps (Prednisolon)</option>
+            <option value="ns-steroid-dep">SN Steroid Dependen (CTX/MMF)</option>
+            <option value="ns-resist">SN Steroid Resisten (Takrolimus/RTX)</option>
+            <option value="itp">ITP (Prednisolon)</option>
+            <option value="hsp-nephritis">HSP Nefritis berat</option>
+            <option value="transplant">Post Transplant (Takrolimus+MMF+Pred)</option>
+          </select>
+        </div>
+        <button class="btn" style="background:var(--violet);color:white" onclick="calcImm()">Tampilkan Regimen</button>
+        <div class="res" id="res-imm" style="background:var(--violet-l);border-color:#c4b5fd">
+          <div class="ralert" id="imm-result" style="font-size:0.78rem;line-height:1.9;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RENAL DOSE ADJUSTMENT -->
+    <div class="card">
+      <div class="ch"><div class="cico" style="background:var(--rose-l)">⚙️</div><div><div class="ct">Penyesuaian Dosis pada CKD</div><div class="cs">Antibiotik & obat umum berdasarkan GFR</div></div></div>
+      <div class="cb">
+        <div class="ibox">Dosis perlu disesuaikan bila eGFR &lt;50 mL/mnt/1.73m². Patokan: Obat tereliminasi ginjal &gt;50% harus direduksi sesuai GFR.</div>
+        <div class="ir">
+          <div class="ig"><label class="il">eGFR (mL/mnt/1.73m²)</label><input class="ii" id="rd-gfr" type="number" value="45" oninput="calcRenalDose()"></div>
+          <div class="ig"><label class="il">Pilih Obat</label>
+            <select class="ii" id="rd-drug" oninput="calcRenalDose()">
+              <option value="amoxicillin">Amoksisilin</option>
+              <option value="ampicillin">Ampisilin</option>
+              <option value="ceftriaxone">Seftriakson</option>
+              <option value="cefazolin">Sefazolin</option>
+              <option value="gentamicin">Gentamisin</option>
+              <option value="vancomycin">Vankomisin</option>
+              <option value="piperazine">Piperasilin-Tazobaktam</option>
+              <option value="meropenem">Meropenem</option>
+              <option value="acyclovir">Asiklovir</option>
+              <option value="trimethoprim">TMP-SMX</option>
+              <option value="metformin">Metformin</option>
+              <option value="enalapril">Enalapril/ACEI</option>
+              <option value="spironolactone">Spironolakton</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" style="background:var(--rose);color:white" onclick="calcRenalDose()">Panduan Dosis Ginjal</button>
+        <div class="res" id="res-rd" style="background:var(--rose-l);border-color:#fca5a5">
+          <div class="ralert" id="rd-result" style="font-size:0.78rem;line-height:1.85;"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── helpers ──
+const $=id=>document.getElementById(id);
+const r2=n=>Math.round(n*100)/100;
+const r1=n=>Math.round(n*10)/10;
+const r0=n=>Math.round(n);
+const bsa=(w,h)=>r2(Math.sqrt(w*h/3600));
+function show(id,on=true){const e=$(id);if(e)e.classList.toggle('show',on);}
+
+function syncAll(){
+  const w=parseFloat($('ptW').value)||20;
+  const h=parseFloat($('ptH').value)||110;
+  const cr=parseFloat($('ptCr').value)||0.6;
+  const egfr=r0(0.413*h/cr);
+  $('ptGFR').textContent=`eGFR: ${egfr} mL/mnt`;
+  let ckdS='';
+  if(egfr>=90) ckdS='G1';
+  else if(egfr>=60) ckdS='G2';
+  else if(egfr>=45) ckdS='G3a';
+  else if(egfr>=30) ckdS='G3b';
+  else if(egfr>=15) ckdS='G4';
+  else ckdS='G5';
+  $('ptCKD').textContent=`CKD: ${ckdS}`;
+  // sync inputs
+  [['ptW',['gfr-w','na-w','k-w','aki-w','htn-w','mf-w','deh-w','diu-w','upcr-w','upcr-age','ns-w','pd-w','hd-w','crrt-w','imm-w','map-sys']],
+   ['ptH',['gfr-h','pd-h','imm-h']],
+   ['ptAge',['gfr-age','bp-age']],
+   ['ptCr',['gfr-cr','aki-cra']],
+   ['ptSex',['gfr-sex','bp-sex']]
+  ].forEach(([src,dests])=>{
+    const v=$(src)?.value;
+    if(v) dests.forEach(d=>{const e=$(d);if(e&&document.activeElement!==e)e.value=v;});
+  });
+}
+
+function showTab(id,btn){
+  document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('active'));
+  $('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── GFR ──
+function calcGFR(){
+  const h=parseFloat($('gfr-h').value)||110;
+  const cr=parseFloat($('gfr-cr').value)||0.6;
+  const age=parseFloat($('gfr-age').value)||5;
+  const w=parseFloat($('gfr-w').value)||20;
+  const sex=$('gfr-sex').value;
+  const bun=parseFloat($('gfr-bun').value)||15;
+  const cysC=parseFloat($('gfr-cys').value)||0;
+  const alb=parseFloat($('gfr-alb').value)||4;
+
+  const schwartz=r0(0.413*h/cr);
+  const ckid=r0(39.1*Math.pow(h/cr,0.516)*Math.pow(1.8/cysC||1,0.294)*Math.pow(30/bun,0.169)*(sex==='m'?1.099:1)*Math.pow(h/100,0.188));
+  const cysCgfr=cysC>0?r0(70.69*Math.pow(cysC,-0.931)):null;
+
+  $('gfr-s').textContent=schwartz;
+  $('gfr-ckid').textContent=bun>0?ckid:'—';
+  $('gfr-cysc').textContent=cysCgfr?cysCgfr:'(masukkan CysC)';
+
+  let stage,name,color,barPct;
+  if(schwartz>=90){stage='G1';name='Normal/Tinggi';color='#059669';barPct=100;}
+  else if(schwartz>=60){stage='G2';name='Penurunan Ringan';color='#10b981';barPct=70;}
+  else if(schwartz>=45){stage='G3a';name='Penurunan Ringan-Sedang';color='#d97706';barPct=50;}
+  else if(schwartz>=30){stage='G3b';name='Penurunan Sedang-Berat';color='#f59e0b';barPct=35;}
+  else if(schwartz>=15){stage='G4';name='Penurunan Berat';color='#ef4444';barPct=18;}
+  else{stage='G5';name='Gagal Ginjal';color='#dc2626';barPct=5;}
+
+  $('gfr-ckd-stage').textContent=stage;
+  $('gfr-ckd-name').textContent=name;
+  $('gfr-ckd-stage').style.color=color;
+  $('gfr-bar').style.width=barPct+'%';
+  $('gfr-bar').style.background=color;
+
+  let alert='';
+  if(stage==='G3a'||stage==='G3b') alert=`<div style="font-size:0.75rem;line-height:1.7">⚠️ CKD ${stage}: Monitor BP tiap kunjungan, UPCR setiap 3 bulan, elektrolit dan Hb. Restriksi fosfat. Pertimbangkan ACEI/ARB bila proteinuria.</div>`;
+  else if(stage==='G4') alert=`<div style="font-size:0.75rem;line-height:1.7">🔴 CKD G4: Persiapan terapi pengganti ginjal (RRT). Monitor hemodinamik. Konsultasi nefrologi anak. Nutrisi khusus.</div>`;
+  else if(stage==='G5') alert=`<div style="font-size:0.75rem;line-height:1.7">⛔ CKD G5 (ESRD): Inisiasi dialisis bila simtomatik atau tidak bisa di-manage konservatif. Pertimbangkan PD/HD dan transplant.</div>`;
+  else alert=`<div style="font-size:0.75rem;line-height:1.7">🟢 Fungsi ginjal ${stage} (${schwartz} mL/mnt/1.73m²). Monitoring rutin sesuai risiko.</div>`;
+  $('gfr-alert').innerHTML=alert;
+  show('res-gfr');
+}
+
+// ── CKD STAGING ──
+function calcCKDStage(){
+  const gfr=parseFloat($('ckd-gfr').value)||75;
+  const alb=$('ckd-alb').value;
+  const dur=$('ckd-dur').value;
+  const etio=$('ckd-etio').value;
+  let gStage=gfr>=90?'G1':gfr>=60?'G2':gfr>=45?'G3a':gfr>=30?'G3b':gfr>=15?'G4':'G5';
+  const etioMap={congenital:'CAKUT — perlu evaluasi anatomi, USG ginjal rutin',glomerular:'Glomerulonefritis — monitor komplemen, ANCA, anti-dsDNA',hereditary:'Herediter — evaluasi genetik, audiologi (Alport), mata',other:'Penyebab lainnya — evaluasi lengkap'};
+  const progMap={
+    A1:{G1:'Hijau',G2:'Hijau',G3a:'Kuning',G3b:'Oranye',G4:'Merah',G5:'Merah'},
+    A2:{G1:'Kuning',G2:'Kuning',G3a:'Oranye',G3b:'Oranye',G4:'Merah',G5:'Merah'},
+    A3:{G1:'Oranye',G2:'Oranye',G3a:'Oranye',G3b:'Merah',G4:'Merah',G5:'Merah'}
+  };
+  const prog=progMap[alb]?.[gStage]||'—';
+  const progColor={Hijau:'#059669',Kuning:'#d97706',Oranye:'#ea580c',Merah:'#e11d48'};
+  $('ckd-result').innerHTML=`<div style="font-size:0.78rem;line-height:1.85">
+    <strong>Stadium GFR: ${gStage}</strong> (${gfr} mL/mnt/1.73m²)<br>
+    <strong>Albuminuria: ${alb}</strong> | <strong>Prognosis: <span style="color:${progColor[prog]}">${prog}</span></strong><br>
+    <strong>Status:</strong> ${dur==='yes'?'✅ CKD (>3 bulan)':'⏳ Belum dapat ditentukan (<3 bulan)'}<br>
+    <strong>Etiologi:</strong> ${etioMap[etio]}<br>
+    ${gfr<30?'⚠️ Persiapkan RRT dini — konsul nefrologi anak dan tim transplant':''}
+  </div>`;
+  show('res-ckd');
+}
+
+// ── Na ──
+function calcNa(){
+  const w=parseFloat($('na-w').value)||20;
+  const act=parseFloat($('na-act').value)||125;
+  const tgt=parseFloat($('na-tgt').value)||135;
+  const cond=$('na-cond').value;
+  const glu=parseFloat($('na-glu').value)||90;
+  const corrected=r1(act+((glu-100)/100)*1.6);
+  const deficit=r1(0.6*w*(tgt-act));
+  const nacl3=r1(deficit/0.51);
+  $('na-corrected').textContent=corrected;
+  $('na-deficit').textContent=(deficit>0?'+':'')+deficit+' mEq';
+  $('na-nacl3').textContent=Math.max(0,nacl3)+' mL';
+  let interp='',warnHtml='';
+  if(act<130){
+    interp=`<div style="font-size:0.78rem;line-height:1.75"><strong>🔴 Hiponatremia ${act<120?'Berat':'Sedang'} (${act} mEq/L)</strong><br>
+    ${cond==='hypo-acute'?'Koreksi cepat: 1–2 mEq/kg NaCl 3% dalam 10–20 mnt untuk kejang/gejala berat':'Koreksi lambat: Maks 8–10 mEq/L/hari (kronik). Jika terlalu cepat → osmotic demyelination syndrome!'}<br>
+    Koreksi pertama: ${r1(Math.abs(deficit)/2)} mEq dalam 4–6 jam pertama</div>`;
+  } else if(act>150){
+    interp=`<div style="font-size:0.78rem;line-height:1.75"><strong>🔴 Hipernatremia (${act} mEq/L)</strong><br>
+    Koreksi LAMBAT: turunkan maks 0.5–1 mEq/L/jam. Gunakan D5W atau NS 0.45%. Total volume koreksi: ${r0(Math.abs(deficit)/0.15)} mL D5W<br>
+    Risiko: edema serebral bila koreksi terlalu cepat!</div>`;
+  } else {
+    interp=`<div style="font-size:0.78rem;line-height:1.75">🟢 Na ${act} mEq/L — dalam batas normal (135–145 mEq/L)</div>`;
+  }
+  $('na-interp').innerHTML=interp;
+  $('na-interp').style.background='rgba(255,255,255,0.6)';
+  $('na-interp').style.borderColor='rgba(0,0,0,0.08)';
+  if(glu>200) $('na-warn').innerHTML=`<div class="rwarn" style="background:#fff7ed;border-color:#fcd34d">⚠️ Glukosa tinggi (${glu} mg/dL): Na terkoreksi ${corrected} mEq/L (koreksi +1.6 mEq/L per 100 mg/dL glukosa di atas 100)</div>`;
+  show('res-na');
+}
+
+// ── K ──
+function calcK(){
+  const w=parseFloat($('k-w').value)||20;
+  const act=parseFloat($('k-act').value)||3;
+  const ph=parseFloat($('k-ph').value)||7.4;
+  const ecg=$('k-ecg').value;
+  const renal=$('k-renal').value;
+  const kAdj=r2(act+(7.4-ph)*0.5);
+  const deficit=act<3.5?r1((3.5-act)*0.4*w*3):'—';
+  const kOral=typeof deficit==='number'?deficit:'—';
+  $('k-adj').textContent=kAdj;
+  $('k-deficit').textContent=typeof deficit==='number'?deficit+' mEq':'—';
+  $('k-oral').textContent=typeof kOral==='number'?r1(kOral/2)+' mEq (½ dosis pertama)':'—';
+  let interp='';
+  if(act<2.5){
+    interp=`<div style="font-size:0.78rem;line-height:1.75">⛔ <strong>Hipokalemia Berat (&lt;2.5 mEq/L)</strong><br>IV: KCl 0.3–0.5 mEq/kg/jam via CVC (maks 40 mEq/L perifer, 80 mEq/L CVC). Monitor EKG. Hidrasi adekuat. Cek Mg!</div>`;
+  } else if(act<3.5){
+    interp=`<div style="font-size:0.78rem;line-height:1.75">🟡 Hipokalemia (${act} mEq/L)<br>Oral KCl 1–2 mEq/kg/hari dalam dosis terbagi. Tingkatkan asupan buah/sayur.</div>`;
+  } else if(act>6){
+    interp=`<div style="font-size:0.78rem;line-height:1.75">⛔ <strong>Hiperkalemia Berat (&gt;6 mEq/L)</strong> — ${ecg!=='none'?'EKG ABNORMAL!':''}<br>
+    1. Ca Glukonat 10%: ${r1(0.5*w)} mL IV pelan (stabilisasi membran)<br>
+    2. Insulin Reguler ${r1(0.1*w)} unit + Glukosa 50% ${r0(2*w)} mL IV<br>
+    3. Salbutamol nebul ${w<25?2.5:5} mg<br>
+    4. NaHCO₃ 1–2 mEq/kg bila asidosis<br>
+    5. Kayexalate / Patiromer bila stabil<br>
+    ${renal!=='normal'?'6. Pertimbangkan dialisis (fungsi ginjal terganggu!)':''}</div>`;
+  } else if(act>5){
+    interp=`<div style="font-size:0.78rem;line-height:1.75">🟡 Hiperkalemia (${act} mEq/L). Monitor EKG. Batasi K diet. ${renal!=='normal'?'Hati-hati pada gangguan ginjal.':''}</div>`;
+  } else {
+    interp=`<div style="font-size:0.78rem;line-height:1.75">🟢 Kalium normal (${act} mEq/L)</div>`;
+  }
+  $('k-interp').innerHTML=interp;
+  $('k-interp').style.background='rgba(255,255,255,0.6)';
+  $('k-interp').style.borderColor='rgba(0,0,0,0.08)';
+  show('res-k');
+}
+
+// ── Ca ──
+function calcCa(){
+  const caT=parseFloat($('ca-tot').value)||9;
+  const alb=parseFloat($('ca-alb').value)||4;
+  const ph=parseFloat($('ca-ph').value)||7.4;
+  const phos=parseFloat($('ca-phos').value)||4.5;
+  const pth=parseFloat($('ca-pth').value)||65;
+  const vitd=parseFloat($('ca-vitd').value)||30;
+  const caCorr=r2(caT+0.8*(4-alb));
+  const caTimes=r1(caCorr*phos);
+  const caIon=r2(caCorr/(1+0.04*(7.4-ph)+0.46*alb/4));
+  $('ca-corr').textContent=caCorr+' mg/dL';
+  $('ca-phos-prod').textContent=caTimes;
+  $('ca-ion').textContent=caIon;
+  let pthStatus='';
+  if(pth>300) pthStatus='🔴 Hiperparatiroid berat (CKD-MBD)';
+  else if(pth>150) pthStatus='🟡 PTH tinggi';
+  else if(pth<15) pthStatus='🔴 Hipoparatiroid';
+  else pthStatus='🟢 Normal';
+  $('ca-pth-status').innerHTML=pthStatus;
+  let interp='';
+  if(caCorr<8) interp='🔴 Hipokalsemia — Ca terkoreksi rendah. Cek PTH, Vit D. Suplementasi Ca + Kalsitriol.';
+  else if(caCorr>11) interp='🔴 Hiperkalsemia — evaluasi PTH, keganasan, Vit D toksisitas.';
+  if(caTimes>55) interp+=' ⚠️ Ca×P produk >55 — risiko kalsifikasi vaskular! Kurangi fosfat dalam diet dan/atau tambahkan pengikat fosfat.';
+  if(vitd<20) interp+=' 🟡 Defisiensi Vit D (<20 ng/mL) — suplementasi Vit D3 2000–4000 IU/hari.';
+  if(!interp) interp='🟢 Homeostasis kalsium-fosfat dalam batas normal.';
+  $('ca-interp').innerHTML=`<div style="font-size:0.78rem;line-height:1.75">${interp}</div>`;
+  $('ca-interp').style.background='rgba(255,255,255,0.6)';
+  $('ca-interp').style.borderColor='rgba(0,0,0,0.08)';
+  show('res-ca');
+}
+
+// ── AG ──
+function calcAG(){
+  const na=parseFloat($('ag-na').value)||140;
+  const cl=parseFloat($('ag-cl').value)||104;
+  const hco3=parseFloat($('ag-hco3').value)||22;
+  const alb=parseFloat($('ag-alb').value)||4;
+  const osmMeas=parseFloat($('ag-osm-meas').value)||0;
+  const glu=parseFloat($('ag-glu').value)||90;
+  const bun=parseFloat($('ag-bun').value)||15;
+  const ag=r1(na-cl-hco3);
+  const agCorr=r1(ag+2.5*(4-alb));
+  const osmCalc=r1(2*na+glu/18+bun/2.8);
+  const osmGap=osmMeas>0?r1(osmMeas-osmCalc):null;
+  $('ag-result').textContent=ag;
+  $('ag-corr').textContent=agCorr;
+  $('ag-osm-calc').textContent=osmCalc;
+  $('ag-osm-gap').textContent=osmGap!==null?osmGap:'—';
+  let interp='';
+  if(agCorr>12){
+    interp='🔴 <strong>Anion Gap Tinggi</strong> (MUDPILES: Methanol, Uremia, DKA, Propylene glycol, Isoniazid, Lactic acidosis, Ethylene glycol, Salicylates)';
+    if(osmGap>10) interp+='<br>⚠️ Osmolal Gap tinggi — curiga alkohol toksik (metanol, etilen glikol)';
+  } else if(agCorr<8){
+    interp='🟡 Anion Gap Rendah — hipoalbuminemia, paraproteinemia, atau hipermagnesia';
+  } else {
+    interp='🟢 Anion Gap Normal (8–12 mEq/L)';
+    if(hco3<22) interp+='<br>→ Non-AG asidosis metabolik: diare, RTA, HCO₃ loss';
+  }
+  $('ag-interp').innerHTML=`<div style="font-size:0.78rem;line-height:1.75">${interp}</div>`;
+  $('ag-interp').style.background='rgba(255,255,255,0.6)';
+  $('ag-interp').style.borderColor='rgba(0,0,0,0.08)';
+  show('res-ag');
+}
+
+// ── AKI ──
+function calcAKI(){
+  const crb=parseFloat($('aki-crb').value)||0.5;
+  const cra=parseFloat($('aki-cra').value)||1.5;
+  const w=parseFloat($('aki-w').value)||20;
+  const uo6=parseFloat($('aki-uo6').value)||40;
+  const uo24=parseFloat($('aki-uo24').value)||200;
+  const bun=parseFloat($('aki-bun').value)||40;
+  const ratio=r2(cra/crb);
+  const deltaCr=r2(cra-crb);
+  const uoRate6=r2(uo6/(6*w));
+  const uoRate24=r2(uo24/(24*w));
+  let stageCr=0,stageUO=0;
+  if(deltaCr>=0.3||ratio>=1.5) stageCr=1;
+  if(ratio>=2) stageCr=2;
+  if(ratio>=3||cra>3.5) stageCr=3;
+  if(uoRate6<0.5) stageUO=1;
+  if(uoRate6<0.5) stageUO=Math.max(stageUO,1); // ≥6h
+  if(uoRate24<0.5&&uo24/w<0.5*24) stageUO=2; // ≥12h
+  if(uo24/w/24===0) stageUO=3; // anuria
+  const stageFinal=Math.max(stageCr,stageUO);
+  const bunCr=r1(bun/(cra*0.357)); // BUN/Cr approx
+  $('aki-ratio').textContent=ratio+'×';
+  $('aki-stage-cr').textContent=stageCr>0?`Stage ${stageCr}`:'Tidak Ada';
+  $('aki-stage-cr').style.color=stageCr===0?'var(--emerald)':stageCr===1?'var(--amber)':stageCr===2?'var(--orange)':'var(--rose)';
+  $('aki-uo-rate').textContent=uoRate6+' mL/kg/jam';
+  $('aki-stage-uo').textContent=stageUO>0?`Stage ${stageUO}`:'Normal';
+  $('aki-stage-uo').style.color=stageUO===0?'var(--emerald)':stageUO===1?'var(--amber)':stageUO===2?'var(--orange)':'var(--rose)';
+  $('aki-bun-cr').textContent=r1(bun/cra);
+  $('aki-stage-final').textContent=stageFinal>0?`Stage ${stageFinal}`:'Tidak Ada AKI';
+  $('aki-stage-final').style.color=stageFinal===0?'var(--emerald)':stageFinal===1?'var(--amber)':stageFinal===2?'var(--orange)':'var(--rose)';
+  const bunCrInterp=bun/cra>20?'Sugestif Pre-renal':'Sugestif Intrinsik/Post-renal';
+  let rec='';
+  if(stageFinal===0) rec=`<div style="font-size:0.78rem">🟢 Tidak memenuhi kriteria AKI KDIGO. BUN/Cr ratio: ${r1(bun/cra)} — ${bunCrInterp}.</div>`;
+  else if(stageFinal===1) rec=`<div style="font-size:0.78rem">🟡 AKI Stage 1 — Optimasi volume, evaluasi obat nefrotoksik, monitoring ketat UO dan Cr tiap 4–6 jam.</div>`;
+  else if(stageFinal===2) rec=`<div style="font-size:0.78rem">🔴 AKI Stage 2 — Pertimbangkan konsultasi nefrologi. Cegah fluid overload. Evaluasi indikasi dialisis.</div>`;
+  else rec=`<div style="font-size:0.78rem">⛔ AKI Stage 3 — Indikasi kuat RRT: anuria &gt;12j, asidosis refrakter, hiperkalemia, fluid overload berat. Konsul nefrologi SEGERA.</div>`;
+  $('aki-rec').innerHTML=rec;
+  $('aki-rec').style.background='rgba(255,255,255,0.6)';
+  $('aki-rec').style.borderColor='rgba(0,0,0,0.08)';
+  show('res-aki');
+}
+
+// ── FENa ──
+function calcFENa(){
+  const nas=parseFloat($('fena-nas').value)||140;
+  const nau=parseFloat($('fena-nau').value)||15;
+  const crs=parseFloat($('fena-crs').value)||1.5;
+  const cru=parseFloat($('fena-cru').value)||80;
+  const buns=parseFloat($('fena-buns').value)||40;
+  const ureanu=parseFloat($('fena-ureanu').value)||800;
+  const fena=r2((nau/nas)/(cru/crs)*100);
+  const feurea=r2(((ureanu/2.14)/(buns/2.14))/(cru/crs)*100); // BUN→urea approx
+  $('fena-result').textContent=fena+'%';
+  $('feurea-result').textContent=feurea+'%';
+  let interp='';
+  if(fena<1) interp='<span style="color:var(--sky)">🔵 FENa <1% → Sugestif Pre-renal atau AKI kontras/mioglobin. Volume-respon kemungkinan baik.</span>';
+  else if(fena<2) interp='<span style="color:var(--amber)">🟡 FENa 1–2% → Zona abu-abu. Evaluasi klinis + FEUrea.</span>';
+  else interp='<span style="color:var(--rose)">🔴 FENa ≥2% → Sugestif ATN/Intrinsik. Respon volume kurang baik.</span>';
+  if(feurea<35) interp+='<br><span style="color:var(--sky)">FEUrea <35% → Pre-renal (lebih valid bila pakai diuretik)</span>';
+  else interp+='<br><span style="color:var(--rose)">FEUrea ≥35% → Intrinsik/ATN</span>';
+  $('fena-interp').innerHTML=interp;
+  show('res-fena');
+}
+
+// ── FO ──
+function calcFO(){
+  const base=parseFloat($('fo-wt-base').value)||20;
+  const act=parseFloat($('fo-wt-act').value)||22;
+  const inp=parseFloat($('fo-in').value)||2000;
+  const out=parseFloat($('fo-out').value)||800;
+  const fo=r1((act-base)/base*100);
+  const balance=r0(inp-out);
+  $('fo-pct').textContent=fo+'%';
+  $('fo-balance').textContent=(balance>0?'+':'')+balance+' mL';
+  let status,rec='';
+  if(fo<=5){status='<span class="ok">✅ Normal (≤5%)</span>'; rec=`<div style="font-size:0.78rem">🟢 FO ${fo}% — Lanjutkan monitoring. Target balance negatif bila edema.`;}
+  else if(fo<=10){status='<span class="warn">⚠️ Elevated (5–10%)</span>'; rec=`<div style="font-size:0.78rem">🟡 FO ${fo}% — Pertimbangkan restriksi cairan. Diuretik bila GFR adekuat.`;}
+  else if(fo<=20){status='<span class="danger">🔴 Berat (10–20%)</span>'; rec=`<div style="font-size:0.78rem">🔴 FO ${fo}% — Associated with increased PICU mortality. Diuretik intensif atau CRRT.`;}
+  else{status='<span class="danger">⛔ Sangat Berat (>20%)</span>'; rec=`<div style="font-size:0.78cm">⛔ FO ${fo}% — Indikasi kuat RRT/CRRT. Konsul nefrologi SEGERA.`;}
+  $('fo-status').innerHTML=status;
+  $('fo-rec').innerHTML=rec+'</div>';
+  $('fo-rec').style.background='rgba(255,255,255,0.6)';
+  $('fo-rec').style.borderColor='rgba(0,0,0,0.08)';
+  show('res-fo');
+}
+
+// ── BP ──
+function calcBP(){
+  const age=parseFloat($('bp-age').value)||8;
+  const sex=$('bp-sex').value;
+  const sys=parseFloat($('bp-sys').value)||120;
+  const dia=parseFloat($('bp-dia').value)||78;
+  const htpct=parseFloat($('bp-ht-pct').value)||50;
+  // Simplified AAP 2017 lookup (approximate)
+  const mBP={5:{5:[96,50],25:[99,52],50:[101,54],75:[103,56],90:[104,57],95:[105,58]},
+              8:{5:[101,55],25:[104,57],50:[106,59],75:[108,61],90:[110,62],95:[111,63]},
+              10:{5:[103,58],25:[106,60],50:[108,62],75:[110,64],90:[112,65],95:[113,66]},
+              12:{5:[106,61],25:[109,63],50:[111,65],75:[113,67],90:[115,68],95:[116,69]}};
+  const fBP={5:{5:[95,53],25:[98,55],50:[100,57],75:[102,59],90:[103,60],95:[104,61]},
+              8:{5:[99,57],25:[102,59],50:[104,61],75:[106,63],90:[107,64],95:[108,65]},
+              10:{5:[101,59],25:[104,61],50:[106,63],75:[108,65],90:[109,66],95:[110,67]},
+              12:{5:[103,62],25:[106,64],50:[108,66],75:[110,68],90:[111,69],95:[112,70]}};
+  const ageKey=[5,8,10,12].reduce((a,b)=>Math.abs(b-age)<Math.abs(a-age)?b:a);
+  const ref=(sex==='m'?mBP:fBP)[ageKey]?.[htpct]||[100,60];
+  const p50s=ref[0]; const p50d=ref[1];
+  const p90s=p50s+8; const p95s=p50s+12; const p99s=p50s+20;
+  const p90d=p50d+5; const p95d=p50d+8; const p99d=p50d+15;
+  let cls,color,rec;
+  if(sys<p90&&dia<p90){cls='Normal';color='#059669';rec='BP normal. Monitor rutin tahunan.';}
+  else if(sys<p95&&dia<p95){cls='Elevated';color='#d97706';rec='Elevated BP: ulangi pengukuran 6 bulan. Restriksi Na, aktivitas fisik.';}
+  else if(sys<=p99+5&&dia<=p99+5){cls='HTN Stage 1';color='#ea580c';rec='HTN Stage 1: konfirmasi 2 kunjungan berbeda. Lifestyle modification. HCTZ/Amlodipin bila tidak respons 6 bulan.';}
+  else{cls='HTN Stage 2';color='#e11d48';rec='HTN Stage 2: Inisiasi antihipertensi SEGERA. Evaluasi penyakit ginjal, jantung, endokrin. Pertimbangkan rawat inap bila simtomatik.';}
+  $('bp-result').innerHTML=`<div style="font-size:0.78rem;line-height:1.85">
+    <strong style="color:${color}">Klasifikasi: ${cls}</strong><br>
+    TD Aktual: ${sys}/${dia} mmHg<br>
+    Referensi (usia ${age}th, ${sex==='m'?'♂':'♀'}, P${htpct} TB):<br>
+    P90: ${p90s}/${p90d} | P95: ${p95s}/${p95d} | P99: ${p99s}/${p99d} mmHg<br>
+    <strong>Rekomendasi:</strong> ${rec}
+  </div>`;
+  $('bp-result').style.background='rgba(255,255,255,0.6)';
+  $('bp-result').style.borderColor='rgba(0,0,0,0.08)';
+  show('res-bp');
+}
+
+// ── HTN DRUGS ──
+function calcHTN(){
+  const w=parseFloat($('htn-w').value)||20;
+  const cond=$('htn-cond').value;
+  const recs={
+    crisis:`<strong>Krisis Hipertensi — IV:</strong><br>
+    1️⃣ <strong>Labetalol</strong> ${r2(0.25*w)} mg IV bolus (0.25 mg/kg), ulangi q10-15 mnt → infus 0.25–3 mg/kg/jam<br>
+    2️⃣ <strong>Hidralazin</strong> ${r2(0.1*w)} mg IV (0.1–0.6 mg/kg) q4-6h<br>
+    3️⃣ <strong>Nicardipine infus</strong> 1–3 mcg/kg/mnt IV (pilihan NICU)<br>
+    4️⃣ <strong>Sodium Nitroprusside</strong> 0.5–8 mcg/kg/mnt IV (krisis berat, dengan monitor invasif)<br>
+    ⚠️ Turunkan MAP maks 25% dalam 8 jam pertama`,
+    stage2:`<strong>HTN Stage 2 — Oral:</strong><br>
+    1️⃣ <strong>Amlodipin</strong> ${r2(0.1*w)} mg/hari (0.1 mg/kg, maks 10 mg) — CCB<br>
+    2️⃣ <strong>Enalapril</strong> ${r2(0.08*w)} mg/hari (0.08 mg/kg, maks 40 mg) — ACEI<br>
+    3️⃣ <strong>Metoprolol</strong> ${r2(0.5*w)} mg/hari (0.5–2 mg/kg, maks 200 mg) — Beta blocker`,
+    stage1:`<strong>HTN Stage 1 — Lifestyle + Obat:</strong><br>
+    Diet rendah Na, olahraga aerobik 30–60 mnt 5×/mgg<br>
+    Bila tidak respons 6 bulan → <strong>Amlodipin</strong> ${r2(0.05*w)} mg/hari (0.05–0.3 mg/kg)`,
+    ckd:`<strong>HTN + CKD — ACEI/ARB Pilihan:</strong><br>
+    <strong>Enalapril</strong> ${r2(0.08*w)} mg/hari dibagi q12h (renoprotektif, antiproteinurik)<br>
+    <strong>Losartan</strong> ${r2(w<50?0.7:25)} mg/hari (0.7–1.4 mg/kg, maks 100 mg) — ARB<br>
+    ⚠️ Monitor K dan Cr 1–2 mgg setelah mulai. Kontraindikasi bilateral RAS`,
+    nephrotic:`<strong>HTN + Sindrom Nefrotik:</strong><br>
+    <strong>Amlodipin</strong> ${r2(0.1*w)} mg/hari — pilihan utama (retensi Na)<br>
+    Hindari ACEI/ARB saat hipoalbuminemia berat (risiko AKI)<br>
+    <strong>Furosemid</strong> untuk edema: ${r2(w<=10?1*w:r1(w))} mg/dosis (1–2 mg/kg)`
+  };
+  $('htn-result').innerHTML=recs[cond]||'—';
+  show('res-htn');
+}
+
+// ── MAP ──
+function calcMAP(){
+  const sys=parseFloat($('map-sys').value)||160;
+  const dia=parseFloat($('map-dia').value)||100;
+  const pct=parseFloat($('map-pct').value)||25;
+  const map=r0((sys+2*dia)/3);
+  const mapT=r0(map*(1-pct/100));
+  const sysT=r0(mapT+(sys-map));
+  const diaT=r0(mapT-(map-dia));
+  $('map-actual').textContent=map;
+  $('map-target').textContent=mapT;
+  $('map-sys-t').textContent=sysT+' mmHg';
+  $('map-dia-t').textContent=diaT+' mmHg';
+  show('res-map');
+}
+
+// ── MAINTENANCE FLUID ──
+function calcMF(){
+  const w=parseFloat($('mf-w').value)||25;
+  const cond=$('mf-cond').value;
+  const temp=parseFloat($('mf-temp').value)||38;
+  let base=w<=10?w*100:w<=20?(1000+(w-10)*50):(1500+(w-20)*20);
+  let mult=1;
+  if(cond==='fever') mult=1+0.125*Math.max(0,temp-38);
+  if(cond==='restrict') mult=0.67;
+  if(cond==='edema') mult=0.5;
+  const total=r0(base*mult);
+  const rate=r1(total/24);
+  const pkg=r1(rate/w);
+  const type=cond==='restrict'?'NS 0.9% + KCl 20mEq/L (restriksi)':cond==='edema'?'NS 0.9% (sangat ketat, target balance negatif)':'NS 0.9% + 20 mEq/L KCl (isotonik modern)';
+  $('mf-total').textContent=total;
+  $('mf-rate').textContent=rate;
+  $('mf-pkg').textContent=pkg;
+  $('mf-type').textContent=type;
+  $('mf-warn').innerHTML=cond==='restrict'?`<div class="rwarn" style="background:#fef3c7;border-color:#fde68a;color:#92400e">⚠️ Restriksi cairan pada CKD/gagal jantung: ${r0(total)} mL/hr (⅔ maintenance). Monitor BB harian.</div>`:'';
+  show('res-mf');
+}
+
+// ── DEHIDRASI ──
+function calcDeh(){
+  const w=parseFloat($('deh-w').value)||20;
+  const deg=$('deh-deg').value;
+  const type=$('deh-type').value;
+  const pctMap={mild:4,mod:7,sev:10};
+  const pct=pctMap[deg];
+  const deficit=r0(w*pct*10);
+  const bolus=deg==='sev'?r0(20*w):deg==='mod'?r0(10*w):0;
+  const maintenance=r0(w<=10?100*w:w<=20?(1000+(w-10)*50):(1500+(w-20)*20));
+  const replace=r0(deficit-bolus);
+  const total24=r0(replace+maintenance);
+  const recs={
+    iso:`<strong>Dehidrasi Isotonik — ${deg.toUpperCase()} (${pct}%)</strong><br>
+    💧 Defisit: <strong>${deficit} mL</strong> | Bolus awal: <strong>${bolus} mL</strong> NS 0.9% dalam 15–30 mnt<br>
+    📊 Sisa defisit (${replace} mL) + Maintenance (${maintenance} mL) = <strong>${total24} mL</strong> dalam 24 jam<br>
+    💉 Cairan: NS 0.9% + 20 mEq/L KCl setelah kencing`,
+    hypo:`<strong>Dehidrasi Hipotonik (Na &lt;130)</strong><br>
+    ⚠️ Koreksi Na HATI-HATI. Maks naik 8–10 mEq/L/hari.<br>
+    Bolus: <strong>${bolus} mL</strong> NS 0.9% → lanjut NS 0.9% sampai Na normal<br>
+    Pantau Na tiap 4–6 jam selama koreksi`,
+    hyper:`<strong>Dehidrasi Hipertonik (Na &gt;150)</strong><br>
+    ⚠️ Koreksi SANGAT LAMBAT. Turunkan Na maks 0.5 mEq/L/jam (max 10 mEq/L/hari).<br>
+    Bolus awal: <strong>${bolus} mL</strong> NS 0.9% → lanjut D5 NS 0.45%<br>
+    Rehidrasi selama 48–72 jam! Monitor EKG (hipokalemia)`
+  };
+  $('deh-result').innerHTML=recs[type]||'';
+  $('deh-result').style.background='rgba(255,255,255,0.6)';
+  $('deh-result').style.borderColor='rgba(0,0,0,0.08)';
+  show('res-deh');
+}
+
+// ── DIURETIK ──
+function calcDiu(){
+  const w=parseFloat($('diu-w').value)||20;
+  const gfr=parseFloat($('diu-gfr').value)||80;
+  const furosOral=r2(1*w);
+  const furosIV=r2(0.5*w);
+  const spiro=r2(1.5*w);
+  const hctz=r2(1*w);
+  $('diu-result').innerHTML=`<strong>Dosis Diuretik untuk BB ${w} kg:</strong><br>
+  1️⃣ <strong>Furosemid oral:</strong> ${furosOral} mg/dosis (1–4 mg/kg) q12–24h<br>
+  2️⃣ <strong>Furosemid IV:</strong> ${furosIV} mg/dosis (0.5–2 mg/kg) q6–12h<br>
+  3️⃣ <strong>Spironolakton:</strong> ${spiro} mg/hari (1–3.3 mg/kg) PO dibagi q12h — hemat K<br>
+  4️⃣ <strong>HCTZ:</strong> ${hctz} mg/hari (1–3 mg/kg) PO q12h<br>
+  ${gfr<30?'⚠️ GFR <30: Furosemid dosis tinggi mungkin diperlukan. Spironolakton dan HCTZ kurang efektif + risiko hiperkalemia. Hindari kombinasi ACEI+Spironolakton.':''}
+  ${gfr<10?'⛔ GFR <10: Furosemid boleh, spironolakton KONTRAINDIKASI (hiperkalemia). Pertimbangkan dialisis untuk overload.':''}`;
+  show('res-diu');
+}
+
+// ── UPCR ──
+function calcUPCR(){
+  const pro=parseFloat($('upcr-pro').value)||150;
+  const cr=parseFloat($('upcr-cr').value)||80;
+  const w=parseFloat($('upcr-w').value)||20;
+  const vol=parseFloat($('upcr-vol').value)||0;
+  const age=parseFloat($('upcr-age').value)||5;
+  const upcr=r2(pro/cr);
+  let h24='—';
+  if(vol>0) h24=r0(pro/100*vol); // mg/24j
+  let cls='',interp='';
+  if(upcr<0.2){cls='🟢 Normal';interp='Tidak ada proteinuria bermakna';}
+  else if(upcr<1){cls='🟡 Ringan';interp='Proteinuria ringan — ulangi 3 bulan';}
+  else if(upcr<2){cls='🟠 Signifikan';interp='Evaluasi penyebab glomerular vs tubular';}
+  else if(upcr<3.5){cls='🔴 Berat';interp='Hampir nefrotik — periksa albumin, kolesterol';}
+  else{cls='⛔ Nefrotik Range';interp='Nefrotik range — periksa albumin, kolesterol, komplemen';}
+  $('upcr-result').textContent=upcr;
+  $('upcr-24h').textContent=h24!=='—'?h24+' mg/24j':r0(upcr*cr*w*0.5)+' mg/hr est.';
+  $('upcr-class').innerHTML=cls;
+  $('upcr-interp').innerHTML=`<div style="font-size:0.78rem;line-height:1.75">${interp}<br>Normal anak >2 thn: UPCR <0.2 (atau <200 mg/g)</div>`;
+  $('upcr-interp').style.background='rgba(255,255,255,0.6)';
+  $('upcr-interp').style.borderColor='rgba(0,0,0,0.08)';
+  show('res-upcr');
+}
+
+// ── UOSM ──
+function calcUOsm(){
+  const uosm=parseFloat($('uosm-val').value)||400;
+  const nau=parseFloat($('uosm-nau').value)||20;
+  const cru=parseFloat($('uosm-cru').value)||80;
+  const nas=parseFloat($('uosm-nas').value)||140;
+  const crs=parseFloat($('uosm-crs').value)||1.5;
+  const osms=parseFloat($('uosm-osms').value)||290;
+  const ratio=r2(uosm/osms);
+  const rfi=r2((nau/nas)/(cru/crs));
+  let osmInterp='',concap='';
+  if(uosm>800){osmInterp='🟢 Konsentrasi baik (>800)';concap='Normal';}
+  else if(uosm>400){osmInterp='🟡 Konsentrasi sedang (400–800)';concap='Borderline';}
+  else if(uosm>300){osmInterp='🟠 Isosthenuric (~300)';concap='Terganggu';}
+  else{osmInterp='🔴 Dilute (<300)';concap='Sangat terganggu';}
+  $('uosm-ratio').textContent=ratio;
+  $('uosm-rfi').textContent=rfi;
+  $('uosm-interp').textContent=osmInterp;
+  $('uosm-concap').textContent=concap;
+  show('res-uosm');
+}
+
+// ── NS ──
+function calcNS(){
+  const alb=parseFloat($('ns-alb').value)||1.8;
+  const upcr=parseFloat($('ns-upcr').value)||3.5;
+  const chol=parseFloat($('ns-chol').value)||320;
+  const steroid=$('ns-steroid').value;
+  const w=parseFloat($('ns-w').value)||20;
+  const bsa=Math.sqrt(w*110/3600);
+  const pred=r1(60*bsa); // 60 mg/m²/hari
+  const predAlt=r1(2*w); // 2 mg/kg/hari
+  const isNS=alb<2.5&&upcr>2;
+  let cls='',steroidRec='',notes='';
+  if(steroid==='naive'){
+    steroidRec=`<strong>Terapi Awal SN:</strong><br>
+    <strong>Prednisolon ${pred} mg/hari</strong> (60 mg/m²/hr, maks 60 mg) dibagi q8-12h × 4–6 minggu<br>
+    → Lanjut 40 mg/m² selang sehari × 4–6 minggu<br>
+    Total 2–3 bulan`;
+  } else if(steroid==='day28'){
+    const remission=upcr<0.2;
+    cls=remission?'✅ REMISI (protein negatif/trace)':'🔴 Steroid Resisten (masih proteinuria setelah 4 mgg)';
+    if(!remission) steroidRec='→ Pertimbangkan biopsi ginjal dan imunosupresi alternatif (Siklofosfamid/Takrolimus/Rituximab)';
+  } else if(steroid==='relapse'){
+    steroidRec=`<strong>Terapi Relaps:</strong><br>
+    <strong>Prednisolon ${pred} mg/hari</strong> sampai remisi (protein negatif ×3 hari berturut-turut)<br>
+    → Lanjut ${r1(pred*0.67)} mg selang sehari × 4 minggu`;
+  } else if(steroid==='remission'){
+    cls=upcr<0.2?'✅ Masih Remisi':'⚠️ Relaps — ulangi terapi steroid';
+  }
+  notes=`<strong>${isNS?'✅ Kriteria SN terpenuhi (albumin <2.5, UPCR >2)':'⚠️ Kriteria SN belum lengkap'}</strong><br>
+  Albumin: ${alb} g/dL | UPCR: ${upcr} | Kol: ${chol} mg/dL<br>
+  ${cls?`Status: <strong>${cls}</strong><br>`:''}${steroidRec}`;
+  $('ns-result').innerHTML=notes;
+  show('res-ns');
+}
+
+// ── PD ──
+function calcPD(){
+  const w=parseFloat($('pd-w').value)||20;
+  const h=parseFloat($('pd-h').value)||110;
+  const mode=$('pd-mode').value;
+  const bun=parseFloat($('pd-bun').value)||80;
+  const dbun=parseFloat($('pd-dbun').value)||60;
+  const dvol=parseFloat($('pd-dvol').value)||900;
+  const bsaVal=bsa(w,h);
+  const vol=r0(1000*bsaVal); // 1000 mL/m²
+  const volMax=r0(50*w);
+  const cycles=mode==='capd'?4:mode==='apd'?10:24;
+  const ktv=r2((dbun/bun)*dvol*cycles/(w*0.6*1000));
+  $('pd-vol').textContent=vol;
+  $('pd-vol-max').textContent=volMax;
+  $('pd-bsa').textContent=bsaVal;
+  $('pd-ktv').textContent=ktv;
+  $('pd-notes').innerHTML=`<div style="font-size:0.75rem;line-height:1.75">
+    Mode: ${mode.toUpperCase()} | ${cycles} siklus/hr | Dwell time: ${mode==='apd'?'90 mnt':mode==='capd'?'4–6 jam':'30–60 mnt'}<br>
+    Cairan PD: standart (Dianeal 1.5% atau 2.5% tergantung UF yang dibutuhkan)<br>
+    ${ktv<1.7/7?'⚠️ Kt/V harian rendah — pertimbangkan tambah siklus atau volume':'🟢 Dosis PD adekuat'}
+  </div>`;
+  $('pd-notes').style.background='rgba(255,255,255,0.6)';
+  $('pd-notes').style.borderColor='rgba(0,0,0,0.08)';
+  show('res-pd');
+}
+
+// ── HD ──
+function calcHD(){
+  const wDry=parseFloat($('hd-w').value)||20;
+  const wAct=parseFloat($('hd-wa').value)||22;
+  const dur=parseFloat($('hd-dur').value)||4;
+  const pre=parseFloat($('hd-pre').value)||80;
+  const post=parseFloat($('hd-post').value)||30;
+  const access=$('hd-access').value;
+  const uf=r0((wAct-wDry)*1000);
+  const ufRate=r1(uf/dur);
+  const urr=r1((pre-post)/pre*100);
+  const ktv=r2(-Math.log(post/pre-0.008*dur)+(4-3.5*post/pre)*uf/(wDry*1000));
+  $('hd-uf').textContent=uf;
+  $('hd-uf-rate').textContent=ufRate;
+  $('hd-urr').textContent=urr+'%';
+  $('hd-urr').style.color=urr>=65?'var(--emerald)':'var(--rose)';
+  $('hd-ktv').textContent=ktv;
+  $('hd-notes').innerHTML=`<div style="font-size:0.75rem;line-height:1.75">
+    Akses: ${access.toUpperCase()} | UF target: ${uf} mL (${r1(uf/wDry)} mL/kg)<br>
+    URR ${urr}% ${urr>=65?'✅':'⚠️ di bawah target 65%'} | spKt/V ${ktv} ${ktv>=1.2?'✅':'⚠️ di bawah target 1.2'}<br>
+    Heparin: ${r0(5*wDry)}–${r0(10*wDry)} unit/jam atau ${r0(50*wDry)} unit loading
+  </div>`;
+  $('hd-notes').style.background='rgba(255,255,255,0.6)';
+  $('hd-notes').style.borderColor='rgba(0,0,0,0.08)';
+  show('res-hd');
+}
+
+// ── CRRT ──
+function calcCRRT(){
+  const w=parseFloat($('crrt-w').value)||20;
+  const mode=$('crrt-mode').value;
+  const dose=parseFloat($('crrt-dose').value)||25;
+  const efluent=r0(dose*w);
+  const qb=r0(4*w);
+  const hep=r0(10*w);
+  $('crrt-efluent').textContent=efluent;
+  $('crrt-qb').textContent=qb;
+  $('crrt-hep').textContent=hep;
+  show('res-crrt');
+}
+
+// ── IMMUNOSUPPRESSION ──
+function calcImm(){
+  const w=parseFloat($('imm-w').value)||20;
+  const h=parseFloat($('imm-h').value)||110;
+  const bsaVal=bsa(w,h);
+  const ind=$('imm-ind').value;
+  const pred60=r1(60*bsaVal);
+  const pred40=r1(40*bsaVal);
+  const ctx=r0(500*bsaVal);
+  const tac=r2(0.1*w);
+  const mmf=r0(600*bsaVal);
+  const recs={
+    'ns-first':`<strong>SN Onset Pertama — Prednisolon:</strong><br>
+    💊 Induksi: <strong>Prednisolon ${pred60} mg/hari</strong> (60 mg/m²/hr, maks 60 mg) q8-12h × 4–6 minggu<br>
+    💊 Tapering: <strong>${pred40} mg selang sehari</strong> (40 mg/m²/sehari bergantian) × 4–6 minggu<br>
+    → Monitor: BB, TD, GD, urin protein harian`,
+    'ns-relapse':`<strong>SN Relaps — Prednisolon:</strong><br>
+    💊 <strong>Prednisolon ${pred60} mg/hari</strong> sampai remisi lengkap (protein negatif 3×/minggu berturut-turut)<br>
+    → Kemudian ${pred40} mg selang sehari × 4 minggu`,
+    'ns-steroid-dep':`<strong>SN Steroid Dependen — Alternatif:</strong><br>
+    1️⃣ <strong>Siklofosfamid (CTX)</strong> oral ${r0(2*w)} mg/hari (2 mg/kg) × 8–12 minggu. Cek CBC tiap 2 minggu.<br>
+    2️⃣ <strong>MMF</strong> ${mmf} mg/hari (600 mg/m²) dibagi q12h × 12–24 bulan<br>
+    3️⃣ <strong>Levamisol</strong> ${r0(2.5*w)} mg (2.5 mg/kg, maks 150 mg) selang sehari`,
+    'ns-resist':`<strong>SN Steroid Resisten — Biopsi dahulu:</strong><br>
+    1️⃣ <strong>Takrolimus</strong> ${tac} mg/dosis q12h (0.1 mg/kg/hari). Target level: 5–10 ng/mL<br>
+    2️⃣ <strong>Rituximab</strong> 375 mg/m² IV × 1–4 dosis (SDNS/SRNS)<br>
+    3️⃣ <strong>Siklosporin A</strong> 4–5 mg/kg/hari q12h. Target level 100–200 ng/mL`,
+    'itp':`<strong>ITP Akut — Prednisolon:</strong><br>
+    💊 <strong>Prednisolon ${r1(1.5*w)} mg/hari</strong> (1.5–2 mg/kg, maks 60 mg) × 2–4 minggu<br>
+    💉 IVIG ${r0(1*w)} g/kg IV hari 1 (PLT &lt;20.000 + perdarahan)<br>
+    Anti-D 75 mcg/kg IV bila golongan darah Rh+`,
+    'hsp-nephritis':`<strong>HSP Nefritis Berat (UPCR>3.5 atau AKI):</strong><br>
+    💊 <strong>Prednisolon ${pred60} mg/hari</strong> × 4 minggu → taper<br>
+    Pulse Metilprednisolon 30 mg/kg/hari (maks 1 g) × 3 hari bila nefritis berat<br>
+    Pertimbangkan ACE inhibitor untuk antiproteinurik jangka panjang`,
+    'transplant':`<strong>Post-Transplant Ginjal — Triple Therapy:</strong><br>
+    💊 <strong>Takrolimus</strong> ${tac} mg q12h (target level 8–12 ng/mL bulan 1–3)<br>
+    💊 <strong>MMF</strong> ${mmf} mg/hari (600 mg/m²) dibagi q12h<br>
+    💊 <strong>Prednisolon</strong> taper dari 1 mg/kg → 0.1–0.2 mg/kg dalam 3–6 bulan<br>
+    Monitor: tacrolimus level, CBC, fungsi ginjal, BP tiap kunjungan`
+  };
+  $('imm-result').innerHTML=recs[ind]||'—';
+  show('res-imm');
+}
+
+// ── RENAL DOSE ──
+function calcRenalDose(){
+  const gfr=parseFloat($('rd-gfr').value)||45;
+  const drug=$('rd-drug').value;
+  const data={
+    amoxicillin:{name:'Amoksisilin',normal:'25–50 mg/kg/hr q8h',g50:'Normal',g30:'q12h',g10:'q24h',note:'Aman pada CKD. Tidak perlu TDM.'},
+    ampicillin:{name:'Ampisilin',normal:'50 mg/kg/hr q6h',g50:'Normal',g30:'q8-12h',g10:'q12-24h',note:''},
+    ceftriaxone:{name:'Seftriakson',normal:'50–100 mg/kg/hr q24h',g50:'Normal',g30:'Normal',g10:'Maks 2g/hr',note:'Umumnya aman, eliminasi dual (hepar+ginjal).'},
+    cefazolin:{name:'Sefazolin',normal:'25–100 mg/kg/hr q8h',g50:'Normal',g30:'q12h',g10:'q24h'},
+    gentamicin:{name:'Gentamisin',normal:'7.5 mg/kg/hr q24h',g50:'Monitor level',g30:'q36-48h',g10:'q48-72h + TDM',note:'⚠️ Monitor trough <1 mcg/mL. Nefrotoksik.'},
+    vancomycin:{name:'Vankomisin',normal:'60 mg/kg/hr q6h',g50:'q8-12h',g30:'q24-48h',g10:'q48-72h atau sesuai level',note:'⚠️ TDM wajib. Target AUC/MIC 400–600.'},
+    piperazine:{name:'Piperasilin-Tazobaktam',normal:'300 mg/kg/hr q6h',g50:'Normal',g30:'q8h',g10:'q12h',note:''},
+    meropenem:{name:'Meropenem',normal:'60–120 mg/kg/hr q8h',g50:'q12h',g30:'q24h',g10:'q24h (reduksi dosis)',note:''},
+    acyclovir:{name:'Asiklovir',normal:'250–500 mg/m² q8h',g50:'q12-24h',g30:'q24h',g10:'q24h dosis ½',note:'⚠️ Hidrasi adekuat. Kristal di tubulus pada hidrasi kurang.'},
+    trimethoprim:{name:'TMP-SMX',normal:'5 mg TMP/kg q12h',g50:'Normal',g30:'50% dosis',g10:'Hindari',note:'⚠️ Risiko hiperkalemia pada CKD. Meningkatkan Cr palsu.'},
+    metformin:{name:'Metformin',normal:'–',g50:'Hati-hati',g30:'Kontraindikasi',g10:'Kontraindikasi',note:'⛔ Risiko asidosis laktat bila GFR<30.'},
+    enalapril:{name:'Enalapril/ACEI',normal:'0.1 mg/kg/hr',g50:'Mulai dosis rendah',g30:'Monitor K+Cr ketat',g10:'Risiko tinggi; pertimbangkan amlodipine',note:'Monitor K dan Cr dalam 1–2 mgg awal.'},
+    spironolactone:{name:'Spironolakton',normal:'1–3.3 mg/kg/hr',g50:'Hati-hati',g30:'Hindari',g10:'Kontraindikasi',note:'⛔ Risiko hiperkalemia fatal pada GFR<30.'}
+  };
+  const d=data[drug];
+  if(!d){show('res-rd');return;}
+  let doseRec,gfr_group;
+  if(gfr>=50){doseRec=d.g50;gfr_group='GFR 50–89';}
+  else if(gfr>=30){doseRec=d.g30;gfr_group='GFR 30–49';}
+  else{doseRec=d.g10;gfr_group='GFR <30';}
+  $('rd-result').innerHTML=`<strong>${d.name}</strong><br>
+  Dosis normal: ${d.normal}<br>
+  <strong>${gfr_group} (eGFR ${gfr}): ${doseRec}</strong><br>
+  ${d.note?`⚠️ ${d.note}`:''}`;
+  $('rd-result').style.background='rgba(255,255,255,0.6)';
+  $('rd-result').style.borderColor='rgba(0,0,0,0.08)';
+  show('res-rd');
+}
+
+// ── INIT ──
+syncAll();
+setTimeout(()=>{
+  calcGFR(); calcCKDStage(); calcNa(); calcK(); calcCa(); calcAG();
+  calcAKI(); calcFENa(); calcFO(); calcBP(); calcHTN(); calcMAP();
+  calcMF(); calcDeh(); calcDiu(); calcUPCR(); calcUOsm(); calcNS();
+  calcPD(); calcHD(); calcCRRT(); calcImm(); calcRenalDose();
+},150);
+</script>
+</body>
+</html>

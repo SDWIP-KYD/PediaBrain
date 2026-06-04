@@ -1,0 +1,1928 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Neonatologi Calculator — NICU Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #f0f4f8;
+  --white:   #ffffff;
+  --s1:      #f8fafc;
+  --border:  #e2e8f0;
+  --text:    #1e293b;
+  --muted:   #64748b;
+  --light:   #94a3b8;
+
+  --blue:    #0ea5e9;
+  --blue-d:  #0284c7;
+  --blue-l:  #e0f2fe;
+  --green:   #10b981;
+  --green-l: #d1fae5;
+  --red:     #ef4444;
+  --red-l:   #fee2e2;
+  --yellow:  #f59e0b;
+  --yellow-l:#fef3c7;
+  --purple:  #8b5cf6;
+  --purple-l:#ede9fe;
+  --orange:  #f97316;
+  --orange-l:#ffedd5;
+  --teal:    #14b8a6;
+  --teal-l:  #ccfbf1;
+  --pink:    #ec4899;
+  --pink-l:  #fce7f3;
+  --indigo:  #6366f1;
+  --indigo-l:#e0e7ff;
+  --cyan:    #06b6d4;
+  --cyan-l:  #cffafe;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 400;
+  min-height: 100vh;
+}
+
+/* ─── HEADER ─── */
+.app-header {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+  color: white;
+  padding: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.app-logo {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.app-title h1 { font-size: 1rem; font-weight: 800; line-height: 1.1; }
+.app-title p  { font-size: 0.65rem; color: rgba(255,255,255,0.45); font-family: 'JetBrains Mono', monospace; }
+
+/* patient bar */
+.patient-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 1rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-wrap: nowrap;
+}
+.patient-bar::-webkit-scrollbar { display: none; }
+
+.pb-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  flex-shrink: 0;
+}
+.pb-label {
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  font-family: 'JetBrains Mono', monospace;
+}
+.pb-inp {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  color: white;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.3rem 0.5rem;
+  width: 70px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.pb-inp:focus { border-color: var(--blue); }
+.pb-inp.wide { width: 100px; }
+.pb-inp.xwide { width: 130px; }
+
+.pb-divider { width: 1px; height: 32px; background: rgba(255,255,255,0.1); flex-shrink: 0; margin: 0 0.2rem; }
+
+.pb-badge {
+  background: rgba(14,165,233,0.2);
+  border: 1px solid rgba(14,165,233,0.4);
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #7dd3fc;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* ─── NAV TABS ─── */
+.nav-tabs {
+  background: var(--white);
+  border-bottom: 2px solid var(--border);
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.nav-tabs::-webkit-scrollbar { display: none; }
+
+.tab-btn {
+  flex: 0 0 auto;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  color: var(--muted);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.7rem 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--blue-d); border-bottom-color: var(--blue); }
+.tab-btn .t-icon { font-size: 0.9rem; }
+
+/* ─── CONTENT ─── */
+.tab-content { display: none; padding: 1rem; animation: tabIn 0.25s ease; }
+.tab-content.active { display: block; }
+
+@keyframes tabIn {
+  from { opacity:0; transform:translateY(6px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ─── CALC CARD ─── */
+.calc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem; }
+
+.calc-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.calc-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.c-icon {
+  width: 36px; height: 36px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.c-title { font-size: 0.88rem; font-weight: 700; }
+.c-sub   { font-size: 0.68rem; color: var(--muted); margin-top: 0.1rem; }
+
+.calc-body { padding: 1rem; }
+
+/* input row */
+.inp-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin-bottom: 0.7rem;
+}
+.inp-row.single { grid-template-columns: 1fr; }
+.inp-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+
+.inp-group { display: flex; flex-direction: column; gap: 0.2rem; }
+.inp-label { font-size: 0.68rem; font-weight: 600; color: var(--muted); }
+
+.inp {
+  background: var(--s1);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.45rem 0.65rem;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.2s;
+}
+.inp:focus { border-color: var(--blue); background: white; }
+
+select.inp { cursor: pointer; }
+
+/* calc button */
+.calc-btn {
+  width: 100%;
+  border: none;
+  border-radius: 9px;
+  color: white;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.6rem;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.1s;
+  margin-bottom: 0.75rem;
+}
+.calc-btn:hover { filter: brightness(1.1); }
+.calc-btn:active { transform: scale(0.98); }
+
+/* result */
+.result { display: none; border-radius: 10px; padding: 0.85rem; }
+.result.show { display: block; animation: resIn 0.2s ease; }
+
+@keyframes resIn {
+  from { opacity:0; transform:scale(0.97); }
+  to   { opacity:1; transform:scale(1); }
+}
+
+.res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+.res-grid.single { grid-template-columns: 1fr; }
+.res-grid.triple { grid-template-columns: 1fr 1fr 1fr; }
+
+.res-item {
+  background: rgba(255,255,255,0.6);
+  border-radius: 7px;
+  padding: 0.6rem 0.75rem;
+}
+.res-lbl { font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 0.2rem; }
+.res-val { font-family: 'JetBrains Mono', monospace; font-size: 1rem; font-weight: 700; line-height: 1; }
+.res-val.big { font-size: 1.25rem; }
+.res-note { font-size: 0.65rem; color: var(--muted); margin-top: 0.2rem; line-height: 1.4; }
+
+.res-warn {
+  margin-top: 0.5rem;
+  background: var(--yellow-l);
+  border: 1px solid #fbbf24;
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.72rem;
+  color: #92400e;
+  display: flex; gap: 0.4rem; align-items: flex-start;
+}
+
+.res-alert {
+  margin-top: 0.5rem;
+  border-radius: 6px;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+
+/* section header */
+.sec-hdr {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+  margin: 1.25rem 0 0.75rem;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.sec-hdr::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* info box */
+.info-box {
+  background: var(--blue-l);
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.75rem;
+  line-height: 1.65;
+  color: #0c4a6e;
+  margin-bottom: 0.75rem;
+}
+.info-box strong { font-weight: 700; }
+
+/* reference table */
+.ref-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.ref-table th {
+  background: var(--s1);
+  font-weight: 700;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  padding: 0.5rem 0.7rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.ref-table td { padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--border); line-height: 1.45; }
+.ref-table tr:last-child td { border-bottom: none; }
+.ref-table tr:hover td { background: var(--s1); }
+
+/* disclaimer */
+.disclaimer {
+  background: #fffbeb;
+  border: 1px solid #fbbf24;
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.72rem;
+  color: #78350f;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+/* highlight status */
+.status-ok     { color: var(--green); }
+.status-warn   { color: var(--yellow); }
+.status-danger { color: var(--red); }
+
+@media (max-width:600px) {
+  .calc-grid { grid-template-columns: 1fr; }
+  .inp-row { grid-template-columns: 1fr; }
+  .inp-row.triple { grid-template-columns: 1fr 1fr; }
+  .res-grid { grid-template-columns: 1fr; }
+  .res-grid.triple { grid-template-columns: 1fr 1fr; }
+  .patient-bar { gap: 0.4rem; }
+  .pb-inp { width: 60px; font-size: 0.75rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- APP HEADER -->
+<div class="app-header">
+  <div class="header-top">
+    <div class="app-logo">🍼</div>
+    <div class="app-title">
+      <h1>Neonatologi Calculator</h1>
+      <p>NICU Clinical Decision Support Tools</p>
+    </div>
+  </div>
+  <div class="patient-bar">
+    <div class="pb-field">
+      <span class="pb-label">BB (g)</span>
+      <input class="pb-inp" type="number" id="ptWeight" value="1500" min="300" max="6000" oninput="syncAll()">
+    </div>
+    <div class="pb-field">
+      <span class="pb-label">GA (mgg)</span>
+      <input class="pb-inp" type="number" id="ptGA" value="30" min="23" max="42" step="0.5" oninput="syncAll()">
+    </div>
+    <div class="pb-field">
+      <span class="pb-label">Usia (hari)</span>
+      <input class="pb-inp" type="number" id="ptAge" value="1" min="0" max="28" oninput="syncAll()">
+    </div>
+    <div class="pb-divider"></div>
+    <div class="pb-badge" id="ptCategory">VLBW · Prematur</div>
+    <div class="pb-badge" id="ptPMA">PMA: 30+1 mgg</div>
+  </div>
+</div>
+
+<!-- NAV TABS -->
+<div class="nav-tabs">
+  <button class="tab-btn active t-drugs"   onclick="showTab('drugs',this)">  <span class="t-icon">💊</span> Obat Neonatus</button>
+  <button class="tab-btn t-fluid"           onclick="showTab('fluid',this)">  <span class="t-icon">💧</span> Cairan & TPN</button>
+  <button class="tab-btn t-vent"            onclick="showTab('vent',this)">   <span class="t-icon">🫁</span> Ventilator</button>
+  <button class="tab-btn t-scores"          onclick="showTab('scores',this)"> <span class="t-icon">📊</span> Skor & Tabel</button>
+  <button class="tab-btn t-abg"             onclick="showTab('abg',this)">    <span class="t-icon">🧪</span> AGD & Elektrolit</button>
+  <button class="tab-btn t-nutrition"       onclick="showTab('nutrition',this)"><span class="t-icon">🥛</span> Nutrisi</button>
+  <button class="tab-btn t-misc"            onclick="showTab('misc',this)">   <span class="t-icon">🔢</span> Alat Hitung</button>
+</div>
+
+<!-- ═════════════════════ TAB: DRUGS ═════════════════════ -->
+<div class="tab-content active" id="tab-drugs">
+  <div class="disclaimer">⚠️ Dosis berdasarkan panduan klinis standar untuk neonatus. Selalu verifikasi dengan referensi terkini. Dosis disesuaikan berdasarkan GA, usia postnatal, dan fungsi organ.</div>
+
+  <div class="calc-grid">
+
+    <!-- KAFEIN SITRAT -->
+    <div class="calc-card">
+      <div class="calc-card-head">
+        <div class="c-icon" style="background:var(--purple-l);color:var(--purple)">☕</div>
+        <div><div class="c-title">Kafein Sitrat</div><div class="c-sub">Apnea of Prematurity</div></div>
+      </div>
+      <div class="calc-body">
+        <div class="info-box"><strong>Sediaan:</strong> 20 mg/mL. Loading 20 mg/kgBB → maintenance 5–10 mg/kgBB/hari PO/IV.</div>
+        <div class="inp-row">
+          <div class="inp-group"><label class="inp-label">BB (gram)</label><input class="inp" id="caf-wt" type="number" value="1500" oninput="calcCaffeine()"></div>
+          <div class="inp-group"><label class="inp-label">Dosis maintenance</label>
+            <select class="inp" id="caf-dose" oninput="calcCaffeine()">
+              <option value="5">5 mg/kg (standar)</option>
+              <option value="10">10 mg/kg (tinggi)</option>
+            </select>
+          </div>
+        </div>
+        <button class="calc-btn" style="background:var(--purple)" onclick="calcCaffeine()">Hitung Dosis Kafein</button>
+        <div class="result" id="res-caf" style="background:var(--purple-l)">
+          <div class="res-grid">
+            <div class="res-item"><div class="res-lbl">Loading (mg)</div><div class="res-val big" id="caf-load-mg"></div><div class="res-note" id="caf-load-ml"></div></div>
+            <div class="res-item"><div class="res-lbl">Maintenance (mg)</div><div class="res-val big" id="caf-main-mg"></div><div class="res-note" id="caf-main-ml"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SURFAKTAN -->
+    <div class="calc-card">
+      <div class="calc-card-head">
+        <div class="c-icon" style="background:var(--cyan-l);color:var(--cyan)">🫧</div>
+        <div><div class="c-title">Surfaktan</div><div class="c-sub">Poractant alfa (Curosurf) / Beractant</div></div>
+      </div>
+      <div class="calc-body">
+        <div class="info-box"><strong>Curosurf:</strong> 80 mg/mL. Dosis 1: 200 mg/kg; Dosis 2-3: 100 mg/kg.<br><strong>Beractant (Survanta):</strong> 25 mg/mL. Dosis: 100 mg/kg.</div>
+        <div class="inp-row">
+          <div class="inp-group"><label class="inp-label">BB (gram)</label><input class="inp" id="surf-wt" type="number" value="1200" oninput="calcSurf()"></div>
+          <div class="inp-group"><label class="inp-label">Jenis Surfaktan</label>
+            <select class="inp" id="surf-type" oninput="calcSurf()">
+              <option value="curosurf1">Curosurf Dosis 1 (200 mg/kg)</option>
+              <option value="curosurf2">Curosurf Dosis 2/3 (100 mg/kg)</option>
+              <option value="beractant">Beractant/Survanta (100 mg/kg)</option>
+            </select>
+          </div>
+        </div>
+        <button class="calc-btn" style="background:var(--cyan)" onclick="calcSurf()">Hitung Volume Surfaktan</button>
+        <div class="result" id="res-surf" style="background:var(--cyan-l)">
+          <div class="res-grid">
+            <div class="res-item"><div class="res-lbl">Dosis (mg)</div><div class="res-val big" id="surf-mg"></div></div>
+            <div class="res-item"><div class="res-lbl">Volume (mL)</div><div class="res-val big" id="surf-vol"></div><div class="res-note" id="surf-note"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANTIBIOTIK NEONATUS -->
+    <div class="calc-card">
+      <div class="calc-card-head">
+        <div class="c-icon" style="background:var(--green-l);color:var(--green)">💉</div>
+        <div><div class="c-title">Antibiotik Neonatus</div><div class="c-sub">Disesuaikan GA + usia postnatal</div></div>
+      </div>
+      <div class="calc-body">
+        <div class="inp-row triple">
+          <div class="inp-group"><label class="inp-label">BB (gram)</label><input class="inp" id="abx-wt" type="number" value="1500" oninput="calcAbx()"></div>
+          <div class="inp-group"><label class="inp-label">GA (minggu)</label><input class="inp" id="abx-ga" type="number" value="30" oninput="calcAbx()"></div>
+          <div class="inp-group"><label class="inp-label">Usia (hari)</label><input class="inp" id="abx-age" type="number" value="1" oninput="calcAbx()"></div>
+        </div>
+        <div class="inp-row single">
+          <div class="inp-group"><label class="inp-label">Antibiotik</label>
+            <select class="inp" id="abx-drug" oninput="calcAbx()">
+              <option value="ampicillin">Ampisilin (IV)</option>
+              <option value="gentamicin">Gentamisin (IV/IM)</option>
+              <option value="cefotaxime">Sefotaksim (IV)</option>
+              <option value="penicillin-g">Penisilin G (IV) — Sifilis</option>
+              <option value="vancomycin">Vankomisin (IV)</option>
+              <option value="metronidazole">Metronidazol (IV) — NEC</option>
+              <option value="acyclovir">Asiklovir (IV) — Herpes</option>
+              <option value="fluconazole">Flukonazol (IV/PO)</option>
+            </select>
+          </div>
+        </div>
+        <div class="inp-row single">
+          <div class="inp-group"><label class="inp-label">Indikasi</label>
+            <select class="inp" id="abx-indication" oninput="calcAbx()">
+              <option value="sepsis">Sepsis / Empiris</option>
+              <option value="meningitis">Meningitis</option>
+              <option value="uti">ISK</option>
+              <option value="pneumonia">Pneumonia</option>
+            </select>
+          </div>
+        </div>
+        <button class="calc-btn" style="background:var(--green)" onclick="calcAbx()">Hitung Dosis Antibiotik</button>
+        <div class="result" id="res-abx" style="background:var(--green-l)">
+          <div class="res-grid">
+            <div class="res-item"><div class="res-lbl">Dosis/kali (mg)</div><div class="res-val big" id="abx-dose-mg"></div></div>
+            <div class="res-item"><div class="res-lbl">Volume (mL)</div><div class="res-val big" id="abx-dose-vol"></div><div class="res-note" id="abx-dose-note"></div></div>
+          </div>
+          <div class="res-alert" id="abx-freq" style="background:var(--green-l);border:1px solid #6ee7b7;margin-top:0.5rem;border-radius:6px;padding:0.5rem 0.7rem;font-size:0.78rem;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOPAMIN/DOBUTAMIN -->
+    <div class="calc-card">
+      <div class="calc-card-head">
+        <div class="c-icon" style="background:var(--red-l);color:var(--red)">❤️</div>
+        <div><div class="c-title">Inotropik / Vasopresor</div><div class="c-sub">Dopamin, Dobutamin, Epinefrin, Norepinefrin</div></div>
+      </div>
+      <div class="calc-body">
+        <div class="info-box">Rule of 6: [Dosis mcg/kg/mnt × BB kg × 6] mg dalam 100 mL → 1 mL/jam = 1 mcg/kg/mnt</div>
+        <div class="inp-row">
+          <div class="inp-group"><label class="inp-label">BB (gram)</label><input class="inp" id="ino-wt" type="number" value="1500" oninput="calcIno()"></div>
+          <div class="inp-group"><label class="inp-label">Obat</label>
+            <select class="inp" id="ino-drug" oninput="calcIno()">
+              <option value="dopamine">Dopamin</option>
+              <option value="dobutamine">Dobutamin</option>
+              <option value="epinephrine">Epinefrin</option>
+              <option value="norepinephrine">Norepinefrin</option>
+            </select>
+          </div>
+        </div>
+        <div class="inp-row">
+          <div class="inp-group"><label class="inp-label">Dosis (mcg/kg/mnt)</label><input class="inp" id="ino-dose" type="number" value="5" min="0.01" max="30" step="0.01" oninput="calcIno()"></div>
+          <div class="inp-group"><label class="inp-label">Volume Syringe (mL)</label>
+            <select class="inp" id="ino-vol" oninput="calcIno()">
+              <option value="50">50 mL</option>
+              <option value="20">20 mL</option>
+              <option value="10">10 mL</option>
+            </select>
+          </div>
+        </div>
+        <button class="calc-btn" style="background:var(--red)" onclick="calcIno()">Hitung Syringe Pump</button>
+        <div class="result" id="res-ino" style="background:var(--red-l)">
+          <div class="res-grid triple">
+            <div class="res-item"><div class="res-lbl">Obat (mg) dalam syringe</div><div class="res-val big" id="ino-drug-mg"></div></div>
+            <div class="res-item"><div class="res-lbl">Rate (mL/jam)</div><div class="res-val big" id="ino-rate"></div></div>
+            <div class="res-item"><div class="res-lbl">Konsentrasi</div><div class="res-val" id="ino-conc"></div><div class="res-note" id="ino-range"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHENOBARBITAL -->
+    <div class="calc-card">
+      <div class="calc-card-head">
+        <div class="c-icon" style="background:var(--pink-l);color:var(--pink)">🧠</div>
+        <div><div class="c-title">Fenobarbital</div><div class="c-sub">Kejang Neonatus</div></div>
+      </div>
+      <div class="calc-body">
+        <div class="info-box">Loading: 20 mg/kgBB IV (maks 40 mg/kg total). Maintenance: 3–5 mg/kg/hari mulai 12–24 jam setelah loading. Sediaan: 200 mg/mL.</div>
+        <div class="inp-row">
+          <div class="inp-group"><label class="inp-label">BB (gram)</label><input class="inp" id="pb-wt" type="number" value="2000" oninput="calcPhenob()"></div>
+          <div class="inp-group"><label class="inp-label">Dosis Loading</label>
+            <select class="inp" id="pb-dose" oninput="calcPhenob()">
+              <option value="20">20 mg/kg (1st)</option>
+              <option value="20e">+ 20 mg/kg (2nd, maks)</option>
+            </select>
+          </div>
+        </div>
+        <button class="calc-btn" style="background:var(--pink)" onclick="calcPhenob()">Hitung Dosis</button>
+        <div class="result" id="res-pb" style="background:var(--pink-l)">
+          <div class="res-grid triple">
+            <div class="res-item"><div class="res-lbl">Loading (mg)</div><div class="res-val big" id="pb-load-mg"></div><div class="res-note" id="pb-load-vol"></div></div>
+            <div class="res-item"><div class="res-lbl">Maint 3 mg/kg (mg)</div><div class="res-val" id="pb-m3-mg"></div><div class="res-note" id="pb-m3-vol"></div></div>
+            <div class="res-item"><div class="res-lbl">Maint 5 mg/kg (mg)</div><div class="res-val" id="pb-m5-mg"></div><div class="res-note" id="pb-m5-vol"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VITAMIN K & PROFILAKSIS -->
+    <div class="calc-card">
+      <div class="calc-card-head">
+        <div class="c-icon" style="background:var(--yellow-l);color:var(--yellow)">💛</div>
+        <div><div class="c-title">Vitamin K & Profilaksis</div><div class="c-sub">Rutin BBL</div></div>
+      </div>
+      <div class="calc-body">
+        <div class="inp-row">
+          <div class="inp-group"><label class="inp-label">BB (gram)</label><input class="inp" id="vitk-wt" type="number" value="2500" oninput="calcVitK()"></div>
+          <div class="inp-group"><label class="inp-label">GA (minggu)</label><input class="inp" id="vitk-ga" type="number" value="35" oninput="calcVitK()"></div>
+        </div>
+        <button class="calc-btn" style="background:var(--yellow)" onclick="calcVitK()">Tampilkan Profilaksis</button>
+        <div class="result" id="res-vitk" style="background:var(--yellow-l)">
+          <div class="res-alert" id="vitk-result" style="font-size:0.82rem;line-height:1.8;"></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end calc-grid -->
+</div>
+
+<!-- ═════════════════════ TAB: FLUID & TPN ═════════════════════ -->
+<div class="tab-content" id="tab-fluid">
+  <div class="calc-grid">
+
+    <!-- KEBUTUHAN CAIRAN HARIAN -->
+    <div class="calc-card">
+      <div class="calc-card-head">
+        <div class="c-icon" style="background:var(--blue-l);color:var(--blue)">💧</div>
+        <div><div class="c-title">Kebutuhan Cairan Harian</div><div class="c-sub">Total Fluid Intake (TFI)</div></div>
+      </div>
+      <div class="calc-body">
+        <div class="info-box"><strong>Panduan:</strong> Hari 1: 60–80; Hari 2: 80–100; Hari 3–7: 120–150; >1 mgg: 150–180 mL/kg/hari. Sesuaikan kondisi klinis.</div>
+        <div class="inp-row triple">
+          <div class="inp-group"><label class="inp-label">BB (gram)</label><input class="inp" id="fl-wt" type="number" value="1500" oninput="calcFluid()"></div>
+          <div class="inp-group"><label class="inp-label">GA (minggu)</label><input class="inp" id="fl-ga" type="number" value="30" oninput="calcFluid()"></div>
+          <div class="inp-group"><label class="inp-label">Usia (hari)</label><input class="inp" id="fl-age" type="number" value="1" oninput="calcFluid()"></div>
+        </div>
+        <div class="inp-row">
+          <div class="inp-group"><label class="inp-label">Kebutuhan (mL/kg/hr)</label><input class="inp" id="fl-need" type="number" value="80" min="40" max="200" oninput="calcFluid()"></div>
+          <div class="inp-group"><label class="inp-label">Asupan Enteral (mL/hr)</label><input class="inp" id="fl-enteral" type="number" value="0" min="0" oninput="calcFluid()"></div>
+        </div>
+        <button class="calc-btn" style="background:var(--blue)" onclick="calcFluid()">Hitung Cairan</button>
+        <div class="result" id="res-fluid" style="background:var(--blue-l)">
+          <div class="res-grid triple">
+            <div class="res-item"><div class="res-lbl">Total Cairan (mL/hr)</div><div class="res-val big" id="fl-total-ml"></div></div>
+            <div class="res-item"><div class="res-lbl">IV Tambahan (mL/hr)</div><div class="res-val big" id="fl-iv-ml"></div></div>
+            <div class="res-item"><div class="res-lbl">Rate Syringe (mL/jam)</div><div class="res-val big" id="fl-rate"></div></div>
+          </div>
+          <div id="fl-warn"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GIR / GLUCOSE INFUSION RATE -->
+    <div class="calc-card">
+      <div class="calc-card-head">
+        <div class="c-icon" style="background:var(--orange-l);color:var(--orange)">🍬</div>
+        <div><div class="c-title">GIR (Glucose Infusion Rate)</div><div class="c-sub">Kecepatan Infus Glukosa</div></div>
+      </div>
+      <div class="calc-body">
+        <div class="info-box">GIR = [Konsentrasi (%) × Rate (mL/jam)] / [BB (kg) × 6] mg/kg/mnt. Target neonatus: 4–8 mg/kg/mnt. Maks 12 mg/kg/mnt.</div>
+        <div class="inp-row">
+          <div class="inp-group"><label class="inp-label">BB (gram)</label><input class="inp" id="gir-wt" type="number" value="1500" oninput="calcGIR()"></div>
+          <div class="inp-group"><label class="inp-label">Konsentrasi Glukosa (%)</label>
+            <select class="inp" id="gir-conc" oninput="calcGIR()">
+              <option value="5">D5%</option>
+              <option value="7.5">D7.5%</option>
+              <option value="10" selected>D10%</option>
+              <option value="12.5">D12.5%</option>
+              <option value="15">D15%</option>
+              <option value="20">D20%</option>
+              <option value="25">D25%</option>
+            </select>
+          </div>
+        </div>
+        <div class="inp-row">
+          <div class="inp-group"><label class="inp-label">Rate Infus (mL/jam)</label><input class="inp" id="gir-rate" type="number" value="6" step="0.1" oninput="calcGIR()"></div>
+          <div class="inp-group"><label class="inp-label">Target GIR (mg/kg/mnt)</label><input class="inp" id="gir-target" type="number" value="6" step="0.5" oninput="calcGIRinverse()"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.7rem">
+          <button class="calc-btn" style="background:var(--orange);margin:0" onclick="calcGIR()">GIR dari Rate</button>
+          <button class="calc-btn" style="background:#ea580c;margin:0" onclick="calcGIRinverse()">Rate dari Target GIR</button>
+        </div>
+        <div class="result" id="res-gir" style="background:var(--orange-l)">
+          <div class="res-grid">
+            <div class="res-item"><div class="res-lbl">GIR Aktual</div><div class="res-val big" id="gir-actual"></div><div class="res-note" id="gir-status"></div></div>
+            <div class="res-item"><div class="res-lbl">Rate untuk Target</div><div class="res-val big" id="gir-needed-rate"></div><div class="res-note">mL/jam</div></div>
+          </div>
+          <div id="gir-warn"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TPN KOMPONEN -->
+    <div class="calc-card">
+      <div class="calc-card-head">
+        <div class="c-icon" style="background:var(--teal-l);color:var(--teal)">🧪</div>
+        <div><div class="c-title">TPN Neonatus</div><div class="c-sub">Total Parenteral Nutrition</div></div>
+      </div>
+      <div class="calc-body">
+        <div class="inp-row">
+          <div class="inp-group"><label class="inp-label">BB (gram)</label><input class="inp" id="tpn-wt" type="number" value="1500" oninput="calcTPN()"></div>
+          <div class="inp-group"><label class="inp-label">Usia (hari)</label><input class="inp" id="tpn-age" type="number" value="1" oninput="calcTPN()"></div>
+        </div>
+        <div class="inp-row triple">
+          <div class="inp-group"><label class="inp-label">TFI (mL/kg/hr)</label><input class="inp" id="tpn-tfi" type="number" value="80" oninput="calcTPN()"></div>
+          <div class="inp-group"><label class="inp-label">Enteral (mL/kg/hr)</label><input class="inp" id="tpn-ent" type="number" value="0" oninput="calcTPN()"></div>
+          <div class="inp-group"><label class="inp-label">GIR target</label><input class="inp" id="tpn-gir" type="number" value="6" step="0.5" oninput="calcTPN()"></div>
+        </div>
+        <div class="inp-row triple">
+          <div class="inp-group"><label class="inp-label">Protein (g/kg/hr)</label><input class="inp" id="tpn-pro" type="number" value="2" step="0.5" oninput="calcTPN()"></div>
+          <div class="inp-group"><label class="inp-label">Lipid (g/kg/hr)</label><input class="inp" id="tpn-lip" type="number" value="1" step="0.5" oninput="calcTPN()"></div>
+          <div class="inp-group"><label class="inp-label">Glukosa (%)</label>
+            <select class="inp" id="tpn-glu" oninput="calcTPN()">
+              <option value="10">D10%</option><option value="12.5">D12.5%</option>
+              <option value="15">D15%</option><option value="20">D20%</option>
+            </select>
+          </div>
+        </div>
+        <button class="calc-btn" style="background:var(--teal)" onclick="calcTPN()">Hitung TPN</button>
+        <div class="result" id="res-tpn" style="background:var(--teal-l)">
+          <div class="res-grid triple">
+            <div class="res-item"><div class="res-lbl">IV Cairan (mL/jam)</div><div class="res-val" id="tpn-iv-rate"></div></div>
+            <div class="res-item"><div class="res-lbl">GIR Aktual</div><div class="res-val" id="tpn-gir-act"></div></div>
+            <div class="res-item"><div class="res-lbl">Kalori Total</div><div class="res-val" id="tpn-cal"></div><div class="res-note">kcal/kg/hr</div></div>
+          </div>
+          <div class="res-grid triple" style="margin-top:0.5rem">
+            <div class="res-item"><div class="res-lbl">Protein (g/hr)</div><div class="res-val" id="tpn-pro-g"></div></div>
+            <div class="res-item"><div class="res-lbl">Lipid (mL/jam, 20%)</div><div class="res-val" id="tpn-lip-ml"></div></div>
+            <div class="res-item"><div class="res-lbl">Kalori non-protein</div><div class="res-val" id="tpn-npc"></div><div class="res-note">kcal/kg/hr</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ELEKTROLIT DALAM TPN -->
+    <div class="calc-card">
+      <div class="calc-card-head">
+        <div class="c-icon" style="background:var(--indigo-l);color:var(--indigo)">⚡</div>
+        <div><div class="c-title">Elektrolit Neonatus</div><div class="c-sub">Kebutuhan harian dalam TPN</div></div>
+      </div>
+      <div class="calc-body">
+        <div class="inp-row">
+          <div class="inp-group"><label class="inp-label">BB (gram)</label><input class="inp" id="elec-wt" type="number" value="1500" oninput="calcElec()"></div>
+          <div class="inp-group"><label class="inp-label">Usia (hari)</label><input class="inp" id="elec-age" type="number" value="3" oninput="calcElec()"></div>
+        </div>
+        <button class="calc-btn" style="background:var(--indigo)" onclick="calcElec()">Hitung Elektrolit</button>
+        <div class="result" id="res-elec" style="background:var(--indigo-l)">
+          <table class="ref-table" style="font-size:0.75rem">
+            <thead><tr><th>Elektrolit</th><th>Kebutuhan</th><th>Total/hari</th><th>Sediaan umum</th></tr></thead>
+            <tbody id="elec-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═════════════════════ TAB: VENTILATOR ═════════════════════ -->
+<div class="tab-content" id="tab-vent">
+  <div class="calc-grid">
+
+    <!-- INITIAL VENT SETTINGS -->
+    <div class="calc-card">
+      <div class="calc-card-head">
+        <div class="c-icon" style="background:var(--blue-l);color:var(--blue)">🌬️</div>
+        <div><div class="c-title">Setting Awal Ventilator</div><div class="c-sub">Rekomendasi berdasarkan BB & diagnosis</div></div>
+      </div>
+      <div class="calc-body">
+        <div class="inp-row">
+          <div class="inp-group"><label class="inp-label">BB (gram)</label><input class="inp" id="vt-wt" type="number" value="1500" oninput="calcVent()"></div>
+          <div class="inp-group"><label class="inp-label">GA (minggu)</label><input class="inp" id="vt-ga" type="number" value="30" oninput="calcVent()"></div>
+        </div>
+        <div class="inp-row single">
+          <div class="inp-group"><label class="inp-label">Diagnosis / Indikasi</label>
+            <select class="inp" id="vt-dx" oninput="calcVent()">
+              <option value="hmd">HMD / RDS</option>
+              <option value="apnea">Apnea Prematuritas</option>
+              <option value="mec">Aspirasi Mekonium (MAS)</option>
+              <option value="pphn">PPHN</option>
+              <option value="pneumonia">Pneumonia Neonatal</option>
+              <option value="post-op">Pasca Operasi</option>
+            </select>
+          </div>
+        </div>
+        <button class="calc-btn" style="background:var(--blue)" onclick="calcVent()">Tampilkan Setting</button>
+        <div class="result" id="res-vent" style="background:var(--blue-l)">
+          <div class="res-grid triple" id="vent-params"></div>
+          <div id="vent-notes" style="margin-top:0.5rem;font-size:0.78rem;line-height:1.7;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TIDAL VOLUME TARGET -->
+    <div class="calc-card">
+      <div class="calc-card-head">
+        <div class="c-icon" style="background:var(--green-l);color:var(--green)">📊</div>
+        <div><div class="c-title">Target Tidal Volume</div><div class="c-sub">Protective lung ventilation</div></div>
+      </div>
+      <div class="calc-body">
+        <div class="info-box">Target VT: 4–6 mL/kgBB (ideal). Neonatus HMD: 4–5 mL/kg. HFOV: VT tidak langsung — MAP + frekuensi.</div>
+        <div class="inp-row">
+          <div class="inp-group"><label class="inp-label">BB (gram)</label><input class="inp" id="tv-wt" type="number" value="1200" oninput="calcTV()"></div>
+          <div class="inp-group"><label class="inp-label">VT terukur (mL)</label><input class="inp" id="tv-measured" type="number" value="6" step="0.5" oninput="calcTV()"></div>
+        </div>
+        <button class="calc-btn" style="background:var(--green)" onclick="calcTV()">Evaluasi Tidal Volume</button>
+        <div class="result" id="res-tv" style="background:var(--green-l)">
+          <div class="res-grid">
+            <div class="res-item"><div class="res-lbl">VT/kg aktual</div><div class="res-val big" id="tv-per-kg"></div></div>
+            <div class="res-item"><div class="res-lbl">Status</div><div class="res-val big" id="tv-status"></div><div class="res-note" id="tv-note"></div></div>
+          </div>
+          <div class="res-grid triple" style="margin-top:0.5rem">
+            <div class="res-item"><div class="res-lbl">Target 4 mL/kg</div><div class="res-val" id="tv-min"></div></div>
+            <div class="res-item"><div class="res-lbl">Target 5 mL/kg</div><div class="res-val" id="tv-mid"></div></div>
+            <div class="res-item"><div class="res-lbl">Target 6 mL/kg</div><div class="res-val" id="tv-max"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OI (OXYGENATION INDEX) -->
+    <div class="calc-card">
+      <div class="calc-card-head">
+        <div class="c-icon" style="background:var(--orange-l);color:var(--orange)">📉</div>
+        <div><div class="c-title">Oxygenation Index (OI)</div><div class="c-sub">Indikasi terapi eskalasi</div></div>
+      </div>
+      <div class="calc-body">
+        <div class="info-box">OI = (MAP × FiO₂ × 100) / PaO₂. OI &gt;25 → pertimbangkan HFOV/iNO. OI &gt;40 → ECMO criteria.</div>
+        <div class="inp-row triple">
+          <div class="inp-group"><label class="inp-label">MAP (cmH₂O)</label><input class="inp" id="oi-map" type="number" value="10" step="0.5" oninput="calcOI()"></div>
+          <div class="inp-group"><label class="inp-label">FiO₂ (0.21–1.0)</label><input class="inp" id="oi-fio2" type="number" value="0.6" step="0.01" min="0.21" max="1" oninput="calcOI()"></div>
+          <div class="inp-group"><label class="inp-label">PaO₂ (mmHg)</label><input class="inp" id="oi-pao2" type="number" value="60" oninput="calcOI()"></div>
+        </div>
+        <button class="calc-btn" style="background:var(--orange)" onclick="calcOI()">Hitung OI</button>
+        <div class="result" id="res-oi" style="background:var(--orange-l)">
+          <div class="res-grid">
+            <div class="res-item"><div class="res-lbl">Oxygenation Index</div><div class="res-val big" id="oi-result"></div></div>
+            <div class="res-item"><div class="res-lbl">Interpretasi</div><div class="res-val" id="oi-interp"></div><div class="res-note" id="oi-note"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ETT SIZE -->
+    <div class="calc-card">
+      <div class="calc-card-head">
+        <div class="c-icon" style="background:var(--purple-l);color:var(--purple)">📏</div>
+        <div><div class="c-title">Ukuran ETT & Kedalaman</div><div class="c-sub">Endotracheal Tube Neonatus</div></div>
+      </div>
+      <div class="calc-body">
+        <div class="inp-row">
+          <div class="inp-group"><label class="inp-label">BB (gram)</label><input class="inp" id="ett-wt" type="number" value="1500" oninput="calcETT()"></div>
+          <div class="inp-group"><label class="inp-label">GA (minggu)</label><input class="inp" id="ett-ga" type="number" value="30" oninput="calcETT()"></div>
+        </div>
+        <button class="calc-btn" style="background:var(--purple)" onclick="calcETT()">Hitung ETT</button>
+        <div class="result" id="res-ett" style="background:var(--purple-l)">
+          <div class="res-grid triple">
+            <div class="res-item"><div class="res-lbl">Ukuran ETT (ID mm)</div><div class="res-val big" id="ett-size"></div></div>
+            <div class="res-item"><div class="res-lbl">Kedalaman bibir (cm)</div><div class="res-val big" id="ett-depth"></div></div>
+            <div class="res-item"><div class="res-lbl">Kedalaman nares (cm)</div><div class="res-val" id="ett-nares"></div></div>
+          </div>
+          <div id="ett-note" style="margin-top:0.5rem;font-size:0.75rem;color:var(--muted);"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═════════════════════ TAB: SCORES ═════════════════════ -->
+<div class="tab-content" id="tab-scores">
+  <div class="calc-grid">
+
+    <!-- APGAR -->
+    <div class="calc-card">
+      <div class="calc-card-head">
+        <div class="c-icon" style="background:var(--blue-l);color:var(--blue)">👶</div>
+        <div><div class="c-title">Skor APGAR</div><div class="c-sub">1 menit, 5 menit, 10 menit</div></div>
+      </div>
+      <div class="calc-body">
+        <div style="display:grid;gap:0.5rem">
+          ${['Appearance (Warna kulit)','Pulse (Denyut jantung)','Grimace (Refleks)','Activity (Tonus)','Respiration (Napas)'].map((item,i)=>`
+          <div style="display:flex;align-items:center;gap:0.5rem">
+            <span style="font-size:0.75rem;font-weight:600;flex:1;color:var(--text)">${item}</span>
+            <select class="inp" id="apgar-${i}" style="width:auto;min-width:160px" oninput="calcApgar()">
+              ${i===0?'<option value="0">0 — Biru/Pucat</option><option value="1">1 — Akrosianosis</option><option value="2">2 — Merah Muda</option>':
+                i===1?'<option value="0">0 — Tidak ada</option><option value="1">1 — &lt;100/mnt</option><option value="2">2 — ≥100/mnt</option>':
+                i===2?'<option value="0">0 — Tidak ada</option><option value="1">1 — Meringis</option><option value="2">2 — Batuk/Bersin</option>':
+                i===3?'<option value="0">0 — Lemas</option><option value="1">1 — Fleksi sedikit</option><option value="2">2 — Aktif</option>':
+                '<option value="0">0 — Tidak ada</option><option value="1">1 — Lemah/irreg</option><option value="2">2 — Baik/Menangis</option>'}
+            </select>
+          </div>`).join('')}
+        </div>
+        <button class="calc-btn" style="background:var(--blue);margin-top:0.75rem" onclick="calcApgar()">Hitung Skor APGAR</button>
+        <div class="result" id="res-apgar" style="background:var(--blue-l)">
+          <div class="res-grid">
+            <div class="res-item"><div class="res-lbl">Total Skor APGAR</div><div class="res-val big" id="apgar-score"></div></div>
+            <div class="res-item"><div class="res-lbl">Interpretasi</div><div class="res-val" id="apgar-interp"></div><div class="res-note" id="apgar-action"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BALLARD SCORE -->
+    <div class="calc-card">
+      <div class="calc-card-head">
+        <div class="c-icon" style="background:var(--yellow-l);color:var(--yellow)">📋</div>
+        <div><div class="c-title">New Ballard Score</div><div class="c-sub">Estimasi Usia Gestasi</div></div>
+      </div>
+      <div class="calc-body">
+        <div class="info-box">Skor maturitas neuromuskular (0–25) + fisik (0–25). Total → usia gestasi.</div>
+        <div class="inp-row">
+          <div class="inp-group"><label class="inp-label">Skor Neuromuskular (0–25)</label><input class="inp" id="bal-neuro" type="number" value="12" min="-10" max="25" oninput="calcBallard()"></div>
+          <div class="inp-group"><label class="inp-label">Skor Fisik (0–25)</label><input class="inp" id="bal-phys" type="number" value="13" min="0" max="25" oninput="calcBallard()"></div>
+        </div>
+        <button class="calc-btn" style="background:var(--yellow);color:#1e293b" onclick="calcBallard()">Estimasi GA</button>
+        <div class="result" id="res-ballard" style="background:var(--yellow-l)">
+          <div class="res-grid">
+            <div class="res-item"><div class="res-lbl">Total Skor</div><div class="res-val big" id="bal-total"></div></div>
+            <div class="res-item"><div class="res-lbl">Estimasi GA</div><div class="res-val big" id="bal-ga"></div><div class="res-note">minggu</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SILVERMAN ANDERSON -->
+    <div class="calc-card">
+      <div class="calc-card-head">
+        <div class="c-icon" style="background:var(--red-l);color:var(--red)">🫁</div>
+        <div><div class="c-title">Skor Silverman-Anderson</div><div class="c-sub">Derajat Distres Napas Neonatus</div></div>
+      </div>
+      <div class="calc-body">
+        <div style="display:grid;gap:0.5rem">
+          ${['Gerakan Dada','Retraksi Interkostal','Retraksi Xifoid','Flap Hidung','Grunting (Ekspirasi)'].map((item,i)=>`
+          <div style="display:flex;align-items:center;gap:0.5rem">
+            <span style="font-size:0.75rem;font-weight:600;flex:1">${item}</span>
+            <select class="inp" id="sa-${i}" style="width:auto;min-width:170px" oninput="calcSA()">
+              ${i===0?'<option value="0">0 — Sinkron</option><option value="1">1 — Lag inspirasi</option><option value="2">2 — Paradoksal</option>':
+                i===1?'<option value="0">0 — Tidak ada</option><option value="1">1 — Minimal</option><option value="2">2 — Nyata</option>':
+                i===2?'<option value="0">0 — Tidak ada</option><option value="1">1 — Minimal</option><option value="2">2 — Nyata</option>':
+                i===3?'<option value="0">0 — Tidak ada</option><option value="1">1 — Minimal</option><option value="2">2 — Nyata</option>':
+                '<option value="0">0 — Tidak ada</option><option value="1">1 — Auskultasi</option><option value="2">2 — Terdengar</option>'}
+            </select>
+          </div>`).join('')}
+        </div>
+        <button class="calc-btn" style="background:var(--red);margin-top:0.75rem" onclick="calcSA()">Hitung Skor</button>
+        <div class="result" id="res-sa" style="background:var(--red-l)">
+          <div class="res-grid">
+            <div class="res-item"><div class="res-lbl">Skor Silverman</div><div class="res-val big" id="sa-score"></div></div>
+            <div class="res-item"><div class="res-lbl">Derajat Distres</div><div class="res-val" id="sa-interp"></div><div class="res-note" id="sa-action"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JAUNDICE / BILIRUBIN -->
+    <div class="calc-card">
+      <div class="calc-card-head">
+        <div class="c-icon" style="background:var(--yellow-l);color:#d97706">🌕</div>
+        <div><div class="c-title">Panduan Fototerapi & Transfusi</div><div class="c-sub">Hiperbilirubinemia Neonatus (AAP)</div></div>
+      </div>
+      <div class="calc-body">
+        <div class="inp-row triple">
+          <div class="inp-group"><label class="inp-label">BB (gram)</label><input class="inp" id="bil-wt" type="number" value="2000" oninput="calcBil()"></div>
+          <div class="inp-group"><label class="inp-label">GA (minggu)</label><input class="inp" id="bil-ga" type="number" value="34" oninput="calcBil()"></div>
+          <div class="inp-group"><label class="inp-label">Usia (jam)</label><input class="inp" id="bil-age" type="number" value="48" oninput="calcBil()"></div>
+        </div>
+        <div class="inp-row">
+          <div class="inp-group"><label class="inp-label">Bilirubin Total (mg/dL)</label><input class="inp" id="bil-val" type="number" value="12" step="0.1" oninput="calcBil()"></div>
+          <div class="inp-group"><label class="inp-label">Risiko</label>
+            <select class="inp" id="bil-risk" oninput="calcBil()">
+              <option value="low">Rendah (sehat, ≥38 mgg)</option>
+              <option value="med" selected>Sedang (35–37 mgg)</option>
+              <option value="high">Tinggi (≥1 faktor risiko)</option>
+            </select>
+          </div>
+        </div>
+        <button class="calc-btn" style="background:#d97706" onclick="calcBil()">Evaluasi Bilirubin</button>
+        <div class="result" id="res-bil" style="background:var(--yellow-l)">
+          <div class="res-alert" id="bil-result"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═════════════════════ TAB: AGD ═════════════════════ -->
+<div class="tab-content" id="tab-abg">
+  <div class="calc-grid">
+
+    <!-- AGD INTERPRETATION -->
+    <div class="calc-card">
+      <div class="calc-card-head">
+        <div class="c-icon" style="background:var(--red-l);color:var(--red)">🧪</div>
+        <div><div class="c-title">Interpretasi AGD Neonatus</div><div class="c-sub">Analisis Gangguan Asam Basa</div></div>
+      </div>
+      <div class="calc-body">
+        <div class="inp-row triple">
+          <div class="inp-group"><label class="inp-label">pH</label><input class="inp" id="agd-ph" type="number" value="7.35" step="0.01" min="6.8" max="7.8" oninput="calcAGD()"></div>
+          <div class="inp-group"><label class="inp-label">PaCO₂ (mmHg)</label><input class="inp" id="agd-co2" type="number" value="45" oninput="calcAGD()"></div>
+          <div class="inp-group"><label class="inp-label">PaO₂ (mmHg)</label><input class="inp" id="agd-po2" type="number" value="65" oninput="calcAGD()"></div>
+        </div>
+        <div class="inp-row triple">
+          <div class="inp-group"><label class="inp-label">HCO₃⁻ (mEq/L)</label><input class="inp" id="agd-hco3" type="number" value="22" oninput="calcAGD()"></div>
+          <div class="inp-group"><label class="inp-label">BE (mEq/L)</label><input class="inp" id="agd-be" type="number" value="-2" step="0.1" oninput="calcAGD()"></div>
+          <div class="inp-group"><label class="inp-label">SpO₂ (%)</label><input class="inp" id="agd-spo2" type="number" value="95" oninput="calcAGD()"></div>
+        </div>
+        <div class="inp-row">
+          <div class="inp-group"><label class="inp-label">FiO₂</label><input class="inp" id="agd-fio2" type="number" value="0.21" step="0.01" oninput="calcAGD()"></div>
+          <div class="inp-group"><label class="inp-label">GA (minggu)</label><input class="inp" id="agd-ga" type="number" value="30" oninput="calcAGD()"></div>
+        </div>
+        <button class="calc-btn" style="background:var(--red)" onclick="calcAGD()">Interpretasi AGD</button>
+        <div class="result" id="res-agd" style="background:var(--red-l)">
+          <div class="res-alert" id="agd-result"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SODIUM CORRECTION -->
+    <div class="calc-card">
+      <div class="calc-card-head">
+        <div class="c-icon" style="background:var(--blue-l);color:var(--blue)">🧂</div>
+        <div><div class="c-title">Koreksi Natrium</div><div class="c-sub">Hiponatremia / Hipernatremia</div></div>
+      </div>
+      <div class="calc-body">
+        <div class="info-box">Koreksi hiponatremia maks 8–10 mEq/L/hari (kronik). Akut simtomatik: 1–2 mEq/kg NaCl 3%.</div>
+        <div class="inp-row triple">
+          <div class="inp-group"><label class="inp-label">BB (gram)</label><input class="inp" id="na-wt" type="number" value="2000" oninput="calcNa()"></div>
+          <div class="inp-group"><label class="inp-label">Na aktual (mEq/L)</label><input class="inp" id="na-actual" type="number" value="125" oninput="calcNa()"></div>
+          <div class="inp-group"><label class="inp-label">Na target (mEq/L)</label><input class="inp" id="na-target" type="number" value="135" oninput="calcNa()"></div>
+        </div>
+        <button class="calc-btn" style="background:var(--blue)" onclick="calcNa()">Hitung Koreksi Na</button>
+        <div class="result" id="res-na" style="background:var(--blue-l)">
+          <div class="res-grid triple">
+            <div class="res-item"><div class="res-lbl">Defisit Na (mEq)</div><div class="res-val big" id="na-deficit"></div></div>
+            <div class="res-item"><div class="res-lbl">NaCl 3% (mL)</div><div class="res-val big" id="na-nacl3"></div><div class="res-note">1mL NaCl3%=0.51mEq</div></div>
+            <div class="res-item"><div class="res-lbl">Kecepatan max</div><div class="res-val" id="na-rate"></div><div class="res-note" id="na-rate-note"></div></div>
+          </div>
+          <div id="na-warn"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BICARBONATE CORRECTION -->
+    <div class="calc-card">
+      <div class="calc-card-head">
+        <div class="c-icon" style="background:var(--green-l);color:var(--green)">⚗️</div>
+        <div><div class="c-title">Koreksi NaHCO₃</div><div class="c-sub">Asidosis Metabolik</div></div>
+      </div>
+      <div class="calc-body">
+        <div class="info-box">Defisit bikarbonat = 0.3 × BB (kg) × (24 − HCO₃ aktual). Berikan ½ dosis dulu, evaluasi ulang. PASTIKAN ventilasi adekuat.</div>
+        <div class="inp-row triple">
+          <div class="inp-group"><label class="inp-label">BB (gram)</label><input class="inp" id="hco-wt" type="number" value="1500" oninput="calcHCO()"></div>
+          <div class="inp-group"><label class="inp-label">HCO₃ aktual (mEq/L)</label><input class="inp" id="hco-actual" type="number" value="14" oninput="calcHCO()"></div>
+          <div class="inp-group"><label class="inp-label">HCO₃ target (mEq/L)</label><input class="inp" id="hco-target" type="number" value="20" oninput="calcHCO()"></div>
+        </div>
+        <button class="calc-btn" style="background:var(--green)" onclick="calcHCO()">Hitung Dosis NaHCO₃</button>
+        <div class="result" id="res-hco" style="background:var(--green-l)">
+          <div class="res-grid triple">
+            <div class="res-item"><div class="res-lbl">Total Defisit (mEq)</div><div class="res-val big" id="hco-total"></div></div>
+            <div class="res-item"><div class="res-lbl">½ Defisit (mEq)</div><div class="res-val big" id="hco-half"></div></div>
+            <div class="res-item"><div class="res-lbl">Volume NaHCO₃ 8.4%</div><div class="res-val" id="hco-vol84"></div><div class="res-note">1 mEq = 1 mL (8.4%)</div></div>
+          </div>
+          <div class="res-warn" style="margin-top:0.5rem">⚠️ Neonatus: encerkan 1:1 akuades → NaHCO₃ 4.2%. Berikan IV pelan ≥30 mnt. Jangan campur Ca.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═════════════════════ TAB: NUTRISI ═════════════════════ -->
+<div class="tab-content" id="tab-nutrition">
+  <div class="calc-grid">
+
+    <!-- KEBUTUHAN NUTRISI -->
+    <div class="calc-card">
+      <div class="calc-card-head">
+        <div class="c-icon" style="background:var(--orange-l);color:var(--orange)">🥛</div>
+        <div><div class="c-title">Kebutuhan Nutrisi Neonatus</div><div class="c-sub">Target harian berdasarkan BB & usia</div></div>
+      </div>
+      <div class="calc-body">
+        <div class="inp-row">
+          <div class="inp-group"><label class="inp-label">BB (gram)</label><input class="inp" id="nut-wt" type="number" value="1500" oninput="calcNutrition()"></div>
+          <div class="inp-group"><label class="inp-label">Usia (hari)</label><input class="inp" id="nut-age" type="number" value="7" oninput="calcNutrition()"></div>
+        </div>
+        <div class="inp-row">
+          <div class="inp-group"><label class="inp-label">Jenis Nutrisi</label>
+            <select class="inp" id="nut-type" oninput="calcNutrition()">
+              <option value="parenteral">Parenteral (TPN)</option>
+              <option value="enteral">Enteral (ASI/Formula)</option>
+              <option value="combined">Kombinasi</option>
+            </select>
+          </div>
+          <div class="inp-group"><label class="inp-label">Target kalori (kcal/kg/hr)</label><input class="inp" id="nut-cal" type="number" value="110" oninput="calcNutrition()"></div>
+        </div>
+        <button class="calc-btn" style="background:var(--orange)" onclick="calcNutrition()">Hitung Kebutuhan</button>
+        <div class="result" id="res-nut" style="background:var(--orange-l)">
+          <div class="res-alert" id="nut-result" style="font-size:0.8rem;line-height:1.8;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ASI FORTIFIKASI -->
+    <div class="calc-card">
+      <div class="calc-card-head">
+        <div class="c-icon" style="background:var(--pink-l);color:var(--pink)">🤱</div>
+        <div><div class="c-title">Panduan Enteral Neonatus</div><div class="c-sub">Trofik feeding & advancement</div></div>
+      </div>
+      <div class="calc-body">
+        <div class="inp-row">
+          <div class="inp-group"><label class="inp-label">BB (gram)</label><input class="inp" id="ef-wt" type="number" value="1200" oninput="calcEnteralFeed()"></div>
+          <div class="inp-group"><label class="inp-label">GA (minggu)</label><input class="inp" id="ef-ga" type="number" value="28" oninput="calcEnteralFeed()"></div>
+        </div>
+        <button class="calc-btn" style="background:var(--pink)" onclick="calcEnteralFeed()">Panduan Feeding</button>
+        <div class="result" id="res-ef" style="background:var(--pink-l)">
+          <div class="res-alert" id="ef-result" style="font-size:0.78rem;line-height:1.9;"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═════════════════════ TAB: MISC ═════════════════════ -->
+<div class="tab-content" id="tab-misc">
+  <div class="calc-grid">
+
+    <!-- PMA CALCULATOR -->
+    <div class="calc-card">
+      <div class="calc-card-head">
+        <div class="c-icon" style="background:var(--teal-l);color:var(--teal)">📅</div>
+        <div><div class="c-title">Usia Koreksi (PMA)</div><div class="c-sub">Postmenstrual Age & Corrected Age</div></div>
+      </div>
+      <div class="calc-body">
+        <div class="inp-row triple">
+          <div class="inp-group"><label class="inp-label">GA saat lahir (mgg)</label><input class="inp" id="pma-ga" type="number" value="28" oninput="calcPMA()"></div>
+          <div class="inp-group"><label class="inp-label">Usia postnatal (hr)</label><input class="inp" id="pma-days" type="number" value="30" oninput="calcPMA()"></div>
+          <div class="inp-group"><label class="inp-label">Usia postnatal (mgg)</label><input class="inp" id="pma-weeks" type="number" value="0" oninput="calcPMA()"></div>
+        </div>
+        <button class="calc-btn" style="background:var(--teal)" onclick="calcPMA()">Hitung PMA</button>
+        <div class="result" id="res-pma" style="background:var(--teal-l)">
+          <div class="res-grid triple">
+            <div class="res-item"><div class="res-lbl">PMA (minggu)</div><div class="res-val big" id="pma-result"></div></div>
+            <div class="res-item"><div class="res-lbl">Usia koreksi</div><div class="res-val" id="pma-corrected"></div></div>
+            <div class="res-item"><div class="res-lbl">Status</div><div class="res-val" id="pma-status"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOOD TRANSFUSION -->
+    <div class="calc-card">
+      <div class="calc-card-head">
+        <div class="c-icon" style="background:var(--red-l);color:var(--red)">🩸</div>
+        <div><div class="c-title">Transfusi PRC Neonatus</div><div class="c-sub">Volume & Kecepatan</div></div>
+      </div>
+      <div class="calc-body">
+        <div class="info-box">Volume PRC = (Hb target − Hb aktual) × BB (kg) × 3. Kecepatan: 3–5 mL/kgBB/jam.</div>
+        <div class="inp-row triple">
+          <div class="inp-group"><label class="inp-label">BB (gram)</label><input class="inp" id="tx-wt" type="number" value="1500" oninput="calcTransfusion()"></div>
+          <div class="inp-group"><label class="inp-label">Hb aktual (g/dL)</label><input class="inp" id="tx-hb-actual" type="number" value="8" step="0.5" oninput="calcTransfusion()"></div>
+          <div class="inp-group"><label class="inp-label">Hb target (g/dL)</label><input class="inp" id="tx-hb-target" type="number" value="12" step="0.5" oninput="calcTransfusion()"></div>
+        </div>
+        <button class="calc-btn" style="background:var(--red)" onclick="calcTransfusion()">Hitung Volume Transfusi</button>
+        <div class="result" id="res-tx" style="background:var(--red-l)">
+          <div class="res-grid triple">
+            <div class="res-item"><div class="res-lbl">Volume PRC (mL)</div><div class="res-val big" id="tx-vol"></div></div>
+            <div class="res-item"><div class="res-lbl">Rate 3 mL/kg/jam</div><div class="res-val" id="tx-rate3"></div><div class="res-note" id="tx-dur3">jam</div></div>
+            <div class="res-item"><div class="res-lbl">Rate 5 mL/kg/jam</div><div class="res-val" id="tx-rate5"></div><div class="res-note" id="tx-dur5">jam</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXCHANGE TRANSFUSION -->
+    <div class="calc-card">
+      <div class="calc-card-head">
+        <div class="c-icon" style="background:var(--yellow-l);color:var(--yellow)">🔄</div>
+        <div><div class="c-title">Transfusi Tukar</div><div class="c-sub">Double Volume Exchange Transfusion</div></div>
+      </div>
+      <div class="calc-body">
+        <div class="info-box">Volume transfusi tukar = 2 × volume darah neonatus (80–85 mL/kgBB). Siklus 5–10 mL/kali.</div>
+        <div class="inp-row">
+          <div class="inp-group"><label class="inp-label">BB (gram)</label><input class="inp" id="ext-wt" type="number" value="3000" oninput="calcExchange()"></div>
+          <div class="inp-group"><label class="inp-label">Volume darah (mL/kg)</label>
+            <select class="inp" id="ext-bv" oninput="calcExchange()">
+              <option value="85">85 mL/kg (aterm)</option>
+              <option value="90">90 mL/kg (prematur)</option>
+              <option value="80">80 mL/kg (konservatif)</option>
+            </select>
+          </div>
+        </div>
+        <button class="calc-btn" style="background:var(--yellow);color:#1e293b" onclick="calcExchange()">Hitung Volume</button>
+        <div class="result" id="res-ext" style="background:var(--yellow-l)">
+          <div class="res-grid triple">
+            <div class="res-item"><div class="res-lbl">Total Volume (mL)</div><div class="res-val big" id="ext-total"></div></div>
+            <div class="res-item"><div class="res-lbl">Siklus 5mL/x (n)</div><div class="res-val" id="ext-cycle5"></div><div class="res-note">siklus</div></div>
+            <div class="res-item"><div class="res-lbl">Siklus 10mL/x (n)</div><div class="res-val" id="ext-cycle10"></div><div class="res-note">siklus</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESUSITASI NEONATUS -->
+    <div class="calc-card">
+      <div class="calc-card-head">
+        <div class="c-icon" style="background:var(--purple-l);color:var(--purple)">🚨</div>
+        <div><div class="c-title">Obat Resusitasi Neonatus</div><div class="c-sub">Berdasarkan BB lahir</div></div>
+      </div>
+      <div class="calc-body">
+        <div class="inp-row single">
+          <div class="inp-group"><label class="inp-label">BB (gram)</label><input class="inp" id="res-wt" type="number" value="2000" oninput="calcResus()"></div>
+        </div>
+        <button class="calc-btn" style="background:var(--purple)" onclick="calcResus()">Tampilkan Dosis Resusitasi</button>
+        <div class="result" id="res-resus" style="background:var(--purple-l)">
+          <table class="ref-table" style="font-size:0.75rem">
+            <thead><tr><th>Obat</th><th>Dosis</th><th>Volume</th><th>Rute</th></tr></thead>
+            <tbody id="resus-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═════════════════════ JAVASCRIPT ═════════════════════ -->
+<script>
+// ─── HELPERS ───
+const $= id => document.getElementById(id);
+const getWt = (id='ptWeight') => parseFloat($(id)?.value||0);
+const getKg = id => getWt(id)/1000;
+const round2 = n => Math.round(n*100)/100;
+const round1 = n => Math.round(n*10)/10;
+const round0 = n => Math.round(n);
+
+function showResult(id, show=true) {
+  const el = $(id);
+  if(el) el.classList.toggle('show', show);
+}
+
+function syncAll() {
+  const wt = getWt('ptWeight');
+  const ga = parseFloat($('ptGA').value)||30;
+  const age = parseFloat($('ptAge').value)||0;
+
+  // category badge
+  let cat = '';
+  if(wt < 1000) cat = 'ELBW · Prematur Ekstrem';
+  else if(wt < 1500) cat = 'VLBW · Sangat Prematur';
+  else if(wt < 2500) cat = 'LBW · Prematur';
+  else if(wt < 4000) cat = 'Normal';
+  else cat = 'Makrosomia';
+  $('ptCategory').textContent = cat;
+
+  // PMA
+  const pmaW = ga + age/7;
+  $('ptPMA').textContent = `PMA: ${Math.floor(pmaW)}+${Math.round((pmaW%1)*7)} mgg`;
+
+  // sync inputs
+  const syncMap = {
+    'ptWeight':['caf-wt','surf-wt','abx-wt','ino-wt','pb-wt','vitk-wt','fl-wt','gir-wt','tpn-wt','elec-wt','vt-wt','ett-wt','bil-wt','na-wt','hco-wt','nut-wt','ef-wt','pma-ga','tx-wt','ext-wt','res-wt','agd-ga','tv-wt'],
+    'ptGA':['abx-ga','vitk-ga','fl-ga','vt-ga','ett-ga','bil-ga','ef-ga'],
+    'ptAge':['abx-age','fl-age','tpn-age','elec-age','bil-age','nut-age']
+  };
+  Object.entries(syncMap).forEach(([src,dests])=>{
+    const v = $(src)?.value;
+    if(v) dests.forEach(d=>{const el=$(d); if(el && document.activeElement!==el) el.value=v;});
+  });
+}
+
+// ─── TAB SYSTEM ───
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  $('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ─── CAFFEINE ───
+function calcCaffeine() {
+  const wt = getKg('caf-wt');
+  const maint = parseFloat($('caf-dose').value)||5;
+  const loadMg = round1(20*wt);
+  const maintMg = round1(maint*wt);
+  $('caf-load-mg').textContent = loadMg+' mg';
+  $('caf-load-ml').textContent = `${round2(loadMg/20)} mL (20mg/mL)`;
+  $('caf-main-mg').textContent = maintMg+' mg';
+  $('caf-main-ml').textContent = `${round2(maintMg/20)} mL (20mg/mL)`;
+  showResult('res-caf');
+}
+
+// ─── SURFAKTAN ───
+function calcSurf() {
+  const wt = getKg('surf-wt');
+  const type = $('surf-type').value;
+  let doseMgKg, conc, name;
+  if(type==='curosurf1'){ doseMgKg=200; conc=80; name='Curosurf'; }
+  else if(type==='curosurf2'){ doseMgKg=100; conc=80; name='Curosurf'; }
+  else { doseMgKg=100; conc=25; name='Beractant'; }
+  const mg = round0(doseMgKg*wt);
+  const vol = round2(mg/conc);
+  $('surf-mg').textContent = mg+' mg';
+  $('surf-vol').textContent = vol+' mL';
+  $('surf-note').textContent = `Konsentrasi: ${conc} mg/mL (${name})`;
+  showResult('res-surf');
+}
+
+// ─── ANTIBIOTIK ───
+function calcAbx() {
+  const wt = getKg('abx-wt');
+  const ga = parseFloat($('abx-ga').value)||30;
+  const age = parseFloat($('abx-age').value)||0;
+  const drug = $('abx-drug').value;
+  const indication = $('abx-indication').value;
+
+  const isNeonate = age<=28;
+  const isPremature = ga<37;
+  const isEarlyOnset = age<=7;
+
+  let dosePerKg, conc, concUnit, freq, notes;
+
+  const abxData = {
+    ampicillin: {
+      dose: indication==='meningitis' ? (isPremature?75:75) : 50,
+      extra: indication==='meningitis' ? 50 : 0,
+      conc: 100, concUnit:'mg/mL',
+      freq: ga<30 ? (age<=7?'q12h':'q8h') : (age<=7?'q12h':'q8h'),
+      note:'Encerkan 100mg/mL. Meningitis: 75-100mg/kg/dosis'
+    },
+    gentamicin: {
+      dose: ga<30 ? 5 : (ga<34 ? 5 : 5),
+      conc: 10, concUnit:'mg/mL',
+      freq: ga<30 ? 'q48h' : (ga<34 ? 'q36h' : (age<=7?'q36h':'q24h')),
+      note:'Monitor trough <1 mcg/mL. Hidrasi adekuat'
+    },
+    cefotaxime: {
+      dose: indication==='meningitis' ? 100 : 50,
+      conc: 100, concUnit:'mg/mL',
+      freq: age<=7 ? 'q12h' : 'q8h',
+      note:'Pilihan aman untuk neonatus. Tidak campur Ca'
+    },
+    'penicillin-g': {
+      dose: 50000, // unit/kg
+      conc: 50000, concUnit:'unit/mL',
+      freq: ga<30?'q12h':(age<=7?'q12h':'q8h'),
+      note:'Unit/kg. Sifilis kongenital: 50.000 unit/kg/dosis q12h x 10-14 hari'
+    },
+    vancomycin: {
+      dose: 15,
+      conc: 5, concUnit:'mg/mL',
+      freq: ga<30 ? 'q18-24h' : (ga<36 ? 'q12h' : (age<=7?'q12h':'q8h')),
+      note:'Infus ≥60 mnt. Monitor trough 10-15 mcg/mL. Sesuaikan GFR'
+    },
+    metronidazole: {
+      dose: 7.5,
+      conc: 5, concUnit:'mg/mL',
+      freq: ga<30 ? 'q48h' : (age<=7?'q24h':'q12h'),
+      note:'NEC, infeksi anaerob. Infus 30 mnt'
+    },
+    acyclovir: {
+      dose: indication==='meningitis' ? 20 : 20,
+      conc: 50, concUnit:'mg/mL',
+      freq: 'q8h x 14-21 hari',
+      note:'Herpes neonatus: 20mg/kg/dosis q8h. Hidrasi adekuat'
+    },
+    fluconazole: {
+      dose: 6,
+      conc: 2, concUnit:'mg/mL',
+      freq: ga<30 ? 'q72h' : (age<=14?'q48h':'q24h'),
+      note:'Profilaksis Kandida: 3-6mg/kg. Antifungal empiris'
+    }
+  };
+
+  const data = abxData[drug] || abxData.ampicillin;
+  const dose = data.dose;
+  const mg = round1(dose * wt);
+  const vol = round2(mg / data.conc);
+
+  $('abx-dose-mg').textContent = `${mg} ${drug==='penicillin-g'?'unit':'mg'}`;
+  $('abx-dose-vol').textContent = `${vol} mL`;
+  $('abx-dose-note').textContent = `Konsentrasi: ${data.concUnit}`;
+  $('abx-freq').innerHTML = `<strong>Frekuensi:</strong> ${data.freq}<br><strong>Info:</strong> ${data.note}`;
+  showResult('res-abx');
+}
+
+// ─── INOTROPIK ───
+function calcIno() {
+  const wt = getKg('ino-wt');
+  const dose = parseFloat($('ino-dose').value)||5;
+  const vol = parseFloat($('ino-vol').value)||50;
+  const drug = $('ino-drug').value;
+  const concMg = {dopamine:200, dobutamine:250, epinephrine:1, norepinephrine:4};
+  const concUnit = {dopamine:'mg/mL×1000', dobutamine:'mg/mL×1000', epinephrine:'mg/mL', norepinephrine:'mg/mL'};
+  const rateOf1 = dose * wt * 6 / vol;
+  const drugMg = round2(dose * wt * 6);
+  const rate = round2(rateOf1 * (dose/dose)); // = dose mcg/kg/mnt
+  const finalRate = round2(dose * wt * 6 / vol);
+  const concActual = round2(drugMg / vol);
+
+  $('ino-drug-mg').textContent = `${drugMg} mg`;
+  $('ino-rate').textContent = `${finalRate} mL/jam`;
+  $('ino-conc').textContent = `${concActual} mg/mL`;
+
+  const ranges = {dopamine:'Low: 1-5 (renal)\nMid: 5-10 (inotrop)\nHigh: >10 (vasokonstr)',
+                  dobutamine:'Inotrop: 5-20 mcg/kg/mnt\nKronotrop lemah',
+                  epinephrine:'Low: 0.05-0.1 (β)\nHigh: >0.3 (α+β)',
+                  norepinephrine:'0.05-2 mcg/kg/mnt\nVasopresor'};
+  $('ino-range').textContent = `${drugMg} mg dalam ${vol}mL D5%`;
+  showResult('res-ino');
+}
+
+// ─── PHENOBARBITAL ───
+function calcPhenob() {
+  const wt = getKg('pb-wt');
+  const loadMg = round0(20*wt);
+  const loadVol = round2(loadMg/200);
+  const m3Mg = round1(3*wt); const m3Vol = round2(m3Mg/200);
+  const m5Mg = round1(5*wt); const m5Vol = round2(m5Mg/200);
+  $('pb-load-mg').textContent = loadMg+' mg';
+  $('pb-load-vol').textContent = `${loadVol} mL (200mg/mL)`;
+  $('pb-m3-mg').textContent = m3Mg+' mg';
+  $('pb-m3-vol').textContent = `${m3Vol} mL`;
+  $('pb-m5-mg').textContent = m5Mg+' mg';
+  $('pb-m5-vol').textContent = `${m5Vol} mL`;
+  showResult('res-pb');
+}
+
+// ─── VIT K ───
+function calcVitK() {
+  const wt = getWt('vitk-wt');
+  const ga = parseFloat($('vitk-ga').value)||35;
+  let vitk, hb, eye, bcg;
+  if(wt >= 1500) { vitk = '1 mg IM (paha lat)'; }
+  else if(wt >= 1000) { vitk = '0.5 mg IM'; }
+  else { vitk = '0.5 mg IM (hati-hati IM)'; }
+  $('vitk-result').innerHTML = `
+    <strong>💛 Vitamin K:</strong> ${vitk}<br>
+    <strong>💉 Hepatitis B (HB0):</strong> 0.5 mL IM dalam 12 jam lahir + HBIG (bila ibu HBsAg+)<br>
+    <strong>👁️ Salep Mata:</strong> Tetrasiklin 1% atau eritromisin 0.5% kedua mata<br>
+    <strong>💉 BCG:</strong> 0.05 mL ID deltoid kiri — bila BB ≥ 2000g dan klinis stabil<br>
+    <strong>🩸 Polio:</strong> 2 tetes oral (bila stabil)<br>
+    ${ga<34?'<span style="color:#d97706">⚠️ Prematur <34 mgg: BCG dan Polio ditunda sampai klinis stabil</span>':''}
+  `;
+  showResult('res-vitk');
+}
+
+// ─── CAIRAN ───
+function calcFluid() {
+  const wt = getKg('fl-wt');
+  const ga = parseFloat($('fl-ga').value)||30;
+  const age = parseFloat($('fl-age').value)||1;
+  const need = parseFloat($('fl-need').value)||80;
+  const enteral = parseFloat($('fl-enteral').value)||0;
+  const totalHr = round2((need * wt)/24);
+  const ivHr = round2(totalHr - enteral/24);
+  const rate = round2(ivHr);
+  $('fl-total-ml').textContent = totalHr+' mL/jam';
+  $('fl-iv-ml').textContent = Math.max(0,ivHr)+' mL/jam';
+  $('fl-rate').textContent = Math.max(0,rate)+' mL/jam';
+  let warn = '';
+  if(age<=2 && need>100) warn='<div class="res-warn">⚠️ Hari 1-2: target TFI 60-80 mL/kg/hr. Naikkan bertahap.</div>';
+  if(ga<30 && need>160) warn='<div class="res-warn">⚠️ Kehilangan air transepidermal tinggi pada prematur ekstrem. Pertimbangkan humidifikasi inkubator.</div>';
+  $('fl-warn').innerHTML = warn;
+  showResult('res-fluid');
+}
+
+// ─── GIR ───
+function calcGIR() {
+  const wt = getKg('gir-wt');
+  const conc = parseFloat($('gir-conc').value)||10;
+  const rate = parseFloat($('gir-rate').value)||6;
+  const gir = round2((conc * rate) / (wt * 6));
+  $('gir-actual').textContent = gir+' mg/kg/mnt';
+  let status = gir < 4 ? '🔴 Terlalu rendah' : gir > 12 ? '🔴 Terlalu tinggi' : gir > 8 ? '🟡 Batas atas' : '🟢 Normal';
+  $('gir-status').textContent = status;
+  if($('gir-target').value) {
+    const target = parseFloat($('gir-target').value)||6;
+    const neededRate = round2((target * wt * 6) / conc);
+    $('gir-needed-rate').textContent = neededRate+' mL/jam';
+  }
+  let warn = gir>12 ? '<div class="res-warn">⚠️ GIR >12 mg/kg/mnt → risiko hiperglikemia dan lipogenesis. Kurangi konsentrasi atau rate.</div>' :
+             gir<4 ? '<div class="res-warn">⚠️ GIR <4 mg/kg/mnt → risiko hipoglikemia. Naikkan konsentrasi atau rate.</div>' : '';
+  $('gir-warn').innerHTML = warn;
+  showResult('res-gir');
+}
+
+function calcGIRinverse() {
+  const wt = getKg('gir-wt');
+  const conc = parseFloat($('gir-conc').value)||10;
+  const target = parseFloat($('gir-target').value)||6;
+  const neededRate = round2((target * wt * 6) / conc);
+  const gir = round2((conc * neededRate) / (wt * 6));
+  $('gir-needed-rate').textContent = neededRate+' mL/jam';
+  $('gir-actual').textContent = gir+' mg/kg/mnt';
+  $('gir-status').textContent = '→ Rate untuk target';
+  showResult('res-gir');
+}
+
+// ─── TPN ───
+function calcTPN() {
+  const wt = getKg('tpn-wt');
+  const age = parseFloat($('tpn-age').value)||1;
+  const tfi = parseFloat($('tpn-tfi').value)||80;
+  const ent = parseFloat($('tpn-ent').value)||0;
+  const girT = parseFloat($('tpn-gir').value)||6;
+  const pro = parseFloat($('tpn-pro').value)||2;
+  const lip = parseFloat($('tpn-lip').value)||1;
+  const glu = parseFloat($('tpn-glu').value)||10;
+  const totalHr = (tfi*wt)/24;
+  const entHr = (ent*wt)/24;
+  const ivRate = Math.max(0, totalHr - entHr);
+  const girAct = round2((glu * ivRate) / (wt * 6));
+  const proG = round2(pro * wt);
+  const lipMl = round2((lip * wt) / 0.2); // 20% lipid = 0.2g/mL
+  const calGlu = round1(girAct * 0.0057 * wt * 1440); // kcal/day → per kg
+  const calPro = round1(pro * 4);
+  const calLip = round1(lip * 10);
+  const calTotal = round1(calGlu + calPro + calLip);
+  $('tpn-iv-rate').textContent = round2(ivRate)+' mL/jam';
+  $('tpn-gir-act').textContent = girAct+' mg/kg/mnt';
+  $('tpn-cal').textContent = calTotal;
+  $('tpn-pro-g').textContent = proG+' g/hr';
+  $('tpn-lip-ml').textContent = round2(lip*wt/5)+' mL/jam';
+  $('tpn-npc').textContent = round1(calGlu + calLip);
+  showResult('res-tpn');
+}
+
+// ─── ELEKTROLIT ───
+function calcElec() {
+  const wt = getKg('elec-wt');
+  const age = parseFloat($('elec-age').value)||1;
+  const isEarly = age <= 3;
+  const data = [
+    {e:'Natrium (Na)', req: age<=2?'0 (ditunda <48j)':'2-4 mEq/kg/hr', perkg: age<=2?0:3, conc:'NaCl 0.9% = 0.154 mEq/mL', unit:'mEq/hr'},
+    {e:'Kalium (K)', req: age<=2?'0 (tunda <48j)':'1-3 mEq/kg/hr', perkg: age<=2?0:2, conc:'KCl 7.46% = 1 mEq/mL', unit:'mEq/hr'},
+    {e:'Kalsium (Ca)', req:'1.5-2.5 mmol/kg/hr', perkg:2, conc:'CaGluk 10% = 0.45 mEq/mL', unit:'mmol/hr'},
+    {e:'Fosfor (P)', req:'1.5-2 mmol/kg/hr', perkg:1.5, conc:'Na fosfat = 1 mmol/mL', unit:'mmol/hr'},
+    {e:'Magnesium (Mg)', req:'0.15-0.25 mmol/kg/hr', perkg:0.2, conc:'MgSO4 20% = 0.8 mmol/mL', unit:'mmol/hr'},
+  ];
+  const tbody = $('elec-tbody');
+  tbody.innerHTML = data.map(d=>
+    `<tr><td><strong>${d.e}</strong></td><td>${d.req}</td><td>${d.perkg>0?round2(d.perkg*wt)+' '+d.unit:'—'}</td><td style="font-size:0.7rem;color:var(--muted)">${d.conc}</td></tr>`
+  ).join('');
+  showResult('res-elec');
+}
+
+// ─── VENTILATOR ───
+function calcVent() {
+  const wt = getKg('vt-wt');
+  const ga = parseFloat($('vt-ga').value)||30;
+  const dx = $('vt-dx').value;
+  const settings = {
+    hmd: {mode:'SIMV+PS',rr:'40-60',pip:'18-24',peep:'5-6',fio2:'0.40-0.80',ti:'0.30-0.35',map:'8-12',vt:'4-5',note:'Surfaktan segera bila RDS terkonfirmasi. Turunkan PIP segera setelah compliance membaik pasca surfaktan. Target PaCO₂ 45-55 mmHg.'},
+    apnea: {mode:'NCPAP/SIMV',rr:'20-30',pip:'14-18',peep:'4-5',fio2:'0.21-0.30',ti:'0.30-0.35',map:'6-8',vt:'4-5',note:'Kafein sitrat loading 20 mg/kg. Backup rate rendah. Mode non-invasif lebih dipilih. Target PaCO₂ 45-55 mmHg.'},
+    mec: {mode:'SIMV/A-C',rr:'40-60',pip:'20-26',peep:'4-5',fio2:'0.50-1.0',ti:'0.30-0.40',map:'10-14',vt:'5-6',note:'HATI-HATI air trapping (PEEP rendah). Pertimbangkan iNO bila PPHN. Suction ETT hati-hati.'},
+    pphn: {mode:'A-C PC/HFOV',rr:'50-70',pip:'20-24',peep:'4-5',fio2:'0.80-1.0',ti:'0.30-0.40',map:'10-14',vt:'4-6',note:'Hiperventilasi relatif (PaCO₂ 35-45). Hindari hipoksemia. iNO 20 ppm bila tersedia. ECMO bila refrakter.'},
+    pneumonia: {mode:'SIMV/A-C',rr:'40-60',pip:'18-24',peep:'5-6',fio2:'0.40-0.80',ti:'0.30-0.40',map:'9-12',vt:'4-6',note:'Antibiotik empiris segera. Setting mirip HMD. Waspada PPHN sekunder.'},
+    'post-op': {mode:'SIMV',rr:'30-40',pip:'16-20',peep:'4-5',fio2:'0.30-0.50',ti:'0.30-0.35',map:'7-9',vt:'4-5',note:'Sedasi adekuat. Weaning bertahap. Target ekstubasi setelah fungsi neurologi stabil.'}
+  };
+  const s = settings[dx]||settings.hmd;
+  const minTV = round1(4*wt*1000);
+  const maxTV = round1(6*wt*1000);
+
+  const params = [
+    {l:'Mode',v:s.mode},{l:'Rate (x/mnt)',v:s.rr},{l:'PIP (cmH₂O)',v:s.pip},
+    {l:'PEEP (cmH₂O)',v:s.peep},{l:'FiO₂',v:s.fio2},{l:'Ti (detik)',v:s.ti},
+    {l:'MAP target',v:s.map},{l:`VT target (${wt>0?round1(4*wt)+'-'+round1(6*wt)+' mL':'-'})`,v:s.vt+' mL/kg'}
+  ];
+
+  $('vent-params').innerHTML = params.map(p=>
+    `<div class="res-item"><div class="res-lbl">${p.l}</div><div class="res-val" style="font-size:0.95rem">${p.v}</div></div>`
+  ).join('');
+  $('vent-notes').innerHTML = `<div style="background:rgba(255,255,255,0.4);border-radius:6px;padding:0.6rem 0.8rem;border:1px solid rgba(0,0,0,0.05)"><strong>📝 Catatan:</strong> ${s.note}</div>`;
+  showResult('res-vent');
+}
+
+// ─── TIDAL VOLUME ───
+function calcTV() {
+  const wt = getKg('tv-wt');
+  const measured = parseFloat($('tv-measured').value)||5;
+  const perKg = round2(measured/wt);
+  $('tv-per-kg').textContent = perKg+' mL/kg';
+  $('tv-min').textContent = round1(4*wt)+' mL';
+  $('tv-mid').textContent = round1(5*wt)+' mL';
+  $('tv-max').textContent = round1(6*wt)+' mL';
+  let status, note;
+  if(perKg<4){ status='<span class="status-warn">⬇ Terlalu Kecil</span>'; note='Naikkan PIP atau pertimbangkan PEEP';}
+  else if(perKg>6){ status='<span class="status-danger">⬆ Terlalu Besar</span>'; note='Turunkan PIP/PC untuk cegah volutrauma';}
+  else{ status='<span class="status-ok">✓ Optimal</span>'; note='Pertahankan setting saat ini';}
+  $('tv-status').innerHTML = status;
+  $('tv-note').textContent = note;
+  showResult('res-tv');
+}
+
+// ─── OI ───
+function calcOI() {
+  const map = parseFloat($('oi-map').value)||10;
+  const fio2 = parseFloat($('oi-fio2').value)||0.6;
+  const pao2 = parseFloat($('oi-pao2').value)||60;
+  const oi = round1((map * fio2 * 100) / pao2);
+  $('oi-result').textContent = oi;
+  let interp, note;
+  if(oi<10){ interp='<span class="status-ok">Ringan</span>'; note='Konvensional adekuat. Weaning bila stabil.';}
+  else if(oi<20){ interp='<span class="status-warn">Sedang</span>'; note='Optimalkan setting. Pertimbangkan surfaktan ulang.';}
+  else if(oi<25){ interp='<span class="status-warn">Berat</span>'; note='Pertimbangkan HFOV.';}
+  else if(oi<40){ interp='<span class="status-danger">Sangat Berat</span>'; note='HFOV + iNO. Konsul rujukan ECMO.';}
+  else{ interp='<span class="status-danger">Ekstrem</span>'; note='Kriteria ECMO (OI >40). Segera konsul.';}
+  $('oi-interp').innerHTML = interp;
+  $('oi-note').textContent = note;
+  showResult('res-oi');
+}
+
+// ─── ETT ───
+function calcETT() {
+  const wt = getWt('ett-wt');
+  const ga = parseFloat($('ett-ga').value)||30;
+  let size, depth;
+  if(wt < 750){ size='2.0'; depth = round1(5.5+wt/1000*0.5); }
+  else if(wt < 1000){ size='2.5'; depth = round1(6.0+wt/1000*0.5); }
+  else if(wt < 2000){ size='2.5'; depth = round1(6.5+wt/1000*0.5); }
+  else if(wt < 3000){ size='3.0'; depth = round1(7.5+wt/1000*0.5); }
+  else if(wt < 4000){ size='3.5'; depth = round1(8.0+wt/1000*0.5); }
+  else { size='3.5-4.0'; depth = round1(9.0); }
+  const bibir = round1(wt/1000 + 6);
+  const nares = round1(bibir + 1.5);
+  $('ett-size').textContent = size+' mm';
+  $('ett-depth').textContent = bibir+' cm';
+  $('ett-nares').textContent = nares+' cm';
+  $('ett-note').textContent = `Rumus: Kedalaman bibir ≈ BB(kg) + 6 cm. Konfirmasi dengan X-ray (0.5-1 cm di atas carina).`;
+  showResult('res-ett');
+}
+
+// ─── APGAR ───
+function calcApgar() {
+  let total = 0;
+  for(let i=0;i<5;i++) total += parseInt($(`apgar-${i}`)?.value||0);
+  $('apgar-score').textContent = total;
+  let interp, action;
+  if(total>=7){ interp='<span class="status-ok">Normal (7–10)</span>'; action='Perawatan rutin. Kontak kulit ibu.';}
+  else if(total>=4){ interp='<span class="status-warn">Depresi Sedang (4–6)</span>'; action='VTP, O₂ aliran bebas. Pantau ketat.';}
+  else{ interp='<span class="status-danger">Depresi Berat (0–3)</span>'; action='VTP aktif, kompresi dada bila HR <60. Siapkan intubasi.';}
+  $('apgar-interp').innerHTML = interp;
+  $('apgar-action').textContent = action;
+  showResult('res-apgar');
+}
+
+// ─── BALLARD ───
+function calcBallard() {
+  const neuro = parseInt($('bal-neuro').value)||0;
+  const phys = parseInt($('bal-phys').value)||0;
+  const total = neuro+phys;
+  $('bal-total').textContent = total;
+  const gaMap = [[-10,20],[-5,22],[0,24],[5,26],[10,28],[15,30],[20,32],[25,34],[30,36],[35,38],[40,40],[45,42],[50,44]];
+  let ga = 24;
+  for(let [score, weeks] of gaMap) { if(total >= score) ga = weeks; }
+  $('bal-ga').textContent = ga;
+  showResult('res-ballard');
+}
+
+// ─── SILVERMAN ───
+function calcSA() {
+  let total = 0;
+  for(let i=0;i<5;i++) total += parseInt($(`sa-${i}`)?.value||0);
+  $('sa-score').textContent = total;
+  let interp, action;
+  if(total===0){ interp='<span class="status-ok">Normal</span>'; action='Tidak ada distres napas';}
+  else if(total<=3){ interp='<span class="status-warn">Ringan (1–3)</span>'; action='Pantau, O₂ bila SpO₂ <90%';}
+  else if(total<=6){ interp='<span class="status-warn">Sedang (4–6)</span>'; action='CPAP, evaluasi foto thoraks';}
+  else{ interp='<span class="status-danger">Berat (7–10)</span>'; action='Intubasi dan ventilasi mekanik';}
+  $('sa-interp').innerHTML = interp;
+  $('sa-action').textContent = action;
+  showResult('res-sa');
+}
+
+// ─── BILIRUBIN ───
+function calcBil() {
+  const wt = getWt('bil-wt');
+  const ga = parseFloat($('bil-ga').value)||34;
+  const ageH = parseFloat($('bil-age').value)||48;
+  const bil = parseFloat($('bil-val').value)||10;
+  const risk = $('bil-risk').value;
+  // Simplified AAP thresholds for near-term/term infants
+  const thresholds = {
+    low: {photo:[{h:24,v:12},{h:48,v:15},{h:72,v:18},{h:96,v:20},{h:120,v:21}], exchange:[{h:24,v:15},{h:48,v:20},{h:72,v:25},{h:96,v:25}]},
+    med: {photo:[{h:24,v:10},{h:48,v:13},{h:72,v:15},{h:96,v:17},{h:120,v:18}], exchange:[{h:24,v:13},{h:48,v:18},{h:72,v:22},{h:96,v:22}]},
+    high:{photo:[{h:24,v:8},{h:48,v:11},{h:72,v:13},{h:96,v:14},{h:120,v:15}], exchange:[{h:24,v:11},{h:48,v:16},{h:72,v:19},{h:96,v:20}]}
+  };
+  const th = thresholds[risk];
+  let photoTh = th.photo[th.photo.length-1].v;
+  let exchangeTh = th.exchange[th.exchange.length-1].v;
+  for(let p of th.photo){ if(ageH<=p.h){ photoTh=p.v; break; }}
+  for(let p of th.exchange){ if(ageH<=p.h){ exchangeTh=p.v; break; }}
+
+  let rec, color;
+  if(bil>=exchangeTh){ rec='🔴 TRANSFUSI TUKAR segera'; color='#dc2626'; }
+  else if(bil>=photoTh){ rec='🟡 Mulai FOTOTERAPI segera'; color='#d97706'; }
+  else if(bil>=(photoTh-2)){ rec='🟠 Pantau ketat, siapkan fototerapi'; color='#ea580c'; }
+  else{ rec='🟢 Observasi, pantau bilirubin serial'; color='#16a34a'; }
+
+  $('bil-result').innerHTML = `
+    <strong style="color:${color}">${rec}</strong><br>
+    Bilirubin aktual: <strong>${bil} mg/dL</strong> pada usia ${ageH} jam<br>
+    Threshold fototerapi (${risk} risk): <strong>${photoTh} mg/dL</strong><br>
+    Threshold transfusi tukar: <strong>${exchangeTh} mg/dL</strong><br>
+    GA: ${ga} minggu | BB: ${wt}g
+    ${ga<35?'<br><span style="color:#d97706">⚠️ Prematur <35 mgg: threshold lebih rendah, gunakan panduan NICU setempat</span>':''}
+  `;
+  $('res-bil').style.background = bil>=exchangeTh?'var(--red-l)':bil>=photoTh?'var(--yellow-l)':'var(--green-l)';
+  showResult('res-bil');
+}
+
+// ─── AGD ───
+function calcAGD() {
+  const pH = parseFloat($('agd-ph').value)||7.35;
+  const co2 = parseFloat($('agd-co2').value)||45;
+  const po2 = parseFloat($('agd-po2').value)||65;
+  const hco3 = parseFloat($('agd-hco3').value)||22;
+  const be = parseFloat($('agd-be').value)||0;
+  const spo2 = parseFloat($('agd-spo2').value)||95;
+  const fio2 = parseFloat($('agd-fio2').value)||0.21;
+  const ga = parseFloat($('agd-ga').value)||30;
+
+  // Interpretation
+  const isAcidosis = pH < 7.30;
+  const isAlkalosis = pH > 7.45;
+  const isRespAcid = co2 > 50;
+  const isRespAlk = co2 < 35;
+  const isMetAcid = hco3 < 18 || be < -5;
+  const isMetAlk = hco3 > 28 || be > 5;
+  const isHypox = po2 < 50;
+  const isHiperox = po2 > 80;
+
+  let primary = '', comp = '', oxy = '', ventRec = '';
+
+  if(isAcidosis) {
+    if(isRespAcid && !isMetAcid) primary = '🔴 Asidosis Respiratorik Akut — ↑CO₂, ↓pH';
+    else if(isMetAcid && !isRespAcid) primary = '🟠 Asidosis Metabolik — ↓HCO₃, ↓pH';
+    else if(isRespAcid && isMetAcid) primary = '🔴 Asidosis CAMPURAN (Resp + Met) — Kritis!';
+    else primary = '🟡 Asidosis (campuran ringan)';
+  } else if(isAlkalosis) {
+    if(isRespAlk && !isMetAlk) primary = '🟡 Alkalosis Respiratorik — ↓CO₂, ↑pH — Hiperventilasi?';
+    else if(isMetAlk && !isRespAlk) primary = '🟡 Alkalosis Metabolik — ↑HCO₃';
+    else primary = '🟡 Alkalosis campuran';
+  } else { primary = '🟢 pH Normal (7.30–7.45)'; }
+
+  if(co2>50 && hco3>24) comp = 'Kompensasi metabolik (↑HCO₃) ada';
+  else if(co2<35 && hco3<22) comp = 'Kompensasi respiratorik (↓CO₂) ada';
+  else comp = 'Kompensasi tidak tampak / akut';
+
+  if(isHypox) oxy = `🔴 Hipoksemia berat (PaO₂ ${po2} mmHg). Naikkan FiO₂/PEEP/MAP.`;
+  else if(po2<60) oxy = `🟡 Hipoksemia ringan-sedang (PaO₂ ${po2} mmHg).`;
+  else if(isHiperox && ga<34) oxy = `⚠️ Hiperoksemia pada prematur (PaO₂ ${po2} mmHg) → Turunkan FiO₂! Risiko ROP.`;
+  else oxy = `🟢 Oksigenasi adekuat (PaO₂ ${po2} mmHg, SpO₂ ${spo2}%)`;
+
+  if(co2>60) ventRec = '→ Naikkan RR atau PIP untuk blow off CO₂';
+  else if(co2<30) ventRec = '→ Turunkan RR atau pertahankan — waspada alkalosis';
+  else ventRec = '→ Ventilasi adekuat';
+
+  $('agd-result').innerHTML = `
+    <strong>${primary}</strong><br>
+    Kompensasi: ${comp}<br>
+    Oksigenasi: ${oxy}<br>
+    Rekomendasi ventilasi: ${ventRec}<br>
+    <hr style="margin:0.5rem 0;border-color:rgba(0,0,0,0.1)">
+    pH: <strong>${pH}</strong> | PaCO₂: <strong>${co2}</strong> | HCO₃⁻: <strong>${hco3}</strong> | BE: <strong>${be}</strong> | FiO₂: <strong>${fio2}</strong>
+  `;
+  $('res-agd').style.background = isAcidosis&&isRespAcid?'var(--red-l)':isAcidosis?'var(--orange-l)':isAlkalosis?'var(--yellow-l)':'var(--green-l)';
+  showResult('res-agd');
+}
+
+// ─── SODIUM ───
+function calcNa() {
+  const wt = getKg('na-wt');
+  const actual = parseFloat($('na-actual').value)||125;
+  const target = parseFloat($('na-target').value)||135;
+  const deficit = round2(0.6 * wt * (target - actual));
+  const nacl3 = round2(deficit / 0.51);
+  const maxRate = round2(8 * wt / 24); // 8 mEq/kg/day / 24h = mEq/hour
+  const maxRateML = round2(maxRate / 0.51);
+  $('na-deficit').textContent = deficit+' mEq';
+  $('na-nacl3').textContent = nacl3+' mL';
+  $('na-rate').textContent = maxRateML+' mL/jam';
+  $('na-rate-note').textContent = 'maks koreksi 8 mEq/L/hari';
+  const warn = actual < 120 ? '<div class="res-warn">⚠️ Hiponatremia berat (<120 mEq/L). Koreksi akut simtomatik: 1-2 mEq/kg NaCl 3% IV perlahan.</div>' :
+               actual > 150 ? '<div class="res-warn">⚠️ Hipernatremia. Koreksi perlahan: turunkan 0.5-1 mEq/L/jam. Gunakan hipotonik.</div>' : '';
+  $('na-warn').innerHTML = warn;
+  showResult('res-na');
+}
+
+// ─── HCO3 ───
+function calcHCO() {
+  const wt = getKg('hco-wt');
+  const actual = parseFloat($('hco-actual').value)||14;
+  const target = parseFloat($('hco-target').value)||20;
+  const total = round2(0.3 * wt * (target - actual));
+  const half = round2(total / 2);
+  $('hco-total').textContent = total+' mEq';
+  $('hco-half').textContent = half+' mEq';
+  $('hco-vol84').textContent = total+' mL (8.4%)';
+  showResult('res-hco');
+}
+
+// ─── NUTRITION ───
+function calcNutrition() {
+  const wt = getKg('nut-wt');
+  const age = parseFloat($('nut-age').value)||7;
+  const type = $('nut-type').value;
+  const cal = parseFloat($('nut-cal').value)||110;
+  const proTarget = wt < 1 ? 3.5 : wt < 1.5 ? 3.5 : 3;
+  const lipTarget = age <= 3 ? 1 : age <= 7 ? 2 : 3;
+  const girTarget = age <= 1 ? 4 : age <= 3 ? 6 : 8;
+  $('nut-result').innerHTML = `
+    <strong>Target Nutrisi untuk ${wt*1000}g (usia ${age} hari):</strong><br>
+    🔥 Kalori: <strong>${cal} kcal/kg/hr</strong> → ${round0(cal*wt)} kcal/hari<br>
+    🥩 Protein: <strong>${proTarget} g/kg/hr</strong> → ${round1(proTarget*wt)} g/hari<br>
+    🫙 Lipid: <strong>${lipTarget} g/kg/hr</strong> (naikkan bertahap) → ${round1(lipTarget*wt)} g/hari<br>
+    🍬 GIR: <strong>${girTarget} mg/kg/mnt</strong> target<br>
+    ${type==='enteral'?'🥛 Enteral: Mulai trofik 10-20 mL/kg/hr, naikkan 10-20 mL/kg/hari':''}
+    ${type==='parenteral'?'💉 Parenteral: Mulai aminoasid hari 1, lipid hari 1-3':''}
+    ${wt<0.75?'⚠️ ELBW: Protein awal 2-3 g/kg, naikkan 0.5 g/kg/hari':''}
+  `;
+  showResult('res-nut');
+}
+
+// ─── ENTERAL FEED ───
+function calcEnteralFeed() {
+  const wt = getWt('ef-wt');
+  const ga = parseFloat($('ef-ga').value)||28;
+  const isPremature = ga < 34;
+  const isELBW = wt < 1000;
+  const isVLBW = wt < 1500;
+  $('ef-result').innerHTML = `
+    <strong>Panduan Enteral Feeding ${wt}g GA ${ga} mgg:</strong><br>
+    ${isELBW?'🟡 ELBW (<1000g): Trofik 10-20 mL/kg/hr (kolostrum/ASI), hari 1-2':''}
+    ${isVLBW&&!isELBW?'📌 VLBW (1000-1499g): Mulai 20 mL/kg/hr, naikkan bertahap':''}
+    ${!isVLBW&&isPremature?'📌 Prematur (1500-2499g): Mulai 30-40 mL/kg/hr':''}
+    📈 Kenaikan volume: <strong>${isELBW?10:20} mL/kg/hari</strong><br>
+    🎯 Target penuh: <strong>150-160 mL/kg/hr</strong><br>
+    🥛 ASI preferensi utama. Fortifikasi HMF bila >100 mL/kg/hr<br>
+    ⏰ Feeding NGT ${isELBW?'bolus tiap 2-3 jam':'bolus tiap 3 jam (aterm: tiap 2-3 jam)'}<br>
+    🚫 Tunda feeding bila: distensi abdomen, muntah hijau, darah di feses, ketidakstabilan hemodinamik
+  `;
+  showResult('res-ef');
+}
+
+// ─── PMA ───
+function calcPMA() {
+  const ga = parseFloat($('pma-ga').value)||28;
+  const days = parseFloat($('pma-days').value)||0;
+  const weeks = parseFloat($('pma-weeks').value)||0;
+  const totalWeeks = ga + days/7 + weeks;
+  const pma = round1(totalWeeks);
+  const correctedMonths = Math.max(0, round1((totalWeeks-40)*0.23));
+  $('pma-result').textContent = `${Math.floor(pma)}+${Math.round((pma%1)*7)} mgg`;
+  $('pma-corrected').textContent = pma>=40 ? `+${round1((pma-40)*7/30)} bulan koreksi` : `${round1(40-pma)} mgg ke term`;
+  let status;
+  if(pma<34) status='<span class="status-danger">Sangat Prematur</span>';
+  else if(pma<37) status='<span class="status-warn">Prematur Akhir</span>';
+  else if(pma<42) status='<span class="status-ok">Cukup Bulan</span>';
+  else status='<span class="status-warn">Post-term</span>';
+  $('pma-status').innerHTML = status;
+  showResult('res-pma');
+}
+
+// ─── TRANSFUSI ───
+function calcTransfusion() {
+  const wt = getKg('tx-wt');
+  const hbA = parseFloat($('tx-hb-actual').value)||8;
+  const hbT = parseFloat($('tx-hb-target').value)||12;
+  const vol = round0((hbT-hbA)*wt*3);
+  const rate3 = round2(3*wt);
+  const rate5 = round2(5*wt);
+  const dur3 = round1(vol/rate3);
+  const dur5 = round1(vol/rate5);
+  $('tx-vol').textContent = vol+' mL';
+  $('tx-rate3').textContent = rate3+' mL/jam';
+  $('tx-dur3').textContent = `durasi: ${dur3} jam`;
+  $('tx-rate5').textContent = rate5+' mL/jam';
+  $('tx-dur5').textContent = `durasi: ${dur5} jam`;
+  showResult('res-tx');
+}
+
+// ─── EXCHANGE ───
+function calcExchange() {
+  const wt = getKg('ext-wt');
+  const bv = parseFloat($('ext-bv').value)||85;
+  const total = round0(2*bv*wt);
+  $('ext-total').textContent = total+' mL';
+  $('ext-cycle5').textContent = round0(total/5)+' siklus';
+  $('ext-cycle10').textContent = round0(total/10)+' siklus';
+  showResult('res-ext');
+}
+
+// ─── RESUSITASI ───
+function calcResus() {
+  const wt = getKg('res-wt');
+  const wtG = wt*1000;
+  const drugs = [
+    {drug:'Epinefrin 1:10000', dose:0.1, unit:'mL/kg', vol:round2(0.1*wt), note:'= 0.01 mg/kg', route:'IV/IO/ETT'},
+    {drug:'Epinefrin 1:1000 (ETT)', dose:0.5, unit:'mL/kg', vol:round2(0.5*wt), note:'= 0.1 mg/kg', route:'ETT'},
+    {drug:'Dekstrosa 10%', dose:2, unit:'mL/kg', vol:round0(2*wt), note:'hipoglikemia', route:'IV'},
+    {drug:'NaCl 0.9% bolus', dose:10, unit:'mL/kg', vol:round0(10*wt), note:'hipovolemia', route:'IV 10 mnt'},
+    {drug:'NaHCO₃ 4.2%', dose:1, unit:'mEq/kg', vol:round0(2*wt), note:'= 2 mL 4.2%', route:'IV pelan'},
+    {drug:'Nalokson 0.4mg/mL', dose:0.01, unit:'mg/kg', vol:round2(0.025*wt), note:round2(0.025*wt)+' mL', route:'IV/IM'},
+    {drug:'Fenobarbital loading', dose:20, unit:'mg/kg', vol:round2(20*wt/200), note:'200mg/mL sediaan', route:'IV ≤30 mnt'},
+    {drug:'Kafein sitrat loading', dose:20, unit:'mg/kg', vol:round2(20*wt/20), note:'20mg/mL sediaan', route:'PO/IV'},
+  ];
+  $('resus-tbody').innerHTML = drugs.map(d=>
+    `<tr><td><strong>${d.drug}</strong></td><td>${d.dose} ${d.unit}</td><td><strong>${d.vol} mL</strong></td><td style="font-size:0.7rem">${d.route}<br><span style="color:var(--muted)">${d.note}</span></td></tr>`
+  ).join('');
+  showResult('res-resus');
+}
+
+// ─── INIT ───
+syncAll();
+// Run all calcs on load with defaults
+setTimeout(()=>{
+  calcCaffeine(); calcSurf(); calcAbx(); calcIno(); calcPhenob(); calcVitK();
+  calcFluid(); calcGIR(); calcTPN(); calcElec();
+  calcVent(); calcTV(); calcOI(); calcETT();
+  calcApgar(); calcSA(); calcBil(); calcBallard();
+  calcAGD(); calcNa(); calcHCO();
+  calcNutrition(); calcEnteralFeed();
+  calcPMA(); calcTransfusion(); calcExchange(); calcResus();
+},100);
+</script>
+</body>
+</html>
