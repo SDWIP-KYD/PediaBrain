@@ -30,13 +30,15 @@ export default function RootLayout({
       lang="id"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
     >
-      <body className="min-h-full flex bg-background text-foreground">
+      <body className="min-h-full flex bg-background text-foreground overflow-x-hidden">
         <Sidebar />
         <main className="flex-1 lg:ml-56 min-h-screen">
           <div className="flex items-center justify-end px-4 pt-3 lg:px-6 lg:pt-4">
-            <GlobalSearch />
+            <div className="flex items-center gap-2">
+              <GlobalSearch />
+            </div>
           </div>
-          <div className="px-4 py-4 lg:px-6 lg:py-6 max-w-5xl">
+          <div className="px-3 py-3 lg:px-6 lg:py-6 max-w-5xl">
             {children}
           </div>
         </main>

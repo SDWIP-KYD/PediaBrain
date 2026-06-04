@@ -12,6 +12,7 @@ import {
   Calculator,
   Users,
   Sparkles,
+  Home,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -49,6 +50,13 @@ export function Sidebar() {
           <PanelLeftOpen className="h-4 w-4" />
         )}
       </button>
+
+      <Link
+        href="/"
+        className="fixed top-3 left-12 z-50 p-2 rounded-lg bg-card border border-border hover:bg-accent lg:hidden"
+      >
+        <Home className="h-4 w-4 text-neon" />
+      </Link>
 
       <aside
         className={cn(

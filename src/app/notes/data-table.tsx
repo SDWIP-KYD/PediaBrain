@@ -105,7 +105,7 @@ const columns: ColumnDef<NoteRow>[] = [
     cell: ({ row }) => {
       const tags = row.getValue("tags") as string[];
       return (
-        <div className="flex flex-wrap gap-1">
+        <div className="hidden sm:flex flex-wrap gap-1">
           {tags.slice(0, 3).map((tag) => (
             <Badge key={tag} variant="secondary" className="text-xs">
               {tag}
@@ -126,7 +126,7 @@ const columns: ColumnDef<NoteRow>[] = [
     cell: ({ row }) => {
       const date = new Date(row.getValue("updatedAt"));
       return (
-        <span className="text-muted-foreground text-xs">
+        <span className="hidden sm:inline text-muted-foreground text-xs">
           {date.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
         </span>
       );
@@ -266,11 +266,11 @@ export function DataTable({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-        <div className="relative flex-1">
+      <div className="flex flex-col gap-2">
+        <div className="relative">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Cari di semua catatan (judul, isi, tag)..."
+            placeholder="Cari catatan..."
             value={globalFilter}
             onChange={(e) => setGlobalFilter(e.target.value)}
             onKeyDown={(e) => {
@@ -279,22 +279,27 @@ export function DataTable({
             className="pl-8"
           />
         </div>
-        <Button
-          onClick={() => navigate(1, undefined, globalFilter)}
-          variant="outline"
-        >
-          <Search className="h-4 w-4 mr-1" />
-          Cari
-        </Button>
-        <Button
-          onClick={() => {
-            setEditingNote(null);
-            setDialogOpen(true);
-          }}
-        >
-          <Plus className="h-4 w-4 mr-1" />
-          Catatan Baru
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => navigate(1, undefined, globalFilter)}
+            variant="outline"
+            className="flex-1 sm:flex-none"
+          >
+            <Search className="h-4 w-4 mr-1" />
+            Cari
+          </Button>
+          <Button
+            onClick={() => {
+              setEditingNote(null);
+              setDialogOpen(true);
+            }}
+            className="flex-1 sm:flex-none"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            <span className="sm:hidden">Baru</span>
+            <span className="hidden sm:inline">Catatan Baru</span>
+          </Button>
+        </div>
       </div>
 
       {viewingNote && (
@@ -325,8 +330,8 @@ export function DataTable({
         />
       )}
 
-      <div className="rounded-md border">
-        <Table>
+      <div className="rounded-md border overflow-x-auto">
+        <Table className="min-w-[400px]">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>

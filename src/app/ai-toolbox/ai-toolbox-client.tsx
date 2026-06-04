@@ -38,7 +38,7 @@ export function AIToolboxClient() {
       </div>
 
       {/* Tool tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
         {tools.map((t) => {
           const Icon = t.icon;
           const isActive = activeTool === t.id;
@@ -47,7 +47,7 @@ export function AIToolboxClient() {
               key={t.id}
               onClick={() => setActiveTool(t.id)}
               className={cn(
-                "flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium whitespace-nowrap transition-all shrink-0",
+                "flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium whitespace-nowrap transition-all shrink-0",
                 isActive
                   ? "border-neon/40 bg-neon/10 text-neon"
                   : "border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -61,7 +61,7 @@ export function AIToolboxClient() {
       </div>
 
       {/* Active tool */}
-      <div className="rounded-xl border border-border bg-card p-4">
+      <div className="rounded-xl border border-border bg-card p-3 sm:p-4 overflow-hidden">
         {activeTool === "laporan" && <LaporanTool />}
         {activeTool === "note" && <NoteTool />}
         {activeTool === "clinical" && <ClinicalTool />}

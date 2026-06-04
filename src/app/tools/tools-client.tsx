@@ -133,7 +133,7 @@ export function ToolsClient() {
           src={activeTool.file}
           title={activeTool.title}
           className="w-full border-0"
-          style={{ height: "calc(100vh - 220px)", minHeight: "500px" }}
+          style={{ height: "calc(100vh - 250px)", minHeight: "400px" }}
           sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
         />
       </div>
