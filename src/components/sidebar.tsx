@@ -13,6 +13,7 @@ import {
   Users,
   Sparkles,
   Home,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -114,8 +115,21 @@ export function Sidebar() {
         </nav>
 
         <div className="p-2 border-t border-border">
+          <button
+            onClick={async () => {
+              await fetch("/api/auth/logout", { method: "POST" });
+              window.location.href = "/login";
+            }}
+            className={cn(
+              "w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] text-muted-foreground hover:bg-destructive/20 hover:text-destructive transition-all",
+              collapsed && "justify-center px-0"
+            )}
+          >
+            <LogOut className="h-3.5 w-3.5 shrink-0" />
+            {!collapsed && <span>Logout</span>}
+          </button>
           <p className={cn(
-            "text-[10px] text-muted-foreground/50 text-center",
+            "text-[10px] text-muted-foreground/50 text-center mt-1",
             collapsed && "hidden"
           )}>
             v1.0
