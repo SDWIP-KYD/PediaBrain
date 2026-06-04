@@ -35,6 +35,14 @@ export function EditVisitDialog({ visit, compact }: { visit: Visit; compact?: bo
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     startTransition(async () => {
+      const sections: Record<string, string> = {};
+      if (form.anamnesis) sections.subjektif = form.anamnesis;
+      if (form.physicalExam) sections.objektif = form.physicalExam;
+      if (form.therapy) sections.terapi = form.therapy;
+      if (form.diagnosisPrimary || form.diagnosisSecondary) {
+        sections.diagnosa = [form.diagnosisPrimary, form.diagnosisSecondary].filter(Boolean).join("\n");
+      }
+      if (form.notes) sections.identitas = form.notes;
       await updateVisit(visit.id, {
         visitDate: form.visitDate,
         diagnosisPrimary: form.diagnosisPrimary || undefined,
@@ -43,6 +51,7 @@ export function EditVisitDialog({ visit, compact }: { visit: Visit; compact?: bo
         physicalExam: form.physicalExam || undefined,
         therapy: form.therapy || undefined,
         notes: form.notes || undefined,
+        sections: Object.keys(sections).length > 0 ? sections : undefined,
       });
       setOpen(false);
       router.refresh();
@@ -84,7 +93,7 @@ function Field({ label, value, onChange, type = "text", required = false }: {
 }) {
   return (
     <div>
-      <label className="text-[11px] text-muted-foreground uppercase tracking-wider block mb-1">
+      <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">
         {label}{required && <span className="text-destructive ml-1">*</span>}
       </label>
       <Input type={type} value={value} onChange={(e) => onChange(e.target.value)} required={required} className="h-9" />
@@ -97,7 +106,7 @@ function TextareaField({ label, value, onChange, rows = 2 }: {
 }) {
   return (
     <div>
-      <label className="text-[11px] text-muted-foreground uppercase tracking-wider block mb-1">{label}</label>
+      <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">{label}</label>
       <Textarea value={value} onChange={(e) => onChange(e.target.value)} rows={rows} className="text-sm" />
     </div>
   );

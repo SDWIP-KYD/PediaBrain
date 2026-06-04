@@ -23,7 +23,7 @@ export function AIToolboxClient() {
   const [activeTool, setActiveTool] = useState<ToolId>("laporan");
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-6 overflow-hidden">
       <div className="flex items-center gap-2">
         <Link href="/" className={buttonVariants({ variant: "ghost", size: "icon" })}>
           <ArrowLeft className="h-4 w-4" />
@@ -38,7 +38,7 @@ export function AIToolboxClient() {
       </div>
 
       {/* Tool tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
         {tools.map((t) => {
           const Icon = t.icon;
           const isActive = activeTool === t.id;

@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Pin, ExternalLink, FileText } from "lucide-react";
+import { Pin, ExternalLink, FileText, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { NotePopup } from "@/components/note-popup";
+import { NoteDialog } from "@/app/notes/note-dialog";
 import { DashboardMarkdown } from "./dashboard-markdown";
 
 interface NoteRow {
@@ -57,6 +58,8 @@ export function DashboardNotesClient({
   recent: NoteRow[];
 }) {
   const [openId, setOpenId] = useState<string | null>(null);
+  const [editNote, setEditNote] = useState<NoteRow | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
   const openNote = recent.find((n) => n.id === openId) ?? null;
 
   return (
@@ -94,18 +97,10 @@ export function DashboardNotesClient({
                       {note.isPinned && <Pin className="h-3 w-3 text-neon shrink-0" />}
                       <span className="truncate">{note.title}</span>
                     </h3>
-                    <button
-                      onClick={() => setOpenId(note.id)}
-                      className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-neon/20 text-neon hover:bg-neon hover:text-background transition-colors"
-                      title="Buka catatan"
-                    >
-                      Buka
-                      <ExternalLink className="h-2.5 w-2.5" />
-                    </button>
                   </div>
                   <div className="flex gap-1 mb-1.5 flex-wrap">
                     {(note.tags as string[]).slice(0, 3).map((tag) => (
-                      <Badge key={tag} variant="secondary" className="text-[10px]">
+                      <Badge key={tag} variant="secondary" className="text-xs">
                         {tag}
                       </Badge>
                     ))}
@@ -117,6 +112,22 @@ export function DashboardNotesClient({
                     <DashboardMarkdown content={words} />
                     {hasMore && <span className="text-[10px]">...</span>}
                   </button>
+                  <div className="flex items-center gap-1 mt-2 pt-2 border-t border-border/50">
+                    <Link
+                      href={`/notes?open=${note.id}`}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-neon/20 text-neon hover:bg-neon hover:text-background transition-colors"
+                    >
+                      <ExternalLink className="h-2.5 w-2.5" />
+                      Buka di Notes
+                    </Link>
+                    <button
+                      onClick={() => { setEditNote(note); setEditOpen(true); }}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium border border-border text-muted-foreground hover:bg-accent transition-colors"
+                    >
+                      <Pencil className="h-2.5 w-2.5" />
+                      Edit
+                    </button>
+                  </div>
                 </div>
               );
             })}
@@ -125,6 +136,7 @@ export function DashboardNotesClient({
       </div>
 
       {openNote && <NotePopup note={openNote} onClose={() => setOpenId(null)} />}
+      <NoteDialog open={editOpen} onOpenChange={setEditOpen} note={editNote} />
     </>
   );
 }

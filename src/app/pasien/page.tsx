@@ -150,41 +150,41 @@ export default async function PasienPage({
                           <div className="flex items-center gap-2 flex-wrap">
                             <h3 className="font-semibold text-sm">{p.name}</h3>
                             {p.sex && (
-                              <Badge variant="outline" className="text-[10px]">
+                              <Badge variant="outline" className="text-xs">
                                 {p.sex === "L" ? "♂" : "♀"} {p.sex}
                               </Badge>
                             )}
                             {age && (
-                              <span className="text-[10px] text-muted-foreground">{age}</span>
+                              <span className="text-xs text-muted-foreground">{age}</span>
                             )}
                             {p.medicalRecordNo && (
-                              <Badge variant="secondary" className="text-[10px] font-mono">
+                              <Badge variant="secondary" className="text-xs font-mono">
                                 RM: {p.medicalRecordNo}
                               </Badge>
                             )}
                           </div>
-                          <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-[11px] text-muted-foreground">
+                          <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-xs text-muted-foreground">
                             {p.parentName && (
                               <span className="flex items-center gap-1">
-                                <User className="h-2.5 w-2.5" />
+                                <User className="h-3 w-3" />
                                 Ortu: {p.parentName}
                               </span>
                             )}
                             {p.phone && (
                               <span className="flex items-center gap-1">
-                                <Phone className="h-2.5 w-2.5" />
+                                <Phone className="h-3 w-3" />
                                 {p.phone}
                               </span>
                             )}
                           </div>
                         </div>
                         <div className="text-right shrink-0">
-                          <Badge variant={p.visitCount > 0 ? "default" : "outline"} className="text-[10px]">
+                          <Badge variant={p.visitCount > 0 ? "default" : "outline"} className="text-xs">
                             {p.visitCount} visit
                           </Badge>
                           {p.lastVisit && (
-                            <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
-                              <Calendar className="h-2.5 w-2.5" />
+                            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
                               {p.lastVisit}
                             </p>
                           )}

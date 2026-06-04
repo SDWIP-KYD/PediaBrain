@@ -85,7 +85,7 @@ export function GlobalSearch() {
       >
         <Search className="h-4 w-4" />
         <span className="hidden sm:inline">Cari...</span>
-        <kbd className="hidden sm:inline text-[10px] bg-muted px-1.5 py-0.5 rounded">⌘K</kbd>
+        <kbd className="hidden sm:inline text-xs bg-muted px-1.5 py-0.5 rounded">⌘K</kbd>
       </button>
 
       <Dialog open={open} onOpenChange={(v) => { if (!v) { setQuery(""); setResults({ notes: [], followUps: [], patients: [] }); } setOpen(v); }}>
@@ -112,7 +112,7 @@ export function GlobalSearch() {
             {/* Patients */}
             {!loading && results.patients.length > 0 && (
               <div>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5 px-1">Pasien</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1.5 px-1">Pasien</p>
                 <div className="space-y-0.5">
                   {results.patients.map((p) => (
                     <button
@@ -129,7 +129,7 @@ export function GlobalSearch() {
                           RM: <HighlightedText text={p.medicalRecordNo} query={query} />
                         </span>
                       )}
-                      {p.sex && <Badge variant="outline" className="text-[9px] shrink-0">{p.sex === "L" ? "♂" : "♀"}</Badge>}
+                      {p.sex && <Badge variant="outline" className="text-xs shrink-0">{p.sex === "L" ? "♂" : "♀"}</Badge>}
                     </button>
                   ))}
                 </div>
@@ -139,7 +139,7 @@ export function GlobalSearch() {
             {/* Notes with content snippets */}
             {!loading && results.notes.length > 0 && (
               <div>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5 px-1">Catatan</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1.5 px-1">Catatan</p>
                 <div className="space-y-0.5">
                   {results.notes.map((n) => {
                     const snippet = getSnippet(n.content, query);
@@ -157,12 +157,12 @@ export function GlobalSearch() {
                           </span>
                           <div className="flex gap-0.5 shrink-0">
                             {n.tags.slice(0, 2).map((t) => (
-                              <Badge key={t} variant="secondary" className="text-[9px]">{t}</Badge>
+                              <Badge key={t} variant="secondary" className="text-xs">{t}</Badge>
                             ))}
                           </div>
                         </div>
                         {snippet && (
-                          <p className="text-[11px] text-muted-foreground mt-0.5 pl-5 line-clamp-2">
+                          <p className="text-xs text-muted-foreground mt-0.5 pl-5 line-clamp-2">
                             <HighlightedText text={snippet} query={query} />
                           </p>
                         )}
@@ -176,7 +176,7 @@ export function GlobalSearch() {
             {/* Follow-ups */}
             {!loading && results.followUps.length > 0 && (
               <div>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5 px-1">Follow-up</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1.5 px-1">Follow-up</p>
                 <div className="space-y-0.5">
                   {results.followUps.map((f) => (
                     <button
@@ -191,7 +191,7 @@ export function GlobalSearch() {
                       <span className="text-muted-foreground text-xs truncate flex-1">
                         <HighlightedText text={f.content || ""} query={query} />
                       </span>
-                      <Badge variant="outline" className="text-[9px] shrink-0">{f.status}</Badge>
+                      <Badge variant="outline" className="text-xs shrink-0">{f.status}</Badge>
                     </button>
                   ))}
                 </div>

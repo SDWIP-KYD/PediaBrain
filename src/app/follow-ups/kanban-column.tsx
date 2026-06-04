@@ -75,7 +75,7 @@ export function KanbanColumn({
                   <div className="flex items-center gap-1 shrink-0">
                     {item.recurrence && item.recurrence !== "none" && (
                       <span title={`Berulang: ${recurrenceLabels[item.recurrence]}`}>
-                        <Repeat className="h-3 w-3 text-neon" />
+                        <Repeat className="h-3.5 w-3.5 text-neon" />
                       </span>
                     )}
                     <Badge variant={statusConfig[item.status]?.variant ?? "outline"} className="text-xs">
@@ -83,34 +83,34 @@ export function KanbanColumn({
                     </Badge>
                   </div>
                 </div>
-                {item.content && <p className="text-xs text-muted-foreground">{item.content}</p>}
+                {item.content && <p className="text-sm text-muted-foreground">{item.content}</p>}
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
+                    <Clock className="h-3.5 w-3.5" />
                     {new Date(item.dueDate).toLocaleDateString("id-ID", {
                       day: "numeric",
                       month: "short",
                     })}
                   </span>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-0.5">
                     {status === "PENDING" && (
                       <>
                         <form action={updateFollowUpStatus.bind(null, item.id, "COMPLETED")}>
-                          <Button type="submit" variant="ghost" size="icon" className="h-7 w-7" title="Selesai">
-                            <Check className="h-3.5 w-3.5 text-green-600" />
+                          <Button type="submit" variant="ghost" size="icon" className="h-9 w-9" title="Selesai">
+                            <Check className="h-4 w-4 text-green-600" />
                           </Button>
                         </form>
                         <form action={updateFollowUpStatus.bind(null, item.id, "CANCELLED")}>
-                          <Button type="submit" variant="ghost" size="icon" className="h-7 w-7" title="Batal">
-                            <X className="h-3.5 w-3.5 text-muted-foreground" />
+                          <Button type="submit" variant="ghost" size="icon" className="h-9 w-9" title="Batal">
+                            <X className="h-4 w-4 text-muted-foreground" />
                           </Button>
                         </form>
                       </>
                     )}
                     {status === "COMPLETED" && (
                       <form action={updateFollowUpStatus.bind(null, item.id, "PENDING")}>
-                        <Button type="submit" variant="ghost" size="icon" className="h-7 w-7" title="Buka lagi">
-                          <Clock className="h-3.5 w-3.5" />
+                        <Button type="submit" variant="ghost" size="icon" className="h-9 w-9" title="Buka lagi">
+                          <Clock className="h-4 w-4" />
                         </Button>
                       </form>
                     )}
@@ -118,15 +118,15 @@ export function KanbanColumn({
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7"
+                      className="h-9 w-9"
                       onClick={() => handleEdit(item)}
                       title="Edit"
                     >
-                      <Pencil className="h-3.5 w-3.5" />
+                      <Pencil className="h-4 w-4" />
                     </Button>
                     <form action={deleteFollowUp.bind(null, item.id)}>
-                      <Button type="submit" variant="ghost" size="icon" className="h-7 w-7" title="Hapus">
-                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                      <Button type="submit" variant="ghost" size="icon" className="h-9 w-9" title="Hapus">
+                        <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </form>
                   </div>

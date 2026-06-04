@@ -63,7 +63,7 @@ export function ToolsClient() {
   const activeTool = tools.find((t) => t.id === activeId) ?? tools[0];
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div className="flex items-center gap-2">
           <Calculator className="h-5 w-5 text-neon" />
@@ -98,7 +98,7 @@ export function ToolsClient() {
         </div>
       </div>
 
-      <div className="overflow-x-auto -mx-1 px-1 scrollbar-hide">
+      <div className="overflow-x-auto scrollbar-hide">
         <div className="flex gap-1.5 min-w-max pb-1">
           {tools.map((tool) => (
             <button

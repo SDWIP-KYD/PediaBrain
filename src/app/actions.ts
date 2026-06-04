@@ -355,6 +355,7 @@ export async function updateVisit(id: string, data: {
   diagnosisSecondary?: string;
   therapy?: string;
   notes?: string;
+  sections?: Record<string, string>;
 }) {
   await db.update(patientVisits).set({
     visitDate: data.visitDate,
@@ -365,6 +366,7 @@ export async function updateVisit(id: string, data: {
     diagnosisSecondary: data.diagnosisSecondary || null,
     therapy: data.therapy || null,
     notes: data.notes || null,
+    sections: data.sections || null,
     updatedAt: new Date(),
   }).where(eq(patientVisits.id, id));
   revalidatePath("/pasien");

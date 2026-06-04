@@ -70,7 +70,19 @@ export function PatientDetailClient({
   function openFullReport(v: Visit) {
     setPopupVisit(v);
     const s = v.sections as Record<string, string> | null;
-    setPopupSections(s && typeof s === "object" ? s : {});
+    if (s && typeof s === "object" && Object.keys(s).length > 0) {
+      setPopupSections(s);
+    } else {
+      const fallback: Record<string, string> = {};
+      if (v.anamnesis) fallback.subjektif = v.anamnesis;
+      if (v.physicalExam) fallback.objektif = v.physicalExam;
+      if (v.therapy) fallback.terapi = v.therapy;
+      if (v.diagnosisPrimary || v.diagnosisSecondary) {
+        fallback.diagnosa = [v.diagnosisPrimary, v.diagnosisSecondary].filter(Boolean).join("\n");
+      }
+      if (v.notes) fallback.identitas = v.notes;
+      setPopupSections(fallback);
+    }
     setExpandedPopupSection(null);
   }
 
@@ -83,7 +95,7 @@ export function PatientDetailClient({
         </Link>
         <div className="flex-1 min-w-0">
           <h1 className="text-xl font-bold tracking-tight sm:text-2xl truncate">{patient.name}</h1>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             {patient.sex === "L" ? "Laki-laki" : patient.sex === "P" ? "Perempuan" : "-"}
             {age && ` · ${age}`}
             {patient.medicalRecordNo && ` · RM: ${patient.medicalRecordNo}`}
@@ -99,13 +111,13 @@ export function PatientDetailClient({
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Data Pasien</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-1.5 text-xs">
+          <CardContent className="space-y-2 text-sm">
             {patient.parentName && <Row icon={User} label="Orang Tua" value={patient.parentName} />}
             {patient.phone && <Row icon={Phone} label="Telepon" value={patient.phone} />}
             {patient.birthDate && <Row icon={Calendar} label="Tgl Lahir" value={patient.birthDate} />}
             {patient.address && <Row icon={FileText} label="Alamat" value={patient.address} multiline />}
             {!patient.parentName && !patient.phone && !patient.birthDate && !patient.address && (
-              <p className="text-muted-foreground text-xs">Belum ada data tambahan</p>
+              <p className="text-muted-foreground text-sm">Belum ada data tambahan</p>
             )}
           </CardContent>
         </Card>
@@ -120,25 +132,33 @@ export function PatientDetailClient({
           <CardContent>
             {latestVisit ? (
               <div className="space-y-2">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Badge variant="outline" className="text-[10px] font-mono">{latestVisit.visitDate}</Badge>
-                  {latestVisit.diagnosisPrimary && <Badge variant="default" className="text-[10px]">{latestVisit.diagnosisPrimary}</Badge>}
+                <div>
+                  <Badge variant="outline" className="text-xs font-mono">{latestVisit.visitDate}</Badge>
                 </div>
+                {latestVisit.diagnosisPrimary && (
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">Diagnosis Utama</p>
+                    <p className="text-sm text-foreground break-words">{latestVisit.diagnosisPrimary}</p>
+                  </div>
+                )}
                 {latestVisit.diagnosisSecondary && (
-                  <p className="text-[11px] text-muted-foreground"><strong>Diagnosis lain:</strong> {latestVisit.diagnosisSecondary}</p>
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">Diagnosis Lain</p>
+                    <p className="text-sm text-foreground break-words">{latestVisit.diagnosisSecondary}</p>
+                  </div>
                 )}
                 {latestSections?.diagnosa && (
                   <div className="rounded-lg border border-neon/20 bg-neon/5 p-3">
-                    <p className="text-[10px] font-semibold text-neon mb-1">Diagnosa / Assessment</p>
-                    <p className="text-[11px] text-foreground whitespace-pre-wrap leading-relaxed">{latestSections.diagnosa}</p>
+                    <p className="text-xs font-semibold text-neon mb-1">Diagnosa / Assessment</p>
+                    <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed break-words">{latestSections.diagnosa}</p>
                   </div>
                 )}
                 {!latestVisit.diagnosisPrimary && !latestVisit.diagnosisSecondary && !latestSections?.diagnosa && (
-                  <p className="text-muted-foreground text-xs">Belum ada diagnosis</p>
+                  <p className="text-muted-foreground text-sm">Belum ada diagnosis</p>
                 )}
               </div>
             ) : (
-              <p className="text-muted-foreground text-xs">Belum ada kunjungan</p>
+              <p className="text-muted-foreground text-sm">Belum ada kunjungan</p>
             )}
           </CardContent>
         </Card>
@@ -174,48 +194,54 @@ export function PatientDetailClient({
                   <div key={v.id} className="rounded-lg border border-border bg-card overflow-hidden">
                     <button
                       onClick={() => setExpandedVisit(isExpanded ? null : v.id)}
-                      className="w-full flex items-center justify-between gap-2 p-3 text-left hover:bg-muted/20 transition-colors"
+                      className="w-full flex items-center justify-between gap-2 p-3 text-left hover:bg-muted/20 transition-colors min-h-[48px]"
                     >
-                      <div className="flex items-center gap-2 flex-wrap min-w-0 flex-1">
-                        <Badge variant="outline" className="text-[10px] font-mono shrink-0">{v.visitDate}</Badge>
-                        {v.diagnosisPrimary && <Badge variant="default" className="text-[10px] truncate max-w-[200px]">{v.diagnosisPrimary}</Badge>}
-                        {v.diagnosisSecondary && <Badge variant="secondary" className="text-[10px] truncate max-w-[150px]">{v.diagnosisSecondary}</Badge>}
+                      <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+                        <Badge variant="outline" className="text-xs font-mono shrink-0">{v.visitDate}</Badge>
+                        <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+                          {v.diagnosisPrimary && (
+                            <Badge variant="default" className="text-xs truncate max-w-[250px]">{v.diagnosisPrimary}</Badge>
+                          )}
+                          {v.diagnosisSecondary && (
+                            <Badge variant="secondary" className="text-xs truncate max-w-[200px]">{v.diagnosisSecondary}</Badge>
+                          )}
+                        </div>
                       </div>
                       <ChevronDown className={`h-4 w-4 text-muted-foreground shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                     </button>
-                    <div className="flex items-center gap-1 px-3 pb-2">
+                    <div className="flex items-center gap-2 px-3 pb-2">
                       <button
                         onClick={() => openFullReport(v)}
-                        className="text-[10px] text-neon hover:underline flex items-center gap-1"
+                        className="text-xs text-neon hover:underline flex items-center gap-1.5 py-1 min-h-[36px]"
                       >
-                        <FileText className="h-3 w-3" /> Buka Laporan Lengkap
+                        <FileText className="h-3.5 w-3.5" /> Buka Laporan Lengkap
                       </button>
                     </div>
 
                     {isExpanded && (
-                      <div className="px-3 pb-3 space-y-2 border-t border-border/50">
+                      <div className="px-3 pb-3 space-y-3 border-t border-border/50">
                         {subjektif && (
                           <div className="mt-2">
-                            <p className="text-[10px] font-semibold text-neon uppercase tracking-wider mb-0.5">Subjektif</p>
-                            <p className="text-[11px] text-foreground whitespace-pre-wrap leading-relaxed">{subjektif}</p>
+                            <p className="text-xs font-semibold text-neon uppercase tracking-wider mb-0.5">Subjektif</p>
+                            <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{subjektif}</p>
                           </div>
                         )}
                         {terapi && (
                           <div>
-                            <p className="text-[10px] font-semibold text-neon uppercase tracking-wider mb-0.5">Terapi</p>
-                            <p className="text-[11px] text-foreground whitespace-pre-wrap leading-relaxed">{terapi}</p>
+                            <p className="text-xs font-semibold text-neon uppercase tracking-wider mb-0.5">Terapi</p>
+                            <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{terapi}</p>
                           </div>
                         )}
                         {(labs.length > 0 || meds.length > 0) && (
                           <div className="grid gap-2 sm:grid-cols-2 pt-1">
                             {labs.length > 0 && (
                               <div>
-                                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1 mb-0.5">
-                                  <Beaker className="h-2.5 w-2.5" /> Lab ({labs.length})
+                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1 mb-0.5">
+                                  <Beaker className="h-3 w-3" /> Lab ({labs.length})
                                 </p>
                                 <div className="space-y-0.5">
                                   {labs.map((l) => (
-                                    <div key={l.id} className="text-[10px] font-mono">
+                                    <div key={l.id} className="text-xs font-mono">
                                       {l.testName}: {l.result ?? "-"} {l.unit ?? ""}
                                       {l.flag && <span className={l.flag === "high" || l.flag === "low" ? "text-yellow-500 ml-1" : "text-green-500 ml-1"}>({l.flag})</span>}
                                     </div>
@@ -225,12 +251,12 @@ export function PatientDetailClient({
                             )}
                             {meds.length > 0 && (
                               <div>
-                                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1 mb-0.5">
-                                  <Pill className="h-2.5 w-2.5" /> Obat ({meds.length})
+                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1 mb-0.5">
+                                  <Pill className="h-3 w-3" /> Obat ({meds.length})
                                 </p>
                                 <div className="space-y-0.5">
                                   {meds.map((m) => (
-                                    <div key={m.id} className="text-[10px] font-mono">
+                                    <div key={m.id} className="text-xs font-mono">
                                       {m.drugName} {m.dose ? `(${m.dose})` : ""} {m.frequency ? `- ${m.frequency}` : ""} {m.duration ? `× ${m.duration}` : ""}
                                     </div>
                                   ))}
@@ -240,8 +266,8 @@ export function PatientDetailClient({
                           </div>
                         )}
                         <div className="flex items-center gap-2 pt-1">
-                          <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1" onClick={() => openFullReport(v)}>
-                            <ExternalLink className="h-2.5 w-2.5" /> Laporan Lengkap
+                          <Button size="sm" variant="outline" className="h-8 text-xs gap-1" onClick={() => openFullReport(v)}>
+                            <ExternalLink className="h-3 w-3" /> Laporan Lengkap
                           </Button>
                           <div className="flex-1" />
                           <EditVisitDialog visit={v} />
@@ -257,7 +283,7 @@ export function PatientDetailClient({
         </CardContent>
       </Card>
 
-      {/* Full Report Popup — clean format */}
+      {/* Full Report Popup */}
       <Dialog open={!!popupVisit} onOpenChange={(open) => { if (!open) setPopupVisit(null); }}>
         <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
@@ -277,14 +303,14 @@ export function PatientDetailClient({
                 <div key={key} className="rounded-lg border border-border overflow-hidden">
                   <button
                     onClick={() => setExpandedPopupSection(isOpen ? null : key)}
-                    className="w-full flex items-center gap-2 px-3 py-2.5 bg-muted/20 text-left text-xs font-semibold hover:bg-muted/40 transition-colors"
+                    className="w-full flex items-center gap-2 px-3 py-3 bg-muted/20 text-left text-sm font-semibold hover:bg-muted/40 transition-colors min-h-[44px]"
                   >
-                    <Icon className={`h-3.5 w-3.5 shrink-0 ${meta.color}`} />
+                    <Icon className={`h-4 w-4 shrink-0 ${meta.color}`} />
                     <span className="flex-1">{meta.label}</span>
-                    <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                    <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} />
                   </button>
                   {isOpen && (
-                    <div className="px-3 py-2.5 text-xs text-foreground whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto border-t border-border/50 bg-card">
+                    <div className="px-3 py-3 text-sm text-foreground whitespace-pre-wrap break-words leading-relaxed max-h-60 overflow-y-auto border-t border-border/50 bg-card">
                       {text}
                     </div>
                   )}
@@ -292,7 +318,10 @@ export function PatientDetailClient({
               );
             })}
             {Object.keys(popupSections).length === 0 && (
-              <p className="text-xs text-muted-foreground text-center py-4">Tidak ada data sections untuk kunjungan ini.</p>
+              <div className="text-center py-4 space-y-2">
+                <p className="text-sm text-muted-foreground">Tidak ada data sections untuk kunjungan ini.</p>
+                <p className="text-xs text-muted-foreground/70">Data bisa ditambahkan melalui AI Input atau Edit Kunjungan.</p>
+              </div>
             )}
           </div>
         </DialogContent>
@@ -306,10 +335,10 @@ export function PatientDetailClient({
 function Row({ icon: Icon, label, value, multiline }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string; multiline?: boolean }) {
   return (
     <div className={multiline ? "space-y-0.5" : "flex items-start gap-2"}>
-      <span className="text-muted-foreground flex items-center gap-1 min-w-[80px] text-[10px] uppercase tracking-wider">
-        <Icon className="h-2.5 w-2.5" />{label}
+      <span className="text-muted-foreground flex items-center gap-1 min-w-[80px] text-xs uppercase tracking-wider">
+        <Icon className="h-3 w-3" />{label}
       </span>
-      <span className={`flex-1 text-foreground ${multiline ? "whitespace-pre-wrap" : ""}`}>{value}</span>
+      <span className={`flex-1 text-foreground ${multiline ? "whitespace-pre-wrap break-words" : "break-words"}`}>{value}</span>
     </div>
   );
 }

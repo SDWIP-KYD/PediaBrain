@@ -95,9 +95,9 @@ export function LaporanTool() {
         </div>
 
         {preview && (
-          <div className="rounded-lg border border-neon/30 bg-neon/5 p-3 text-xs space-y-2">
-            <p className="font-semibold text-neon text-[10px] uppercase">Preview Pasien Baru</p>
-            <div className="grid grid-cols-2 gap-1 text-[11px]">
+          <div className="rounded-lg border border-neon/30 bg-neon/5 p-3 text-sm space-y-2">
+            <p className="font-semibold text-neon text-xs uppercase">Preview Pasien Baru</p>
+            <div className="grid grid-cols-2 gap-1 text-sm">
               <div><span className="text-muted-foreground">Nama: </span>{preview.patient.name}</div>
               <div><span className="text-muted-foreground">RM: </span>{preview.patient.medical_record_no || "-"}</div>
               <div><span className="text-muted-foreground">Lahir: </span>{preview.patient.birth_date || "-"}</div>

@@ -89,7 +89,7 @@ export function DashboardCalendar({ items }: { items: FollowUpItem[] }) {
                         ? "secondary"
                         : "outline"
                   }
-                  className="text-[10px] shrink-0"
+                  className="text-xs shrink-0"
                 >
                   {item.status}
                 </Badge>

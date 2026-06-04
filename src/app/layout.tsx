@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Sidebar } from "@/components/sidebar";
 import { GlobalSearch } from "@/components/global-search";
 import { QuickCapture } from "@/components/quick-capture";
+import { Brain } from "lucide-react";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -32,13 +34,16 @@ export default function RootLayout({
     >
       <body className="min-h-full flex bg-background text-foreground overflow-x-hidden">
         <Sidebar />
-        <main className="flex-1 lg:ml-56 min-h-screen">
-          <div className="flex items-center justify-end px-4 pt-3 lg:px-6 lg:pt-4">
-            <div className="flex items-center gap-2">
-              <GlobalSearch />
-            </div>
+        <main className="flex-1 lg:ml-56 min-h-screen overflow-x-hidden">
+          <div className="flex items-center justify-between px-4 pt-3 lg:px-6 lg:pt-4">
+            <Link href="/" className="flex items-center gap-2 font-bold text-base tracking-tight hover:opacity-80 transition-opacity lg:hidden">
+              <Brain className="h-5 w-5 text-neon" />
+              <span>Pedia-Brain</span>
+            </Link>
+            <div className="hidden lg:block" />
+            <GlobalSearch />
           </div>
-          <div className="px-3 py-3 lg:px-6 lg:py-6 max-w-5xl">
+          <div className="px-4 py-4 lg:px-6 lg:py-6 max-w-5xl">
             {children}
           </div>
         </main>

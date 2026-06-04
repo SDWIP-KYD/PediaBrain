@@ -99,23 +99,23 @@ export function NoteTool() {
         </div>
 
         {draft && (
-          <div className="rounded-lg border border-blue-400/30 bg-blue-400/5 p-3 text-xs space-y-2">
-            <p className="font-semibold text-blue-300 text-[10px] uppercase">Draft Catatan</p>
+          <div className="rounded-lg border border-blue-400/30 bg-blue-400/5 p-3 text-sm space-y-2">
+            <p className="font-semibold text-blue-300 text-xs uppercase">Draft Catatan</p>
             <div>
-              <label className="text-[10px] text-muted-foreground">Judul</label>
+              <label className="text-xs text-muted-foreground">Judul</label>
               <input value={draft.title} onChange={(e) => activeId && updateDraft(activeId, { ...draft, title: e.target.value })}
                 className="w-full h-8 rounded border border-border bg-background px-2 text-xs mt-0.5 focus:border-neon focus:outline-none" />
             </div>
             <div>
-              <label className="text-[10px] text-muted-foreground">Isi</label>
+              <label className="text-xs text-muted-foreground">Isi</label>
               <textarea value={draft.content} onChange={(e) => activeId && updateDraft(activeId, { ...draft, content: e.target.value })} rows={4}
                 className="w-full rounded border border-border bg-background px-2 py-1.5 text-xs mt-0.5 focus:border-neon focus:outline-none resize-none" />
             </div>
             <div>
-              <label className="text-[10px] text-muted-foreground">Tags</label>
+              <label className="text-xs text-muted-foreground">Tags</label>
               <div className="flex gap-1 flex-wrap mt-0.5">
-                {draft.tags.map((t, i) => <span key={i} className="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">#{t}</span>)}
-                {draft.tags.length === 0 && <span className="text-[10px] text-muted-foreground">Belum ada tags</span>}
+                {draft.tags.map((t, i) => <span key={i} className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">#{t}</span>)}
+                {draft.tags.length === 0 && <span className="text-xs text-muted-foreground">Belum ada tags</span>}
               </div>
             </div>
             <Button size="sm" onClick={handleSave} disabled={saving} className="w-full h-8 text-xs">
