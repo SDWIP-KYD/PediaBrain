@@ -21,11 +21,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "PediaBrain",
   description: "Personal Medical PKM - Knowledge Management untuk Dokter Anak",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    viewportFit: "cover",
-  },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover" as const,
 };
 
 export default function RootLayout({

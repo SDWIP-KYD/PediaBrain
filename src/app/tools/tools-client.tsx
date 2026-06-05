@@ -1,141 +1,178 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { Calculator, ExternalLink, RefreshCw } from "lucide-react";
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { Calculator } from "lucide-react";
+import { PatientPanel } from "./components/patient-panel";
 
-const tools = [
+const categories = [
   {
     id: "neonatologi",
     title: "Neonatologi",
-    description: "NICU tools: drugs, fluids, ventilator, scores, ABG, nutrition",
-    file: "/tools/neonatologi-calculator.html",
-  },
-  {
-    id: "catatan-klinis",
-    title: "Catatan Klinis",
-    description: "Pediatric clinical reference: BSID, growth, drug doses",
-    file: "/tools/Catatan-Klinis-Anak.html",
-  },
-  {
-    id: "referensi-obat",
-    title: "Referensi Obat",
-    description: "Pediatric drug reference: dose calculator, emergency drugs, latin abbreviations",
-    file: "/tools/referensi-obat-anak.html",
-  },
-  {
-    id: "sepsis-2026",
-    title: "Sepsis 2026",
-    description: "SSC pediatric sepsis guidelines 2026",
-    file: "/tools/sepsis-anak-2026.html",
+    subtitle: "NICU tools: obat, cairan, ventilator, skor, AGD",
+    icon: "👶",
+    href: "/tools/neonatologi",
+    color: "cyan",
+    count: 21,
   },
   {
     id: "picu",
     title: "PICU",
-    description: "PICU calculator: resuscitation, ventilator, hemodynamics, sedation",
-    file: "/tools/picu-calculator.html",
-  },
-  {
-    id: "catatan-gizi",
-    title: "Catatan Gizi",
-    description: "Nutrition notes: malnutrition, milk, growth charts, TPN, formulas",
-    file: "/tools/catatan-gizi.html",
-  },
-  {
-    id: "nutrition",
-    title: "Nutrition",
-    description: "Nutrition calculator: BMI, calorie, macro, fluid, refeeding",
-    file: "/tools/nutrition-calculator.html",
+    subtitle: "Resusitasi, ventilator, hemodinamik, sedasi",
+    icon: "🚨",
+    href: "/tools/picu",
+    color: "red",
+    count: 19,
+    disabled: true,
   },
   {
     id: "nephrology",
     title: "Nephrology",
-    description: "Pediatric nephrology: GFR, electrolytes, AKI, hypertension, dialysis",
-    file: "/tools/nephrology-calculator.html",
+    subtitle: "GFR, elektrolit, AKI, hipertensi, dialisis",
+    icon: "🫘",
+    href: "/tools/nephrology",
+    color: "green",
+    count: 21,
+    disabled: true,
+  },
+  {
+    id: "nutrition",
+    title: "Nutrition",
+    subtitle: "BMI, kalori, makronutrien, TPN, refeeding",
+    icon: "🍼",
+    href: "/tools/nutrition",
+    color: "orange",
+    count: 16,
+    disabled: true,
+  },
+  {
+    id: "catatan-klinis",
+    title: "Catatan Klinis",
+    subtitle: "Pediatric clinical reference atlas",
+    icon: "📋",
+    href: "/tools/catatan-klinis",
+    color: "purple",
+    count: 13,
+    disabled: true,
+  },
+  {
+    id: "referensi-obat",
+    title: "Referensi Obat",
+    subtitle: "Drug reference & dose calculator",
+    icon: "💊",
+    href: "/tools/referensi-obat",
+    color: "pink",
+    count: 50,
+    disabled: true,
+  },
+  {
+    id: "sepsis",
+    title: "Sepsis 2026",
+    subtitle: "SSC pediatric sepsis guidelines",
+    icon: "🦠",
+    href: "/tools/sepsis",
+    color: "yellow",
+    count: 1,
+    disabled: true,
+  },
+  {
+    id: "catatan-gizi",
+    title: "Catatan Gizi",
+    subtitle: "Nutrition notes & growth charts",
+    icon: "📊",
+    href: "/tools/catatan-gizi",
+    color: "teal",
+    count: 8,
+    disabled: true,
   },
 ];
 
-export function ToolsClient() {
-  const [activeId, setActiveId] = useState(tools[0].id);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [reloadKey, setReloadKey] = useState(0);
+const colorMap: Record<string, string> = {
+  cyan: "border-cyan-500/20 bg-cyan-500/5 hover:bg-cyan-500/10",
+  red: "border-red-500/20 bg-red-500/5 hover:bg-red-500/10",
+  green: "border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10",
+  orange: "border-orange-500/20 bg-orange-500/5 hover:bg-orange-500/10",
+  purple: "border-purple-500/20 bg-purple-500/5 hover:bg-purple-500/10",
+  pink: "border-pink-500/20 bg-pink-500/5 hover:bg-pink-500/10",
+  yellow: "border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10",
+  teal: "border-teal-500/20 bg-teal-500/5 hover:bg-teal-500/10",
+};
 
-  const activeTool = tools.find((t) => t.id === activeId) ?? tools[0];
+const activeColorMap: Record<string, string> = {
+  cyan: "border-cyan-500/40 bg-cyan-500/15",
+  red: "border-red-500/40 bg-red-500/15",
+  green: "border-emerald-500/40 bg-emerald-500/15",
+  orange: "border-orange-500/40 bg-orange-500/15",
+  purple: "border-purple-500/40 bg-purple-500/15",
+  pink: "border-pink-500/40 bg-pink-500/15",
+  yellow: "border-amber-500/40 bg-amber-500/15",
+  teal: "border-teal-500/40 bg-teal-500/15",
+};
+
+export function ToolsClient() {
+  const pathname = usePathname();
 
   return (
-    <div className="space-y-3 overflow-hidden">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <Calculator className="h-5 w-5 text-neon" />
-          <div>
-            <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
-              Clinical Tools
-            </h1>
-            <p className="text-xs text-muted-foreground">
-              Kalkulator dan referensi klinis pediatric
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setReloadKey((k) => k + 1)}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium hover:bg-accent transition-colors"
-            title="Reload"
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Reload</span>
-          </button>
-          <a
-            href={activeTool.file}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-neon/30 bg-neon/10 px-3 py-1.5 text-xs font-medium text-neon hover:bg-neon/20 transition-colors"
-            title="Buka di tab baru"
-          >
-            <ExternalLink className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Buka Tab Baru</span>
-          </a>
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <Calculator className="h-5 w-5 text-neon" />
+        <div>
+          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Clinical Tools</h1>
+          <p className="text-xs text-muted-foreground">Kalkulator dan referensi klinis pediatric</p>
         </div>
       </div>
 
-      <div className="overflow-x-auto scrollbar-hide">
-        <div className="flex gap-1.5 min-w-max pb-1">
-          {tools.map((tool) => (
-            <button
-              key={tool.id}
-              onClick={() => setActiveId(tool.id)}
+      <PatientPanel />
+
+      {/* Category grid */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {categories.map((cat) => {
+          const isActive = pathname === cat.href || pathname.startsWith(cat.href + "/");
+          const isDisabled = cat.disabled;
+
+          if (isDisabled) {
+            return (
+              <div
+                key={cat.id}
+                className={cn(
+                  "rounded-xl border p-4 opacity-50 cursor-not-allowed",
+                  "border-border bg-card/50"
+                )}
+              >
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">{cat.icon}</span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold truncate">{cat.title}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">{cat.subtitle}</p>
+                    <p className="text-[10px] text-muted-foreground/50 mt-2">Segera hadir</p>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <Link
+              key={cat.id}
+              href={cat.href}
               className={cn(
-                "shrink-0 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all",
-                activeId === tool.id
-                  ? "bg-neon/10 border-neon/30 text-neon"
-                  : "bg-card border-border text-muted-foreground hover:bg-accent hover:text-foreground"
+                "rounded-xl border p-4 transition-all",
+                isActive ? activeColorMap[cat.color] : colorMap[cat.color]
               )}
             >
-              {tool.title}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="rounded-lg border border-border bg-card overflow-hidden">
-        <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-border bg-muted/30">
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold truncate">{activeTool.title}</p>
-            <p className="text-[11px] text-muted-foreground truncate">
-              {activeTool.description}
-            </p>
-          </div>
-        </div>
-
-        <iframe
-          key={`${activeId}-${reloadKey}`}
-          ref={iframeRef}
-          src={activeTool.file}
-          title={activeTool.title}
-          className="w-full border-0"
-          style={{ height: "calc(100vh - 250px)", minHeight: "400px" }}
-          sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-        />
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">{cat.icon}</span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold truncate">{cat.title}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">{cat.subtitle}</p>
+                  <p className="text-[10px] text-muted-foreground/50 mt-2">{cat.count} tools</p>
+                </div>
+              </div>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );
