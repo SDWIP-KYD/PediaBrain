@@ -83,7 +83,6 @@ const categories = [
     href: "/tools/sepsis",
     color: "yellow",
     count: 1,
-    disabled: true,
   },
   {
     id: "catatan-gizi",
@@ -93,7 +92,6 @@ const categories = [
     href: "/tools/catatan-gizi",
     color: "teal",
     count: 8,
-    disabled: true,
   },
 ];
 
