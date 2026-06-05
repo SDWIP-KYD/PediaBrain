@@ -417,6 +417,8 @@ export async function getPatientsByRoom() {
       room: patients.room,
       birthDate: patients.birthDate,
       sex: patients.sex,
+      status: patients.status,
+      notes: patients.notes,
       diagnosis: sql<string | null>`(
         SELECT ${patientVisits.diagnosisPrimary}
         FROM ${patientVisits}
@@ -426,9 +428,27 @@ export async function getPatientsByRoom() {
       )`,
     })
     .from(patients)
+    .where(eq(patients.status, "rawat_inap"))
     .orderBy(patients.room, patients.bed);
 
   return rows;
+}
+
+export async function updatePatientNotes(id: string, notes: string | null) {
+  await db.update(patients).set({ notes, updatedAt: new Date() }).where(eq(patients.id, id));
+  revalidatePath("/pasien/kanban");
+}
+
+export async function dischargePatient(id: string) {
+  await db.update(patients).set({ status: "pulang", room: null, bed: null, updatedAt: new Date() }).where(eq(patients.id, id));
+  revalidatePath("/pasien/kanban");
+  revalidatePath("/pasien");
+}
+
+export async function admitPatient(id: string) {
+  await db.update(patients).set({ status: "rawat_inap", updatedAt: new Date() }).where(eq(patients.id, id));
+  revalidatePath("/pasien/kanban");
+  revalidatePath("/pasien");
 }
 
 export async function findPatientByName(name: string) {
