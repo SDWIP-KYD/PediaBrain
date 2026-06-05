@@ -451,6 +451,187 @@ export async function admitPatient(id: string) {
   revalidatePath("/pasien");
 }
 
+export type BulkSyncChange = {
+  type: "created" | "moved" | "updated" | "discharged";
+  patientName: string;
+  patientId?: string;
+  fromRoom?: string | null;
+  toRoom?: string | null;
+  fromBed?: string | null;
+  toBed?: string | null;
+  changes?: string[];
+};
+
+export type BulkSyncResult = {
+  changes: BulkSyncChange[];
+  summary: {
+    created: number;
+    moved: number;
+    updated: number;
+    discharged: number;
+    total: number;
+  };
+};
+
+export type BulkSyncInput = {
+  patients: {
+    name: string;
+    room: string;
+    bed: string | null;
+    medicalRecordNo?: string | null;
+    birthDate?: string | null;
+    diagnosis?: string | null;
+    notes?: string | null;
+    dpjp?: string | null;
+  }[];
+};
+
+function normalizeName(s: string): string {
+  return s.toLowerCase().replace(/\s+/g, " ").trim().replace(/^(an|nn|nyny|by)\.?\s+/i, "").trim();
+}
+
+function normalizeRm(s: string | null | undefined): string | null {
+  if (!s) return null;
+  return s.replace(/\D/g, "");
+}
+
+export async function bulkSyncPatients(input: BulkSyncInput): Promise<BulkSyncResult> {
+  const changes: BulkSyncChange[] = [];
+
+  const existing = await db
+    .select({
+      id: patients.id,
+      name: patients.name,
+      medicalRecordNo: patients.medicalRecordNo,
+      room: patients.room,
+      bed: patients.bed,
+      notes: patients.notes,
+      status: patients.status,
+    })
+    .from(patients)
+    .where(eq(patients.status, "rawat_inap"));
+
+  const existingByName = new Map<string, typeof existing[0]>();
+  const existingByRm = new Map<string, typeof existing[0]>();
+  for (const p of existing) {
+    existingByName.set(normalizeName(p.name), p);
+    if (p.medicalRecordNo) existingByRm.set(p.medicalRecordNo, p);
+  }
+
+  const matched = new Set<string>();
+  const inputNamesNorm = new Set<string>();
+
+  for (const inp of input.patients) {
+    const nameNorm = normalizeName(inp.name);
+    const rmNorm = normalizeRm(inp.medicalRecordNo);
+    inputNamesNorm.add(nameNorm);
+
+    let found = rmNorm ? existingByRm.get(rmNorm) : null;
+    if (!found) found = existingByName.get(nameNorm);
+    if (found) matched.add(found.id);
+
+    if (!found) {
+      const [inserted] = await db.insert(patients).values({
+        name: inp.name.trim(),
+        medicalRecordNo: inp.medicalRecordNo || null,
+        birthDate: inp.birthDate || null,
+        room: inp.room,
+        bed: inp.bed || null,
+        status: "rawat_inap",
+        notes: inp.notes || null,
+      }).returning();
+      changes.push({
+        type: "created",
+        patientName: inp.name.trim(),
+        patientId: inserted?.id,
+        toRoom: inp.room,
+        toBed: inp.bed,
+      });
+    } else {
+      const updated: string[] = [];
+      const updateData: Record<string, unknown> = { updatedAt: new Date() };
+
+      if (found.room !== inp.room) {
+        updated.push(`Ruangan: ${found.room || "-"} → ${inp.room}`);
+        updateData.room = inp.room;
+      }
+      if ((found.bed || null) !== (inp.bed || null)) {
+        updated.push(`Bed: ${found.bed || "-"} → ${inp.bed || "-"}`);
+        updateData.bed = inp.bed || null;
+      }
+      if (inp.notes && found.notes !== inp.notes) {
+        updated.push(`Catatan diperbarui`);
+        updateData.notes = inp.notes;
+      }
+      if (inp.medicalRecordNo && normalizeRm(found.medicalRecordNo) !== rmNorm) {
+        updateData.medicalRecordNo = inp.medicalRecordNo;
+      }
+
+      if (Object.keys(updateData).length > 1) {
+        await db.update(patients).set(updateData as any).where(eq(patients.id, found.id));
+        if (found.room !== inp.room || (found.bed || null) !== (inp.bed || null)) {
+          changes.push({
+            type: "moved",
+            patientName: inp.name.trim(),
+            patientId: found.id,
+            fromRoom: found.room,
+            toRoom: inp.room,
+            fromBed: found.bed,
+            toBed: inp.bed,
+            changes: updated,
+          });
+        } else {
+          changes.push({
+            type: "updated",
+            patientName: inp.name.trim(),
+            patientId: found.id,
+            changes: updated,
+          });
+        }
+      }
+    }
+  }
+
+  for (const p of existing) {
+    if (!matched.has(p.id)) {
+      const nameNorm = normalizeName(p.name);
+      const rmNorm = normalizeRm(p.medicalRecordNo);
+      const isInInput = inputNamesNorm.has(nameNorm) || (rmNorm && Array.from(inputNamesNorm).some(n => n === nameNorm));
+      if (!isInInput) {
+        await db.update(patients).set({
+          status: "pulang",
+          room: null,
+          bed: null,
+          updatedAt: new Date(),
+        }).where(eq(patients.id, p.id));
+        changes.push({
+          type: "discharged",
+          patientName: p.name,
+          patientId: p.id,
+          fromRoom: p.room,
+          toRoom: null,
+          fromBed: p.bed,
+          toBed: null,
+        });
+      }
+    }
+  }
+
+  revalidatePath("/pasien/kanban");
+  revalidatePath("/pasien");
+
+  return {
+    changes,
+    summary: {
+      created: changes.filter((c) => c.type === "created").length,
+      moved: changes.filter((c) => c.type === "moved").length,
+      updated: changes.filter((c) => c.type === "updated").length,
+      discharged: changes.filter((c) => c.type === "discharged").length,
+      total: changes.length,
+    },
+  };
+}
+
 export async function findPatientByName(name: string) {
   return await db.select().from(patients).where(ilike(patients.name, `%${name}%`)).limit(5);
 }
