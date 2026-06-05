@@ -1,11 +1,21 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Calculator } from "lucide-react";
+import { Calculator, ExternalLink } from "lucide-react";
 import { PatientPanel } from "./components/patient-panel";
+
+const legacyTools = [
+  { title: "Neonatologi (HTML)", file: "/tools/neonatologi-calculator.html" },
+  { title: "PICU (HTML)", file: "/tools/picu-calculator.html" },
+  { title: "Nephrology (HTML)", file: "/tools/nephrology-calculator.html" },
+  { title: "Nutrition (HTML)", file: "/tools/nutrition-calculator.html" },
+  { title: "Catatan Klinis (HTML)", file: "/tools/Catatan-Klinis-Anak.html" },
+  { title: "Referensi Obat (HTML)", file: "/tools/referensi-obat-anak.html" },
+  { title: "Sepsis 2026 (HTML)", file: "/tools/sepsis-anak-2026.html" },
+  { title: "Catatan Gizi (HTML)", file: "/tools/catatan-gizi.html" },
+];
 
 const categories = [
   {
@@ -24,8 +34,7 @@ const categories = [
     icon: "🚨",
     href: "/tools/picu",
     color: "red",
-    count: 19,
-    disabled: true,
+    count: 26,
   },
   {
     id: "nephrology",
@@ -173,6 +182,24 @@ export function ToolsClient() {
             </Link>
           );
         })}
+      </div>
+      {/* Legacy HTML tools for crosschecking */}
+      <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+        <p className="text-xs font-semibold text-muted-foreground">Versi HTML (Crosscheck)</p>
+        <div className="flex flex-wrap gap-2">
+          {legacyTools.map((t) => (
+            <a
+              key={t.file}
+              href={t.file}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/30 px-3 py-1.5 text-[11px] text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+            >
+              <ExternalLink className="h-3 w-3" />
+              {t.title}
+            </a>
+          ))}
+        </div>
       </div>
     </div>
   );
