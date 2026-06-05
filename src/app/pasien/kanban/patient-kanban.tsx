@@ -328,7 +328,7 @@ function PatientCard({
   onCancelNotes: () => void;
   onDischarge: () => void;
   isDischarging: boolean;
-  notesInputRef?: React.RefObject<HTMLTextAreaElement>;
+  notesInputRef?: React.RefObject<HTMLTextAreaElement | null>;
 }) {
   return (
     <div
