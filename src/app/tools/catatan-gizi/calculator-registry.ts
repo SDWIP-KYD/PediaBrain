@@ -8,6 +8,7 @@ export const catatanGiziSubtabs = [
   "Assessment",
   "Monitoring",
   "Planning",
+  "Referensi",
 ] as const;
 
 const calculatorRegistry: Record<string, GiziLogCalcDef[]> = {
@@ -24,6 +25,13 @@ const calculatorRegistry: Record<string, GiziLogCalcDef[]> = {
   Planning: [
     { id: "diet-plan", name: "Diet Plan", description: "Target kalori, makronutrien, meal plan" },
     { id: "nutri-care-plan", name: "Nutrition Care Plan", description: "Problem, goals, intervensi, monitoring" },
+  ],
+  Referensi: [
+    { id: "milk-database", name: "Database Susu Formula", description: "46+ produk Indonesia dengan kalori & takaran" },
+    { id: "prsl-calc", name: "PRSL Calculator", description: "Protein-Renal Solute Load dengan safety assessment" },
+    { id: "growth-tables", name: "Tabel Pertumbuhan", description: "BB harian/bulanan, TB, LK, RDA by age" },
+    { id: "tpn-reference", name: "Referensi TPN/NP", description: "Komposisi, GIR formula, osmolaritas, ReSoMal" },
+    { id: "knee-height", name: "Knee Height → TB", description: "Estimasi tinggi badan untuk pasien tidur" },
   ],
 };
 

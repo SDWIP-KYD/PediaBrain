@@ -35,6 +35,11 @@ import { OsmolalitasUrinRFICalc } from "./components/osmolalitas-urin-rfi";
 import { SindromNefrotikCalc } from "./components/sindrom-nefrotik";
 import { ImunosupresiNefrologiCalc } from "./components/immunosupresi-nefrologi";
 import { PenyesuaianDosisCKDCalc } from "./components/penyesuaian-dosis-ckd";
+import { CKDStagingCalc } from "./components/ckd-staging";
+import { CalciumAssessmentCalc } from "./components/calcium-assessment";
+import { AnionGapCalc } from "./components/anion-gap";
+import { FENaCalc } from "./components/fena-calc";
+import { FluidOverloadCalc } from "./components/fluid-overload";
 
 const calcComponents: Record<string, React.FC> = {
   "gfr-calc": GFRCalc,
@@ -69,6 +74,11 @@ const calcComponents: Record<string, React.FC> = {
   "sindrom-nefrotik": SindromNefrotikCalc,
   "immunosupresi-nefrologi": ImunosupresiNefrologiCalc,
   "penyesuaian-dosis-ckd": PenyesuaianDosisCKDCalc,
+  "ckd-staging": CKDStagingCalc,
+  "calcium-assessment": CalciumAssessmentCalc,
+  "anion-gap": AnionGapCalc,
+  "fena-calc": FENaCalc,
+  "fluid-overload": FluidOverloadCalc,
 };
 
 const subtabIcons: Record<string, string> = {

@@ -45,6 +45,7 @@ export const neonatologiCalculators: CalculatorDef[] = [
   { id: "enteral", title: "Panduan Enteral Neonatus", subtitle: "Trophic feeding & advancement", icon: "🤱", color: "pink", subtab: "Nutrisi" },
 
   // Alat Hitung
+  { id: "nahco3koreksi", title: "Koreksi NaHCO₃", subtitle: "Asidosis Metabolik", icon: "⚗️", color: "green", subtab: "Alat Hitung" },
   { id: "pma", title: "Usia Koreksi (PMA)", subtitle: "Postmenstrual Age & Corrected Age", icon: "📅", color: "teal", subtab: "Alat Hitung" },
   { id: "transfusiprc", title: "Transfusi PRC Neonatus", subtitle: "Volume & Kecepatan", icon: "🩸", color: "red", subtab: "Alat Hitung" },
   { id: "transfusitukar", title: "Transfusi Tukar", subtitle: "Double Volume Exchange Transfusion", icon: "🔄", color: "yellow", subtab: "Alat Hitung" },

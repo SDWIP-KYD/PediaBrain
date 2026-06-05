@@ -29,6 +29,7 @@ import { PMACalc } from "./components/pma-calc";
 import { TransfusiPRCCalc } from "./components/transfusi-prc-calc";
 import { TransfusiTukarCalc } from "./components/transfusi-tukar-calc";
 import { ObatResusitasiCalc } from "./components/obat-resusitasi-calc";
+import { NaHCO3KoreksiCalc } from "./components/nahco3-koreksi-calc";
 
 const calcComponents: Record<string, React.FC> = {
   kafein: KafeinCalc,
@@ -57,6 +58,7 @@ const calcComponents: Record<string, React.FC> = {
   transfusiprc: TransfusiPRCCalc,
   transfusitukar: TransfusiTukarCalc,
   obatresusitasi: ObatResusitasiCalc,
+  nahco3koreksi: NaHCO3KoreksiCalc,
 };
 
 const subtabIcons: Record<string, string> = {

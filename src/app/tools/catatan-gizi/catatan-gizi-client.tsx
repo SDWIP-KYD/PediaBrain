@@ -11,6 +11,11 @@ import { GrowthLog } from "./components/growth-log";
 import { MicronutrientLog } from "./components/micronutrient-log";
 import { DietPlan } from "./components/diet-plan";
 import { NutriCarePlan } from "./components/nutri-care-plan";
+import { MilkDatabaseCalc } from "./components/milk-database";
+import { PRSLCalc } from "./components/prsl-calc";
+import { GrowthTablesCalc } from "./components/growth-tables";
+import { TPNReferenceCalc } from "./components/tpn-reference";
+import { KneeHeightCalc } from "./components/knee-height";
 
 const calcComponents: Record<string, React.FC> = {
   "nutri-assessment": NutriAssessment,
@@ -21,12 +26,18 @@ const calcComponents: Record<string, React.FC> = {
   "micronutrient-log": MicronutrientLog,
   "diet-plan": DietPlan,
   "nutri-care-plan": NutriCarePlan,
+  "milk-database": MilkDatabaseCalc,
+  "prsl-calc": PRSLCalc,
+  "growth-tables": GrowthTablesCalc,
+  "tpn-reference": TPNReferenceCalc,
+  "knee-height": KneeHeightCalc,
 };
 
 const subtabIcons: Record<string, string> = {
   "Assessment": "🩺",
   "Monitoring": "📈",
   "Planning": "📝",
+  "Referensi": "📚",
 };
 
 export function CatatanGiziClient() {

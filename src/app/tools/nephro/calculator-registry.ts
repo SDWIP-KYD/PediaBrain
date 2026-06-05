@@ -27,17 +27,21 @@ const calculatorRegistry: Record<string, NephroCalcDef[]> = {
     { id: "cystatin-calc", name: "Cystatin C GFR", description: "Cystatin-based eGFR" },
     { id: "egfr-trend", name: "eGFR Trend", description: "Track eGFR over time" },
     { id: "bun-creat-ratio", name: "BUN/Creatinine Ratio", description: "Prerenal vs intrinsic" },
+    { id: "ckd-staging", name: "CKD Staging (KDIGO)", description: "GFR + albuminuria + prognosis + etiology" },
   ],
   "AKI & Staging": [
     { id: "aki-staging", name: "AKI Staging", description: "KDIGO criteria" },
     { id: "rifle", name: "RIFLE Criteria", description: "AKI classification" },
     { id: "aki-risk", name: "AKI Risk Assessment", description: "Pediatric AKI risk" },
+    { id: "fena-calc", name: "FENa & FEUrea", description: "Diferensiasi pre-renal vs intrinsik" },
   ],
   "Elektrolit & Asam-Basa": [
     { id: "hyperkalemia", name: "Hyperkalemia Mgmt", description: "K+ >5.5 management" },
     { id: "hyponatremia", name: "Hyponatremia Mgmt", description: "Na+ <135 correction" },
     { id: "met-acidosis", name: "Metabolic Acidosis", description: "AG, delta-delta, RTA" },
     { id: "rta-calc", name: "RTA Classification", description: "Type 1/2/3/4 RTA" },
+    { id: "calcium-assessment", name: "Kalsium, Fosfat & PTH", description: "Ca corrected, Ca×P, PTH status, Vit D" },
+    { id: "anion-gap", name: "Anion Gap & Osmolal Gap", description: "AG calculation + albumin correction + MUDPILES" },
   ],
   "Hipertensi": [
     { id: "bp-classification", name: "BP Classification (AAP 2017)", description: "Age-based BP percentiles for pediatric hypertension staging" },
@@ -48,6 +52,7 @@ const calculatorRegistry: Record<string, NephroCalcDef[]> = {
     { id: "maintenance-fluid", name: "Maintenance Fluid", description: "Holliday-Segar 100/50/20 method" },
     { id: "dehidrasi-assessment", name: "Dehidrasi Assessment", description: "Iso/hypo/hypernatremic dehydration + rehydration volumes" },
     { id: "diuretik-dosis", name: "Diuretik Dosis", description: "Furosemide, spironolactone, HCTZ dosing by weight" },
+    { id: "fluid-overload", name: "Fluid Overload Assessment", description: "% kelebihan cairan pada AKI/PICU" },
   ],
   "Urin & Proteinuria": [
     { id: "upcr-calc", name: "UPCR", description: "Urine Protein:Creatinine Ratio interpretation" },
