@@ -419,6 +419,7 @@ export async function getPatientsByRoom() {
       sex: patients.sex,
       status: patients.status,
       notes: patients.notes,
+      dpjp: patients.dpjp,
       diagnosis: sql<string | null>`(
         SELECT ${patientVisits.diagnosisPrimary}
         FROM ${patientVisits}
@@ -495,6 +496,11 @@ function normalizeRm(s: string | null | undefined): string | null {
   return s.replace(/\D/g, "");
 }
 
+function normalizeDpjp(s: string | null | undefined): string | null {
+  if (!s) return null;
+  return s.trim().replace(/\s+/g, " ");
+}
+
 export async function bulkSyncPatients(input: BulkSyncInput): Promise<BulkSyncResult> {
   const changes: BulkSyncChange[] = [];
 
@@ -506,6 +512,7 @@ export async function bulkSyncPatients(input: BulkSyncInput): Promise<BulkSyncRe
       room: patients.room,
       bed: patients.bed,
       notes: patients.notes,
+      dpjp: patients.dpjp,
       status: patients.status,
     })
     .from(patients)
@@ -539,6 +546,7 @@ export async function bulkSyncPatients(input: BulkSyncInput): Promise<BulkSyncRe
         bed: inp.bed || null,
         status: "rawat_inap",
         notes: inp.notes || null,
+        dpjp: normalizeDpjp(inp.dpjp),
       }).returning();
       changes.push({
         type: "created",
@@ -565,6 +573,11 @@ export async function bulkSyncPatients(input: BulkSyncInput): Promise<BulkSyncRe
       }
       if (inp.medicalRecordNo && normalizeRm(found.medicalRecordNo) !== rmNorm) {
         updateData.medicalRecordNo = inp.medicalRecordNo;
+      }
+      const inpDpjp = normalizeDpjp(inp.dpjp);
+      if (inpDpjp && normalizeDpjp(found.dpjp) !== inpDpjp) {
+        updated.push(`DPJP: ${found.dpjp || "-"} → ${inpDpjp}`);
+        updateData.dpjp = inpDpjp;
       }
 
       if (Object.keys(updateData).length > 1) {

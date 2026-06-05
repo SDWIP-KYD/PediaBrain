@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Link from "next/link";
 import {
   GripVertical, Loader2, StickyNote, LogOut, X, Check, User,
-  Bot, Send, Sparkles, Bell, ArrowLeft, ChevronRight, ChevronDown,
-  Trash2, Plus, ArrowRightLeft,
+  Bot, Send, Bell, Trash2, Plus, ArrowRightLeft,
+  Stethoscope, ChevronDown,
 } from "lucide-react";
 import {
   movePatientToRoom, getPatientsByRoom, updatePatientNotes, dischargePatient,
@@ -26,19 +26,19 @@ interface KanbanPatient {
   sex: string | null;
   status: string | null;
   notes: string | null;
+  dpjp: string | null;
   diagnosis: string | null;
 }
 
 const ROOMS = ["DAHLIA", "ANGGREK", "MELATI", "SERUNI"] as const;
 
-const ROOM_THEME: Record<string, { border: string; headerBg: string; badge: string; ring: string; dot: string; text: string }> = {
+const ROOM_THEME: Record<string, { border: string; headerBg: string; badge: string; ring: string; dot: string }> = {
   DAHLIA: {
     border: "border-rose-500/40 hover:border-rose-500/60",
     headerBg: "bg-gradient-to-r from-rose-500/15 to-rose-500/5",
     badge: "bg-rose-500/20 text-rose-300",
     ring: "ring-rose-500/50",
     dot: "bg-rose-500",
-    text: "text-rose-300",
   },
   ANGGREK: {
     border: "border-violet-500/40 hover:border-violet-500/60",
@@ -46,7 +46,6 @@ const ROOM_THEME: Record<string, { border: string; headerBg: string; badge: stri
     badge: "bg-violet-500/20 text-violet-300",
     ring: "ring-violet-500/50",
     dot: "bg-violet-500",
-    text: "text-violet-300",
   },
   MELATI: {
     border: "border-amber-500/40 hover:border-amber-500/60",
@@ -54,7 +53,6 @@ const ROOM_THEME: Record<string, { border: string; headerBg: string; badge: stri
     badge: "bg-amber-500/20 text-amber-300",
     ring: "ring-amber-500/50",
     dot: "bg-amber-500",
-    text: "text-amber-300",
   },
   SERUNI: {
     border: "border-cyan-500/40 hover:border-cyan-500/60",
@@ -62,7 +60,6 @@ const ROOM_THEME: Record<string, { border: string; headerBg: string; badge: stri
     badge: "bg-cyan-500/20 text-cyan-300",
     ring: "ring-cyan-500/50",
     dot: "bg-cyan-500",
-    text: "text-cyan-300",
   },
 };
 
@@ -72,6 +69,16 @@ const HIGHLIGHT_STYLES: Record<ChangeType, { ring: string; bg: string; label: st
   updated: { ring: "ring-2 ring-amber-400", bg: "bg-amber-500/5", label: "Update", icon: ArrowRightLeft },
   discharged: { ring: "ring-2 ring-rose-400", bg: "bg-rose-500/5", label: "Pulang", icon: LogOut },
 };
+
+function normalizeDpjp(s: string | null | undefined): string {
+  return (s || "").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function getDpjpShort(s: string | null | undefined): string {
+  const n = (s || "").trim();
+  if (!n) return "";
+  return n.length > 24 ? n.slice(0, 22) + "…" : n;
+}
 
 export function PatientKanban() {
   const [patients, setPatients] = useState<KanbanPatient[]>([]);
@@ -84,9 +91,11 @@ export function PatientKanban() {
   const [dischargingId, setDischargingId] = useState<string | null>(null);
   const [highlights, setHighlights] = useState<Map<string, ChangeHighlight>>(new Map());
   const [notifications, setNotifications] = useState<{ change: BulkSyncChange; timestamp: number }[]>([]);
-  const [notifOpen, setNotifOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [dpjpFilter, setDpjpFilter] = useState<string>("__all__");
+  const [dpjpOpen, setDpjpOpen] = useState(false);
   const notesInputRef = useRef<HTMLTextAreaElement>(null);
+  const dpjpRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadPatients();
@@ -97,6 +106,15 @@ export function PatientKanban() {
       notesInputRef.current.focus();
     }
   }, [editingNotes]);
+
+  useEffect(() => {
+    if (!dpjpOpen) return;
+    function onClick(e: MouseEvent) {
+      if (dpjpRef.current && !dpjpRef.current.contains(e.target as Node)) setDpjpOpen(false);
+    }
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [dpjpOpen]);
 
   // Auto-clear highlights after 30s
   useEffect(() => {
@@ -116,14 +134,40 @@ export function PatientKanban() {
     }
   }, []);
 
-  const byRoom = ROOMS.reduce<Record<string, KanbanPatient[]>>((acc, room) => {
-    acc[room] = patients
-      .filter((p) => p.room === room)
-      .sort((a, b) => (a.bed || "").localeCompare(b.bed || "", undefined, { numeric: true }));
-    return acc;
-  }, {} as Record<string, KanbanPatient[]>);
+  // Get unique DPJPs
+  const dpjpList = useMemo(() => {
+    const set = new Set<string>();
+    for (const p of patients) {
+      if (p.dpjp) set.add(p.dpjp.trim());
+    }
+    return Array.from(set).sort();
+  }, [patients]);
 
-  const unassigned = patients.filter(
+  // Filter patients by DPJP
+  const filteredPatients = useMemo(() => {
+    if (dpjpFilter === "__all__") return patients;
+    const target = normalizeDpjp(dpjpFilter);
+    return patients.filter((p) => normalizeDpjp(p.dpjp) === target);
+  }, [patients, dpjpFilter]);
+
+  // Split rooms into 2 columns
+  const roomColumns = useMemo(() => {
+    const left: string[] = [ROOMS[0], ROOMS[1]]; // DAHLIA, ANGGREK
+    const right: string[] = [ROOMS[2], ROOMS[3]]; // MELATI, SERUNI
+    return { left, right };
+  }, []);
+
+  const byRoom = useMemo(() => {
+    const map: Record<string, KanbanPatient[]> = {};
+    for (const r of ROOMS) {
+      map[r] = filteredPatients
+        .filter((p) => p.room === r)
+        .sort((a, b) => (a.bed || "").localeCompare(b.bed || "", undefined, { numeric: true }));
+    }
+    return map;
+  }, [filteredPatients]);
+
+  const unassigned = filteredPatients.filter(
     (p) => !p.room || !ROOMS.includes(p.room as typeof ROOMS[number])
   );
 
@@ -224,12 +268,12 @@ export function PatientKanban() {
 
     setHighlights(newHighlights);
     setNotifications((prev) => [...newNotifs, ...prev].slice(0, 50));
-    if (newNotifs.length > 0) setNotifOpen(true);
     loadPatients();
   }
 
   const totalInRooms = ROOMS.reduce((sum, r) => sum + (byRoom[r]?.length || 0), 0);
   const notifCount = notifications.length;
+  const currentDpjpLabel = dpjpFilter === "__all__" ? "Semua DPJP" : getDpjpShort(dpjpFilter);
 
   if (loading) {
     return (
@@ -242,194 +286,243 @@ export function PatientKanban() {
 
   return (
     <>
-      {/* Mobile/secondary action bar */}
+      {/* Top action bar: DPJP filter + Notif count + AI button */}
       <div className="flex items-center gap-2 mb-3 flex-wrap">
-        <button
-          onClick={() => setChatOpen(!chatOpen)}
-          className={cn(
-            "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
-            chatOpen
-              ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
-              : "border border-border hover:bg-accent"
+        {/* DPJP Filter */}
+        <div className="relative" ref={dpjpRef}>
+          <button
+            onClick={() => setDpjpOpen(!dpjpOpen)}
+            className={cn(
+              "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
+              dpjpFilter !== "__all__"
+                ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                : "border border-border hover:bg-accent"
+            )}
+          >
+            <Stethoscope className="h-3.5 w-3.5" />
+            {currentDpjpLabel}
+            <ChevronDown className={cn("h-3 w-3 transition-transform", dpjpOpen && "rotate-180")} />
+          </button>
+          {dpjpOpen && (
+            <div className="absolute top-full left-0 mt-1 z-30 w-64 max-h-72 overflow-y-auto rounded-lg border border-border bg-card shadow-xl">
+              <button
+                onClick={() => { setDpjpFilter("__all__"); setDpjpOpen(false); }}
+                className={cn(
+                  "block w-full text-left px-3 py-1.5 text-xs hover:bg-accent transition-colors",
+                  dpjpFilter === "__all__" && "bg-emerald-500/10 text-emerald-300"
+                )}
+              >
+                <span className="font-semibold">Semua DPJP</span>
+                <span className="text-muted-foreground ml-1">({patients.length})</span>
+              </button>
+              <div className="border-t border-border" />
+              {dpjpList.length === 0 ? (
+                <p className="px-3 py-3 text-[11px] text-muted-foreground text-center">
+                  Belum ada DPJP
+                </p>
+              ) : (
+                dpjpList.map((dpjp) => {
+                  const count = patients.filter((p) => normalizeDpjp(p.dpjp) === normalizeDpjp(dpjp)).length;
+                  return (
+                    <button
+                      key={dpjp}
+                      onClick={() => { setDpjpFilter(dpjp); setDpjpOpen(false); }}
+                      className={cn(
+                        "block w-full text-left px-3 py-1.5 text-xs hover:bg-accent transition-colors",
+                        dpjpFilter === dpjp && "bg-emerald-500/10 text-emerald-300"
+                      )}
+                    >
+                      <span className="truncate">{dpjp}</span>
+                      <span className="text-muted-foreground ml-1">({count})</span>
+                    </button>
+                  );
+                })
+              )}
+            </div>
           )}
+        </div>
+
+        <button
+          onClick={() => setChatOpen(true)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border border-border hover:bg-accent transition-all"
         >
-          <Bot className="h-3.5 w-3.5" />
+          <Bot className="h-3.5 w-3.5 text-emerald-400" />
           AI Sync
         </button>
-        <button
-          onClick={() => setNotifOpen(!notifOpen)}
-          className={cn(
-            "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all relative",
-            notifOpen
-              ? "bg-blue-500/20 text-blue-300 border border-blue-500/40"
-              : "border border-border hover:bg-accent"
-          )}
-        >
-          <Bell className="h-3.5 w-3.5" />
-          Notifikasi
-          {notifCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 h-4 min-w-4 px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">
-              {notifCount > 99 ? "99+" : notifCount}
-            </span>
-          )}
-        </button>
+
+        {notifCount > 0 && (
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-500/15 text-blue-300 border border-blue-500/30">
+            <Bell className="h-3.5 w-3.5" />
+            {notifCount} perubahan
+          </div>
+        )}
+
         <span className="text-xs text-muted-foreground ml-auto">
           {totalInRooms} pasien di {ROOMS.length} ruangan
+          {dpjpFilter !== "__all__" && <span className="text-emerald-400 ml-1">(filtered)</span>}
         </span>
       </div>
 
+      {/* Main 2-column layout: ROOMS (left) | SIDEBAR (right) */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4">
-        {/* Main kanban area - 2 columns: rooms (left) + unassigned (right) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* LEFT COLUMN: All rooms (vertical list) */}
-          <div className="rounded-xl border border-border bg-card/30 p-3 space-y-2">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-1 pb-1">
-              Ruangan Rawat Inap
-            </h2>
-            {ROOMS.map((room) => {
-              const items = byRoom[room] ?? [];
-              const isOver = dragOverRoom === room;
-              const theme = ROOM_THEME[room];
-              return (
-                <div
-                  key={room}
-                  onDragOver={(e) => handleDragOver(e, room)}
-                  onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, room)}
-                  className={cn(
-                    "rounded-lg border bg-background/50 transition-all duration-200",
-                    theme.border,
-                    isOver && `ring-2 ${theme.ring}`
-                  )}
-                >
-                  <div className={cn(
-                    "flex items-center justify-between px-3 py-2 rounded-t-lg border-b",
-                    theme.headerBg,
-                    theme.border
-                  )}>
-                    <div className="flex items-center gap-2">
-                      <div className={cn("h-2 w-2 rounded-full", theme.dot)} />
-                      <h3 className="font-bold text-xs tracking-wider">{room}</h3>
-                    </div>
-                    <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded-full", theme.badge)}>
-                      {items.length}
-                    </span>
-                  </div>
-                  <div className="p-2 space-y-1.5 min-h-[60px]">
-                    {items.length === 0 ? (
-                      <p className="text-[10px] text-muted-foreground/50 text-center py-3 italic">
-                        Taruh pasien di sini
-                      </p>
-                    ) : (
-                      items.map((p) => {
-                        const hl = highlights.get(p.id);
-                        return (
-                          <PatientRow
-                            key={p.id}
-                            patient={p}
-                            onDragStart={handleDragStart}
-                            onDragEnd={handleDragEnd}
-                            isDragging={draggedId === p.id}
-                            isMoving={movingId === p.id}
-                            isEditingNotes={editingNotes === p.id}
-                            notesDraft={notesDraft}
-                            onNotesDraftChange={setNotesDraft}
-                            onStartEditNotes={() => startEditingNotes(p)}
-                            onSaveNotes={() => handleSaveNotes(p.id)}
-                            onCancelNotes={() => setEditingNotes(null)}
-                            onDischarge={() => handleDischarge(p.id)}
-                            isDischarging={dischargingId === p.id}
-                            notesInputRef={editingNotes === p.id ? notesInputRef : undefined}
-                            highlight={hl}
-                          />
-                        );
-                      })
-                    )}
-                  </div>
+        {/* LEFT: Rooms in 2 columns, each room scrollable internally */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 min-w-0">
+          {roomColumns.left.map((room) => {
+            const items = byRoom[room] ?? [];
+            const isOver = dragOverRoom === room;
+            const theme = ROOM_THEME[room];
+            return (
+              <RoomSection
+                key={room}
+                room={room}
+                theme={theme}
+                items={items}
+                isOver={isOver}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                highlights={highlights}
+                draggedId={draggedId}
+                movingId={movingId}
+                editingNotes={editingNotes}
+                notesDraft={notesDraft}
+                setNotesDraft={setNotesDraft}
+                setEditingNotes={setEditingNotes}
+                startEditingNotes={startEditingNotes}
+                handleSaveNotes={handleSaveNotes}
+                handleDischarge={handleDischarge}
+                dischargingId={dischargingId}
+                notesInputRef={editingNotes ? notesInputRef : undefined}
+              />
+            );
+          })}
+          {roomColumns.right.map((room) => {
+            const items = byRoom[room] ?? [];
+            const isOver = dragOverRoom === room;
+            const theme = ROOM_THEME[room];
+            return (
+              <RoomSection
+                key={room}
+                room={room}
+                theme={theme}
+                items={items}
+                isOver={isOver}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                highlights={highlights}
+                draggedId={draggedId}
+                movingId={movingId}
+                editingNotes={editingNotes}
+                notesDraft={notesDraft}
+                setNotesDraft={setNotesDraft}
+                setEditingNotes={setEditingNotes}
+                startEditingNotes={startEditingNotes}
+                handleSaveNotes={handleSaveNotes}
+                handleDischarge={handleDischarge}
+                dischargingId={dischargingId}
+                notesInputRef={editingNotes ? notesInputRef : undefined}
+              />
+            );
+          })}
+        </div>
+
+        {/* RIGHT: Sidebar with AI chat, unassigned, notifications */}
+        <div className="flex flex-col gap-3 min-w-0">
+          {/* AI Chat (collapsed/expanded) */}
+          <div className={cn(
+            "rounded-xl border bg-card/50 flex flex-col overflow-hidden transition-all duration-200",
+            chatOpen ? "border-emerald-500/40 max-h-[60vh]" : "border-border"
+          )}>
+            <button
+              onClick={() => setChatOpen(!chatOpen)}
+              className="flex items-center justify-between px-3 py-2 hover:bg-accent/30 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20">
+                  <Bot className="h-3 w-3 text-emerald-400" />
                 </div>
-              );
-            })}
+                <span className="text-sm font-semibold">AI Sync</span>
+              </div>
+              <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", chatOpen && "rotate-180")} />
+            </button>
+            {chatOpen && (
+              <KanbanAIChat
+                onClose={() => setChatOpen(false)}
+                onSyncComplete={(result) => {
+                  applyChanges(result);
+                  setChatOpen(false);
+                }}
+              />
+            )}
           </div>
 
-          {/* RIGHT COLUMN: Unassigned */}
+          {/* Belum ditempatkan */}
           <div
             onDragOver={(e) => handleDragOver(e, "__unassigned__")}
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, "")}
             className={cn(
-              "rounded-xl border-2 border-dashed border-muted-foreground/30 bg-card/20 p-3 space-y-2 transition-all duration-200",
+              "rounded-xl border-2 border-dashed border-muted-foreground/30 bg-card/30 p-3 transition-all duration-200",
               dragOverRoom === "__unassigned__" && "ring-2 ring-emerald-500/50 border-emerald-500/50"
             )}
           >
-            <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-1 pb-1">
-              Belum Ditempatkan
-            </h2>
-            <div className="rounded-lg border border-muted-foreground/20 bg-background/30">
-              <div className="px-3 py-2 border-b border-muted-foreground/10">
-                <p className="text-[10px] text-muted-foreground/70">
-                  Drag pasien ke sini untuk menghapus dari ruangan
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Belum Ditempatkan
+              </h3>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+                {unassigned.length}
+              </span>
+            </div>
+            <p className="text-[10px] text-muted-foreground/60 mb-2">
+              Drag pasien ke sini untuk menghapus dari ruangan
+            </p>
+            <div className="space-y-1.5 max-h-[280px] overflow-y-auto pr-1">
+              {unassigned.length === 0 ? (
+                <p className="text-[10px] text-muted-foreground/50 text-center py-4 italic">
+                  Semua pasien sudah ditempatkan
                 </p>
-              </div>
-              <div className="p-2 space-y-1.5 min-h-[200px] max-h-[calc(100vh-320px)] overflow-y-auto">
-                {unassigned.length === 0 ? (
-                  <p className="text-[10px] text-muted-foreground/50 text-center py-6 italic">
-                    Semua pasien sudah ditempatkan
-                  </p>
-                ) : (
-                  unassigned.map((p) => {
-                    const hl = highlights.get(p.id);
-                    return (
-                      <PatientRow
-                        key={p.id}
-                        patient={p}
-                        onDragStart={handleDragStart}
-                        onDragEnd={handleDragEnd}
-                        isDragging={draggedId === p.id}
-                        isMoving={movingId === p.id}
-                        isEditingNotes={editingNotes === p.id}
-                        notesDraft={notesDraft}
-                        onNotesDraftChange={setNotesDraft}
-                        onStartEditNotes={() => startEditingNotes(p)}
-                        onSaveNotes={() => handleSaveNotes(p.id)}
-                        onCancelNotes={() => setEditingNotes(null)}
-                        onDischarge={() => handleDischarge(p.id)}
-                        isDischarging={dischargingId === p.id}
-                        notesInputRef={editingNotes === p.id ? notesInputRef : undefined}
-                        highlight={hl}
-                      />
-                    );
-                  })
-                )}
-              </div>
+              ) : (
+                unassigned.map((p) => {
+                  const hl = highlights.get(p.id);
+                  return (
+                    <PatientRow
+                      key={p.id}
+                      patient={p}
+                      onDragStart={handleDragStart}
+                      onDragEnd={handleDragEnd}
+                      isDragging={draggedId === p.id}
+                      isMoving={movingId === p.id}
+                      isEditingNotes={editingNotes === p.id}
+                      notesDraft={notesDraft}
+                      onNotesDraftChange={setNotesDraft}
+                      onStartEditNotes={() => startEditingNotes(p)}
+                      onSaveNotes={() => handleSaveNotes(p.id)}
+                      onCancelNotes={() => setEditingNotes(null)}
+                      onDischarge={() => handleDischarge(p.id)}
+                      isDischarging={dischargingId === p.id}
+                      notesInputRef={editingNotes === p.id ? notesInputRef : undefined}
+                      highlight={hl}
+                    />
+                  );
+                })
+              )}
             </div>
           </div>
-        </div>
 
-        {/* NOTIFICATION SIDEBAR */}
-        {notifOpen && (
+          {/* Notifikasi */}
           <NotificationPanel
             notifications={notifications}
             onClear={() => {
               setNotifications([]);
               setHighlights(new Map());
             }}
-            onClose={() => setNotifOpen(false)}
           />
-        )}
+        </div>
       </div>
 
-      {/* AI CHATBOX */}
-      {chatOpen && (
-        <KanbanAIChat
-          onClose={() => setChatOpen(false)}
-          onSyncComplete={(result) => {
-            applyChanges(result);
-            setChatOpen(false);
-          }}
-        />
-      )}
-
-      {/* Floating AI Sync button (mobile) */}
+      {/* Floating AI Sync button (mobile fallback) */}
       {!chatOpen && (
         <button
           onClick={() => setChatOpen(true)}
@@ -440,6 +533,118 @@ export function PatientKanban() {
         </button>
       )}
     </>
+  );
+}
+
+function RoomSection({
+  room,
+  theme,
+  items,
+  isOver,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  highlights,
+  draggedId,
+  movingId,
+  editingNotes,
+  notesDraft,
+  setNotesDraft,
+  setEditingNotes,
+  startEditingNotes,
+  handleSaveNotes,
+  handleDischarge,
+  dischargingId,
+  notesInputRef,
+}: {
+  room: string;
+  theme: typeof ROOM_THEME[string];
+  items: KanbanPatient[];
+  isOver: boolean;
+  onDragOver: (e: React.DragEvent, room: string) => void;
+  onDragLeave: () => void;
+  onDrop: (e: React.DragEvent, targetRoom: string) => void;
+  highlights: Map<string, ChangeHighlight>;
+  draggedId: string | null;
+  movingId: string | null;
+  editingNotes: string | null;
+  notesDraft: string;
+  setNotesDraft: (v: string) => void;
+  setEditingNotes: (v: string | null) => void;
+  startEditingNotes: (p: KanbanPatient) => void;
+  handleSaveNotes: (id: string) => Promise<void>;
+  handleDischarge: (id: string) => Promise<void>;
+  dischargingId: string | null;
+  notesInputRef?: React.RefObject<HTMLTextAreaElement | null>;
+}) {
+  return (
+    <div
+      onDragOver={(e) => onDragOver(e, room)}
+      onDragLeave={onDragLeave}
+      onDrop={(e) => onDrop(e, room)}
+      className={cn(
+        "rounded-lg border bg-background/50 transition-all duration-200 flex flex-col",
+        theme.border,
+        isOver && `ring-2 ${theme.ring}`
+      )}
+    >
+      <div className={cn(
+        "flex items-center justify-between px-3 py-2 rounded-t-lg border-b shrink-0",
+        theme.headerBg,
+        theme.border
+      )}>
+        <div className="flex items-center gap-2">
+          <div className={cn("h-2 w-2 rounded-full", theme.dot)} />
+          <h3 className="font-bold text-xs tracking-wider">{room}</h3>
+        </div>
+        <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded-full", theme.badge)}>
+          {items.length}
+        </span>
+      </div>
+      <div className="p-2 space-y-1.5 min-h-[80px] max-h-[420px] overflow-y-auto">
+        {items.length === 0 ? (
+          <p className="text-[10px] text-muted-foreground/50 text-center py-4 italic">
+            Taruh pasien di sini
+          </p>
+        ) : (
+          items.map((p) => {
+            const hl = highlights.get(p.id);
+            return (
+              <PatientRow
+                key={p.id}
+                patient={p}
+                onDragStart={(e, id) => {
+                  if (editingNotes) { e.preventDefault(); return; }
+                  // call parent dragStart
+                  const target = e.currentTarget as HTMLElement;
+                  target.style.opacity = "0.4";
+                  e.dataTransfer.effectAllowed = "move";
+                  e.dataTransfer.setData("text/plain", id);
+                  // trigger parent state via custom event approach would be complex;
+                  // instead, the parent passes onDragStart so we rely on it
+                }}
+                onDragEnd={(e) => {
+                  const target = e.currentTarget as HTMLElement;
+                  target.style.opacity = "1";
+                }}
+                isDragging={draggedId === p.id}
+                isMoving={movingId === p.id}
+                isEditingNotes={editingNotes === p.id}
+                notesDraft={notesDraft}
+                onNotesDraftChange={setNotesDraft}
+                onStartEditNotes={() => startEditingNotes(p)}
+                onSaveNotes={() => handleSaveNotes(p.id)}
+                onCancelNotes={() => setEditingNotes(null)}
+                onDischarge={() => handleDischarge(p.id)}
+                isDischarging={dischargingId === p.id}
+                notesInputRef={editingNotes === p.id ? notesInputRef : undefined}
+                highlight={hl}
+              />
+            );
+          })
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -477,6 +682,7 @@ function PatientRow({
   highlight?: ChangeHighlight;
 }) {
   const hlStyle = highlight ? HIGHLIGHT_STYLES[highlight.type] : null;
+  const dpjpShort = getDpjpShort(patient.dpjp);
 
   return (
     <div
@@ -536,6 +742,16 @@ function PatientRow({
               </span>
             )}
           </div>
+
+          {/* DPJP */}
+          {dpjpShort && (
+            <div className="flex items-center gap-1 mt-0.5">
+              <Stethoscope className="h-2.5 w-2.5 text-purple-400 shrink-0" />
+              <span className="text-[10px] text-purple-300/80 truncate" title={patient.dpjp || ""}>
+                {dpjpShort}
+              </span>
+            </div>
+          )}
 
           <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/70 mt-0.5">
             {patient.medicalRecordNo && (
@@ -619,42 +835,23 @@ function PatientRow({
 function NotificationPanel({
   notifications,
   onClear,
-  onClose,
 }: {
   notifications: { change: BulkSyncChange; timestamp: number }[];
   onClear: () => void;
-  onClose: () => void;
 }) {
-  if (notifications.length === 0) {
-    return (
-      <div className="rounded-xl border border-border bg-card/50 p-4 h-fit">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-bold flex items-center gap-1.5">
-            <Bell className="h-4 w-4" />
-            Notifikasi
-          </h3>
-          <button onClick={onClose} className="p-1 rounded hover:bg-muted">
-            <X className="h-3.5 w-3.5" />
-          </button>
-        </div>
-        <p className="text-xs text-muted-foreground text-center py-6">
-          Belum ada perubahan. Kirim list pasien via AI Sync untuk melihat notifikasi.
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <div className="rounded-xl border border-border bg-card/50 p-3 h-fit max-h-[calc(100vh-200px)] overflow-hidden flex flex-col">
-      <div className="flex items-center justify-between mb-2 px-1">
+    <div className="rounded-xl border border-border bg-card/50 p-3 flex flex-col max-h-[300px] overflow-hidden">
+      <div className="flex items-center justify-between mb-2 px-1 shrink-0">
         <h3 className="text-sm font-bold flex items-center gap-1.5">
-          <Bell className="h-4 w-4 text-blue-400" />
+          <Bell className="h-3.5 w-3.5 text-blue-400" />
           Notifikasi
-          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300">
-            {notifications.length}
-          </span>
+          {notifications.length > 0 && (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300">
+              {notifications.length}
+            </span>
+          )}
         </h3>
-        <div className="flex items-center gap-1">
+        {notifications.length > 0 && (
           <button
             onClick={onClear}
             className="p-1 rounded hover:bg-muted text-muted-foreground"
@@ -662,51 +859,54 @@ function NotificationPanel({
           >
             <Trash2 className="h-3.5 w-3.5" />
           </button>
-          <button onClick={onClose} className="p-1 rounded hover:bg-muted">
-            <X className="h-3.5 w-3.5" />
-          </button>
-        </div>
+        )}
       </div>
-      <div className="space-y-1.5 overflow-y-auto pr-1">
-        {notifications.map((n, i) => {
-          const hlStyle = HIGHLIGHT_STYLES[n.change.type];
-          const Icon = hlStyle.icon;
-          const timeAgo = formatTimeAgo(n.timestamp);
-          return (
-            <div
-              key={i}
-              className={cn(
-                "rounded-md border p-2 text-[11px] transition-all",
-                n.change.type === "created" && "border-emerald-500/30 bg-emerald-500/5",
-                n.change.type === "moved" && "border-blue-500/30 bg-blue-500/5",
-                n.change.type === "updated" && "border-amber-500/30 bg-amber-500/5",
-                n.change.type === "discharged" && "border-rose-500/30 bg-rose-500/5"
-              )}
-            >
-              <div className="flex items-start gap-1.5">
-                <Icon className={cn(
-                  "h-3 w-3 mt-0.5 shrink-0",
-                  n.change.type === "created" && "text-emerald-400",
-                  n.change.type === "moved" && "text-blue-400",
-                  n.change.type === "updated" && "text-amber-400",
-                  n.change.type === "discharged" && "text-rose-400"
-                )} />
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold truncate">
-                    {n.change.patientName}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">
-                    {n.change.type === "created" && `Ditambahkan ke ${n.change.toRoom}${n.change.toBed ? ` ${n.change.toBed}` : ""}`}
-                    {n.change.type === "moved" && `Pindah: ${n.change.fromRoom || "-"}${n.change.fromBed ? ` ${n.change.fromBed}` : ""} → ${n.change.toRoom}${n.change.toBed ? ` ${n.change.toBed}` : ""}`}
-                    {n.change.type === "updated" && (n.change.changes?.join(", ") || "Data diperbarui")}
-                    {n.change.type === "discharged" && `Dipulangkan dari ${n.change.fromRoom || "-"}`}
-                  </p>
-                  <p className="text-[9px] text-muted-foreground/60 mt-0.5">{timeAgo}</p>
+      <div className="space-y-1.5 overflow-y-auto pr-1 flex-1">
+        {notifications.length === 0 ? (
+          <p className="text-[10px] text-muted-foreground/50 text-center py-4 italic">
+            Belum ada perubahan. Kirim list via AI Sync.
+          </p>
+        ) : (
+          notifications.map((n, i) => {
+            const hlStyle = HIGHLIGHT_STYLES[n.change.type];
+            const Icon = hlStyle.icon;
+            const timeAgo = formatTimeAgo(n.timestamp);
+            return (
+              <div
+                key={i}
+                className={cn(
+                  "rounded-md border p-1.5 text-[11px] transition-all",
+                  n.change.type === "created" && "border-emerald-500/30 bg-emerald-500/5",
+                  n.change.type === "moved" && "border-blue-500/30 bg-blue-500/5",
+                  n.change.type === "updated" && "border-amber-500/30 bg-amber-500/5",
+                  n.change.type === "discharged" && "border-rose-500/30 bg-rose-500/5"
+                )}
+              >
+                <div className="flex items-start gap-1.5">
+                  <Icon className={cn(
+                    "h-3 w-3 mt-0.5 shrink-0",
+                    n.change.type === "created" && "text-emerald-400",
+                    n.change.type === "moved" && "text-blue-400",
+                    n.change.type === "updated" && "text-amber-400",
+                    n.change.type === "discharged" && "text-rose-400"
+                  )} />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold truncate">
+                      {n.change.patientName}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug">
+                      {n.change.type === "created" && `+ ${n.change.toRoom}${n.change.toBed ? ` ${n.change.toBed}` : ""}`}
+                      {n.change.type === "moved" && `${n.change.fromRoom || "-"} → ${n.change.toRoom}${n.change.toBed ? ` ${n.change.toBed}` : ""}`}
+                      {n.change.type === "updated" && (n.change.changes?.join(", ") || "Update")}
+                      {n.change.type === "discharged" && `Pulang dari ${n.change.fromRoom || "-"}`}
+                    </p>
+                    <p className="text-[9px] text-muted-foreground/60 mt-0.5">{timeAgo}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
     </div>
   );
@@ -722,7 +922,7 @@ function KanbanAIChat({
   const [messages, setMessages] = useState<{ role: "user" | "assistant" | "system"; content: string }[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [parsedPatients, setParsedPatients] = useState<Awaited<ReturnType<typeof bulkSyncPatients>>["changes"] extends never ? never : any[] | null>(null);
+  const [parsedPatients, setParsedPatients] = useState<any[] | null>(null);
   const [syncing, setSyncing] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -764,48 +964,29 @@ function KanbanAIChat({
       const result = await bulkSyncPatients({ patients: parsedPatients });
       setMessages((prev) => [
         ...prev,
-        { role: "system", content: `✅ Sinkron selesai: ${result.summary.created} baru, ${result.summary.moved} pindah, ${result.summary.updated} update, ${result.summary.discharged} pulang` },
+        { role: "system", content: `✅ ${result.summary.created} baru, ${result.summary.moved} pindah, ${result.summary.updated} update, ${result.summary.discharged} pulang` },
       ]);
       setParsedPatients(null);
       setTimeout(() => onSyncComplete(result), 800);
     } catch (e) {
-      setMessages((prev) => [...prev, { role: "system", content: "❌ Gagal sinkron: " + (e instanceof Error ? e.message : "Error") }]);
+      setMessages((prev) => [...prev, { role: "system", content: "❌ " + (e instanceof Error ? e.message : "Error") }]);
     } finally {
       setSyncing(false);
     }
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 w-[min(420px,calc(100vw-2rem))] h-[min(640px,calc(100vh-2rem))] rounded-xl border border-emerald-500/30 bg-card shadow-2xl flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between gap-2 p-3 border-b border-border bg-gradient-to-r from-emerald-500/10 to-transparent">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/20">
-            <Bot className="h-3.5 w-3.5 text-emerald-400" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold truncate">AI Sync Kanban</p>
-            <p className="text-[10px] text-muted-foreground">Paste list pasien → auto-assign ruangan</p>
-          </div>
-        </div>
-        <button onClick={onClose} className="p-1 rounded hover:bg-muted">
-          <X className="h-3.5 w-3.5" />
-        </button>
-      </div>
-
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-2.5">
+    <div className="flex flex-col border-t border-border bg-background/30 max-h-[55vh]">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-2 space-y-2 min-h-[120px]">
         {messages.length === 0 && !parsedPatients && (
           <div className="space-y-2">
-            <p className="text-xs text-muted-foreground text-center pt-2">
-              Kirim list pasien (format bebas). AI akan extract nama, ruangan, bed, diagnosis, dan otomatis assign ke kanban.
+            <p className="text-[11px] text-muted-foreground text-center pt-1">
+              Paste list pasien (format bebas). AI auto-extract + assign.
             </p>
-            <div className="rounded-md border border-emerald-500/20 bg-emerald-500/5 p-2 text-[10px] text-emerald-300/80 space-y-1">
-              <p className="font-bold">💡 Tips:</p>
-              <ul className="list-disc list-inside space-y-0.5 ml-1">
-                <li>Format RTF/text bebas, AI yang parsing</li>
-                <li>Pasien lama: di-update (pindah kamar/ruangan)</li>
-                <li>Pasien baru: otomatis dibuat</li>
-                <li>Pasien hilang dari list: otomatis dipulangkan</li>
-              </ul>
+            <div className="rounded-md border border-emerald-500/20 bg-emerald-500/5 p-1.5 text-[10px] text-emerald-300/80 space-y-0.5">
+              <p>• Pasien baru: otomatis dibuat</p>
+              <p>• Pasien lama: di-update / pindah kamar</p>
+              <p>• Hilang dari list: otomatis pulang</p>
             </div>
           </div>
         )}
@@ -813,15 +994,15 @@ function KanbanAIChat({
         {messages.map((m, i) => (
           <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
             <div className={cn(
-              "max-w-[90%] rounded-lg p-2 text-xs",
+              "max-w-[90%] rounded-lg p-1.5 text-[11px]",
               m.role === "user" ? "bg-emerald-500/15 text-foreground" :
               m.content.startsWith("✅") ? "border border-emerald-500/30 bg-emerald-500/5 text-emerald-200" :
               m.content.startsWith("❌") ? "border border-rose-500/30 bg-rose-500/5 text-rose-200" :
               "bg-muted/40"
             )}>
-              <div className="flex items-center gap-1.5 mb-0.5">
-                {m.role === "user" ? <User className="h-2.5 w-2.5 text-emerald-400" /> : <Bot className="h-3 w-3 text-emerald-400" />}
-                <span className="text-[10px] font-semibold">{m.role === "user" ? "Anda" : "AI"}</span>
+              <div className="flex items-center gap-1 mb-0.5">
+                {m.role === "user" ? <User className="h-2.5 w-2.5 text-emerald-400" /> : <Bot className="h-2.5 w-2.5 text-emerald-400" />}
+                <span className="text-[9px] font-semibold">{m.role === "user" ? "Anda" : "AI"}</span>
               </div>
               <p className="whitespace-pre-wrap break-words">{m.content}</p>
             </div>
@@ -829,30 +1010,29 @@ function KanbanAIChat({
         ))}
 
         {parsedPatients && (
-          <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-2.5 text-xs space-y-2">
+          <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-2 text-[11px] space-y-1.5">
             <p className="text-[10px] font-semibold text-emerald-300 uppercase tracking-wider">
-              Preview: {parsedPatients.length} pasien
+              {parsedPatients.length} pasien
             </p>
-            <div className="max-h-48 overflow-y-auto space-y-1 pr-1">
+            <div className="max-h-32 overflow-y-auto space-y-1 pr-1">
               {parsedPatients.map((p, i) => (
-                <div key={i} className="flex items-center gap-1.5 text-[10px] bg-background/50 rounded px-2 py-1">
-                  <span className="font-mono text-muted-foreground w-16 shrink-0">{p.room}{p.bed ? ` ${p.bed}` : ""}</span>
+                <div key={i} className="flex items-center gap-1 text-[10px] bg-background/50 rounded px-1.5 py-0.5">
+                  <span className="font-mono text-muted-foreground w-14 shrink-0">{p.room}{p.bed ? ` ${p.bed}` : ""}</span>
                   <span className="truncate flex-1">{p.name}</span>
-                  {p.diagnosis && <span className="text-muted-foreground truncate hidden sm:inline">· {p.diagnosis}</span>}
                 </div>
               ))}
             </div>
-            <div className="flex gap-1.5 pt-1">
+            <div className="flex gap-1 pt-0.5">
               <button
                 onClick={handleSync}
                 disabled={syncing}
-                className="flex-1 inline-flex items-center justify-center gap-1 text-xs font-medium px-2 py-1.5 rounded-md bg-emerald-500 text-white hover:bg-emerald-600 transition-colors disabled:opacity-50"
+                className="flex-1 inline-flex items-center justify-center gap-1 text-[11px] font-medium px-2 py-1 rounded-md bg-emerald-500 text-white hover:bg-emerald-600 transition-colors disabled:opacity-50"
               >
-                {syncing ? <><Loader2 className="h-3 w-3 animate-spin" />Sinkron...</> : <><Check className="h-3 w-3" />Sinkronkan ke Kanban</>}
+                {syncing ? <><Loader2 className="h-3 w-3 animate-spin" />Sync...</> : <><Check className="h-3 w-3" />Sinkronkan</>}
               </button>
               <button
                 onClick={() => setParsedPatients(null)}
-                className="px-2 py-1.5 rounded-md bg-muted text-muted-foreground hover:bg-muted/80 text-xs"
+                className="px-2 py-1 rounded-md bg-muted text-muted-foreground hover:bg-muted/80 text-[11px]"
               >
                 Batal
               </button>
@@ -861,28 +1041,28 @@ function KanbanAIChat({
         )}
 
         {loading && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Loader2 className="h-3.5 w-3.5 animate-spin text-emerald-400" />
-            <span>AI mem-parse list pasien...</span>
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <Loader2 className="h-3 w-3 animate-spin text-emerald-400" />
+            <span>Parsing...</span>
           </div>
         )}
       </div>
 
-      <div className="border-t border-border p-2 flex gap-2">
+      <div className="border-t border-border p-1.5 flex gap-1.5">
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleParse(); } }}
-          placeholder="Paste list pasien rawat inap..."
-          rows={3}
-          className="flex-1 min-h-[60px] max-h-32 resize-none rounded-md border border-border bg-background px-2 py-1.5 text-xs focus:border-emerald-500 focus:outline-none"
+          placeholder="Paste list pasien..."
+          rows={2}
+          className="flex-1 min-h-[36px] max-h-20 resize-none rounded-md border border-border bg-background px-2 py-1 text-[11px] focus:border-emerald-500 focus:outline-none"
         />
         <button
           onClick={handleParse}
           disabled={loading || !input.trim()}
-          className="h-auto px-3 rounded-md bg-emerald-500 text-white hover:bg-emerald-600 transition-colors disabled:opacity-50"
+          className="h-auto px-2 rounded-md bg-emerald-500 text-white hover:bg-emerald-600 transition-colors disabled:opacity-50"
         >
-          <Send className="h-3.5 w-3.5" />
+          <Send className="h-3 w-3" />
         </button>
       </div>
     </div>
@@ -891,9 +1071,9 @@ function KanbanAIChat({
 
 function formatTimeAgo(ts: number): string {
   const seconds = Math.floor((Date.now() - ts) / 1000);
-  if (seconds < 60) return `${seconds}d lalu`;
+  if (seconds < 60) return `${seconds}d`;
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m lalu`;
+  if (minutes < 60) return `${minutes}m`;
   const hours = Math.floor(minutes / 60);
-  return `${hours}j lalu`;
+  return `${hours}j`;
 }

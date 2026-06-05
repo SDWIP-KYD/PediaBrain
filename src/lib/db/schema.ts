@@ -60,6 +60,7 @@ export const patients = pgTable("patients", {
   bed: varchar("bed", { length: 20 }),
   status: varchar("status", { length: 20 }).notNull().default("rawat_inap"),
   notes: text("notes"),
+  dpjp: varchar("dpjp", { length: 255 }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
