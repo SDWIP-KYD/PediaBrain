@@ -15,7 +15,7 @@ export function CardiacOutputCalc() {
   const [hb, setHb] = useState(10);
   const [sao2, setSaO2] = useState(95);
 
-  const bsa = Math.sqrt((w * 1000 * h) / 3600);
+  const bsa = Math.sqrt((w * h) / 3600);
   const co = +((hr * sv) / 1000).toFixed(2);
   const ci = bsa > 0 ? +(co / bsa).toFixed(2) : 0;
   const svr = co > 0 ? +(79.9 * (map - cvp) / co).toFixed(0) : 0;
@@ -24,9 +24,8 @@ export function CardiacOutputCalc() {
 
   return (
     <CalcCard title="Cardiac Output" subtitle="CO, CI, SVR, DO₂" icon="❤️" color="pink">
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <CalcInput label="BB (kg)" value={w} onChange={(v) => setW(v as number)} step={0.5} />
-        <CalcInput label="TB (cm)" value={h} onChange={(v) => setH(v as number)} />
         <CalcInput label="HR" value={hr} onChange={(v) => setHR(v as number)} />
       </div>
       <div className="grid grid-cols-3 gap-3">
@@ -43,9 +42,7 @@ export function CardiacOutputCalc() {
           <ResultItem label="CO" value={`${co}`} unit="L/min" />
           <ResultItem label="CI" value={`${ci}`} unit="L/min/m²" note="Normal: 3.5-5.5" />
           <ResultItem label="SVR" value={`${svr}`} unit="dyn·s/cm⁵" />
-          <ResultItem label="CaO₂" value={`${cao2}`} unit="mL O₂/dL" />
           <ResultItem label="DO₂" value={`${do2}`} unit="mL O₂/min" />
-          <ResultItem label="BSA" value={`${+bsa.toFixed(3)}`} unit="m²" />
         </ResultGrid>
       </CalcResult>
     </CalcCard>

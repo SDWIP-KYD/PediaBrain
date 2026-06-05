@@ -21,6 +21,7 @@ function getAgeGroup(age: number): string {
 export function SepsisScoreCalc() {
   const { weightGram, ageYears } = usePatient();
   const [age, setAge] = useState(ageYears);
+  const [w, setW] = useState(weightGram / 1000);
   const [temp, setTemp] = useState(38.5);
   const [hr, setHR] = useState(160);
   const [rr, setRR] = useState(45);
@@ -46,6 +47,7 @@ export function SepsisScoreCalc() {
       </InfoBox>
       <div className="grid grid-cols-3 gap-3">
         <CalcInput label="Usia (thn)" value={age} onChange={(v) => setAge(v as number)} />
+        <CalcInput label="BB (kg)" value={w} onChange={(v) => setW(v as number)} step={0.5} />
         <CalcInput label="Temp (°C)" value={temp} onChange={(v) => setTemp(v as number)} step={0.1} />
         <CalcInput label="HR" value={hr} onChange={(v) => setHR(v as number)} />
       </div>
@@ -65,7 +67,12 @@ export function SepsisScoreCalc() {
         </ResultGrid>
         {hasShock && (
           <ResultAlert type="danger">
-            ⚠️ SEPTIC SHOCK — SIRS {sirs.length} + BP {sys} {"<"} {th.minBp} mmHg. Resusitasi agresif segera!
+            ⚠️ SEPTIC SHOCK — SIRS {sirs.length} + BP {sys} {"<"} {th.minBp} mmHg. Hour-1 Bundle: 1. Kultur darah → Antibiotik dalam 1 JAM / 2. NS bolus 10mL/kg / 3. Norepinefrin / 4. Glukosa dan kalsium / 5. Intubasi bila perlu. Resusitasi agresif segera!
+          </ResultAlert>
+        )}
+        {hasSIRS && !hasShock && (
+          <ResultAlert type="warning">
+            🟡 SEPSIS — Tangani sumber infeksi, kultur, antibiotik dalam 3 jam, monitor produksi urin.
           </ResultAlert>
         )}
       </CalcResult>

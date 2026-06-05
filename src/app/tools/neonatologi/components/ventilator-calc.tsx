@@ -51,6 +51,9 @@ export function VentilatorCalc() {
 
   return (
     <CalcCard title="Setting Ventilator" subtitle="Parameter awal ventilator neonatus" icon="🫁" color="blue">
+      <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-800 leading-relaxed">
+        ⚠️ Dosis berdasarkan panduan klinis standar untuk neonatus. Selalu verifikasi dengan referensi terkini.
+      </div>
       <div className="grid grid-cols-3 gap-3">
         <CalcInput label="BB (gram)" value={wt} onChange={(v) => setWt(v as number)} unit="g" />
         <CalcInput label="GA (minggu)" value={ga} onChange={(v) => setGa(v as number)} unit="mgg" />

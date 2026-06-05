@@ -181,6 +181,9 @@ function DrugListItem({
     "Neurologi": "bg-pink-500/10 border-pink-500/20 text-pink-400",
     "Hematologi": "bg-orange-500/10 border-orange-500/20 text-orange-400",
     "Gawat Darurat": "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
+    "Alergi/Imunologi": "bg-violet-500/10 border-violet-500/20 text-violet-400",
+    "Nutrisi/Vitamin": "bg-yellow-500/10 border-yellow-500/20 text-yellow-400",
+    "Dermatologi/Topikal": "bg-teal-500/10 border-teal-500/20 text-teal-400",
   };
 
   return (

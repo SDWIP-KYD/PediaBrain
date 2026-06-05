@@ -35,6 +35,9 @@ export function TidalVolumeCalc() {
         <ResultGrid cols={3}>
           <ResultItem label="VT/kg" value={`${perKg}`} unit="mL/kg" />
           <ResultItem label="VT minimum" value={`${minTV}`} unit="mL" note="4 mL/kg" />
+          <ResultItem label="VT tengah" value={`${midTV}`} unit="mL" note="5 mL/kg" />
+        </ResultGrid>
+        <ResultGrid cols={1} className="mt-2">
           <ResultItem label="VT maksimum" value={`${maxTV}`} unit="mL" note="6 mL/kg" />
         </ResultGrid>
         <ResultAlert type={statusType}>

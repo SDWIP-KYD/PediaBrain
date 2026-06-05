@@ -21,7 +21,7 @@ export function OIPICUCalc() {
   if (pfRatio >= 300) { ards = "Normal"; ardsType = "success"; action = "Monitor."; }
   else if (pfRatio >= 200) { ards = "Mild ARDS"; ardsType = "warning"; action = "Lung protective ventilation. Prone jika tidak membaik 12-24 jam."; }
   else if (pfRatio >= 100) { ards = "Moderate ARDS"; ardsType = "warning"; action = "Pertimbangkan HFOV. Prone positioning. NMB 48 jam. iNO bila PPHN."; }
-  else { ards = "Severe ARDS"; ardsType = "danger"; action = oi > 25 ? "HFOV." : "" + (oi > 40 ? " ECMO. Konsul ECMO center SEGERA." : ""); }
+  else { ards = "Severe ARDS"; ardsType = "danger"; action = oi > 40 ? "ECMO. Konsul ECMO center SEGERA." : oi > 25 ? "HFOV." : ""; }
 
   return (
     <CalcCard title="Oxygenation Index" subtitle="OI, PF ratio, SF ratio, ARDS classification" icon="🔬" color="red">

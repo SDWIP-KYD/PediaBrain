@@ -137,6 +137,87 @@ export function MilkDatabaseCalc() {
           </tbody>
         </table>
       </div>
+
+      {/* Susu Sering Digunakan */}
+      <div className="grid grid-cols-2 gap-3 mt-4">
+        <div>
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">⭐ Susu Sering Digunakan</p>
+          <div className="overflow-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left py-1.5 px-2 text-muted-foreground">Susu</th>
+                  <th className="text-left py-1.5 px-2 text-muted-foreground">Takaran</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { name: "Infatrini", takaran: "1 sdt = 25 ml air" },
+                  { name: "SGM Gain 100", takaran: "1 sdt = 20 ml air" },
+                  { name: "SGM Optigrow", takaran: "1 sdt = 45 ml air" },
+                  { name: "Pediacomplete", takaran: "1 sdt = 40 ml air" },
+                  { name: "Pediasure", takaran: "1 sdt = 50 ml air" },
+                  { name: "Goldsure", takaran: "1 sdt = 30 ml air" },
+                  { name: "Chilkid Platinum", takaran: "1 sdt = 35 ml air" },
+                  { name: "Morigro", takaran: "1 sdt = 35 ml air" },
+                ].map((s, i) => (
+                  <tr key={i} className="border-b border-border/50">
+                    <td className="py-1 px-2 font-medium">{s.name}</td>
+                    <td className="py-1 px-2 font-mono text-blue-300">{s.takaran}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div>
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">🎯 Rekomendasi per Usia</p>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between px-2 py-1.5 border-b border-border/50 text-xs">
+              <span>👶 &lt; 1 tahun</span>
+              <div className="flex gap-1">
+                <span className="px-1.5 py-0.5 rounded text-[10px] bg-blue-500/15 text-blue-300">SGM Ananda</span>
+                <span className="px-1.5 py-0.5 rounded text-[10px] bg-blue-500/15 text-blue-300">Lactogen</span>
+                <span className="px-1.5 py-0.5 rounded text-[10px] bg-blue-500/15 text-blue-300">Infatrini</span>
+                <span className="px-1.5 py-0.5 rounded text-[10px] bg-orange-500/15 text-orange-300">Pregestimil</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between px-2 py-1.5 border-b border-border/50 text-xs">
+              <span>🧒 1–10 tahun</span>
+              <div className="flex gap-1">
+                <span className="px-1.5 py-0.5 rounded text-[10px] bg-emerald-500/15 text-emerald-300">Pediasure</span>
+                <span className="px-1.5 py-0.5 rounded text-[10px] bg-emerald-500/15 text-emerald-300">Pediacomplete</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between px-2 py-1.5 border-b border-border/50 text-xs">
+              <span>🧑 &gt; 10 tahun</span>
+              <div className="flex gap-1">
+                <span className="px-1.5 py-0.5 rounded text-[10px] bg-blue-500/15 text-blue-300">Ensure</span>
+                <span className="px-1.5 py-0.5 rounded text-[10px] bg-blue-500/15 text-blue-300">Goldsure</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between px-2 py-1.5 border-b border-border/50 text-xs">
+              <span>🚨 Gizi Buruk</span>
+              <div className="flex gap-1">
+                <span className="px-1.5 py-0.5 rounded text-[10px] bg-red-500/15 text-red-300">F75</span>
+                <span className="px-1.5 py-0.5 rounded text-[10px] bg-red-500/15 text-red-300">F100</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* SGM Optigrow kandungan */}
+      <div className="mt-3">
+        <p className="text-[11px] font-semibold text-blue-400 uppercase tracking-wider mb-2">SGM Optigrow / 100g</p>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="px-3 py-1.5 rounded bg-muted/50 border border-border font-mono text-xs text-blue-300">Protein: 12.2 g</div>
+          <div className="px-3 py-1.5 rounded bg-muted/50 border border-border font-mono text-xs text-blue-300">Na: 149 mg</div>
+          <div className="px-3 py-1.5 rounded bg-muted/50 border border-border font-mono text-xs text-emerald-300">K: 466 mg</div>
+          <div className="px-3 py-1.5 rounded bg-muted/50 border border-border font-mono text-xs text-orange-300">P: 264 mg</div>
+        </div>
+      </div>
     </CalcCard>
   );
 }

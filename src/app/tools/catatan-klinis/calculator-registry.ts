@@ -2,43 +2,52 @@ export interface KlinisCalcDef {
   id: string;
   name: string;
   description: string;
+  category: string;
 }
 
 export const catatanKlinisSubtabs = [
-  "Templates",
-  "Assessment",
-  "Procedures",
-  "Administrative",
+  "Divisi",
+  "Kalkulator",
+  "Semua",
 ] as const;
 
-const calculatorRegistry: Record<string, KlinisCalcDef[]> = {
-  Templates: [
-    { id: "soap", name: "SOAP Note Generator", description: "Subjective, Objective, Assessment, Plan" },
-    { id: "resume", name: "Resume Medis", description: "Ringkasan medis lengkap" },
-    { id: "referral", name: "Surat Rujukan", description: "Surat rujukan spesialis" },
-    { id: "discharge", name: "Surat Pulang", description: "Ringkasan pulang & instruksi" },
-  ],
-  Assessment: [
-    { id: "pe-anak", name: "Pemeriksaan Fisik Anak", description: "Checklist sistematis pemeriksaan fisik" },
-    { id: "riwayat", name: "Riwayat Penyakit", description: "Panduan anamnesis lengkap" },
-    { id: "risiko-jatuh", name: "Risiko Jatuh", description: "Morse Fall Scale adaptasi peds" },
-    { id: "risiko-decubitus", name: "Risiko Decubitus", description: "Braden Q scale pediatric" },
-  ],
-  Procedures: [
-    { id: "prosedur", name: "Catatan Prosedur", description: "Dokumentasi prosedur medis" },
-    { id: "informed-consent", name: "Informed Consent", description: "Formulir persetujuan tindakan" },
-    { id: "catatan-medis", name: "Catatan Medis Harian", description: "Progress notes harian" },
-  ],
-  Administrative: [
-    { id: "surat-alamat", name: "Surat Alamat Dokter", description: "Surat keterangan alamat dokter" },
-    { id: "surat-sakit", name: "Surat Keterangan Sakit", description: "Surat izin sakit" },
-  ],
-};
+export const divisions = [
+  { id: "nicu", name: "NICU", full: "Neonatal Intensive Care Unit", icon: "👶", sectionCount: 21 },
+  { id: "picu", name: "PICU", full: "Pediatric Intensive Care Unit", icon: "💊", sectionCount: 6 },
+  { id: "hemato", name: "Hemato-Onkologi", full: "Hematologi & Onkologi", icon: "🩸", sectionCount: 9 },
+  { id: "kardio", name: "Kardiologi", full: "Kardiologi Anak", icon: "❤️", sectionCount: 4 },
+  { id: "gastro", name: "Gastroenterologi", full: "Gastroenterologi Anak", icon: "🫁", sectionCount: 4 },
+  { id: "nutrisi", name: "Nutrisi Metabolik", full: "Nutrisi & Penyakit Metabolik", icon: "🍼", sectionCount: 2 },
+  { id: "neuro", name: "Neurologi", full: "Neurologi Anak", icon: "🧠", sectionCount: 3 },
+  { id: "respi", name: "Respirologi", full: "Respirologi Anak", icon: "🌬️", sectionCount: 3 },
+  { id: "endo", name: "Endokrinologi", full: "Endokrinologi Anak", icon: "⚗️", sectionCount: 5 },
+  { id: "nefro", name: "Nefrologi", full: "Nefrologi Anak", icon: "🫘", sectionCount: 2 },
+  { id: "infeksi", name: "Infeksi & Tropis", full: "Infeksi & Penyakit Tropis", icon: "🦠", sectionCount: 3 },
+  { id: "alergi", name: "Alergi Imunologi", full: "Alergi & Imunologi", icon: "🛡️", sectionCount: 2 },
+  { id: "pedsos", name: "Pedsos", full: "Pediatri Sosial", icon: "👥", sectionCount: 3 },
+] as const;
 
-export function getKlinisCalculatorsForSubtab(subtab: string): KlinisCalcDef[] {
-  return calculatorRegistry[subtab] || [];
+export const calculatorRegistry: KlinisCalcDef[] = [
+  { id: "gir", name: "GIR (Glucose Infusion Rate)", description: "Dari infus IV dextrose", category: "NICU & Cairan" },
+  { id: "rumatan", name: "Cairan Rumatan (Holliday-Segar)", description: "Metode berat badan 100/50/20", category: "NICU & Cairan" },
+  { id: "iwl", name: "IWL & Balance Cairan", description: "Hitung IWL dan balans 24 jam", category: "NICU & Cairan" },
+  { id: "bicnat", name: "Koreksi Bikarbonat", description: "Bicnat / Meylon — habis 24 jam", category: "NICU & Cairan" },
+  { id: "prc", name: "Volume Transfusi PRC", description: "ΔHb × 4 × BB", category: "Hematologi" },
+  { id: "anc", name: "Absolute Neutrophil Count", description: "Derajat neutropenia", category: "Hematologi" },
+  { id: "mentzer", name: "Indeks Mentzer", description: "Bedakan ADB vs Thalasemia", category: "Hematologi" },
+  { id: "vaso", name: "Drip Obat Vasoaktif", description: "Kecepatan infus mL/jam", category: "PICU & Kardiologi" },
+  { id: "nikardipin", name: "Drip Nikardipin", description: "10 mL + 40 mL NaCl 0.9%", category: "PICU & Kardiologi" },
+  { id: "map", name: "Mean Arterial Pressure", description: "(Sis + 2×Dia) ÷ 3", category: "PICU & Kardiologi" },
+  { id: "rr", name: "Koreksi RR Ventilator", description: "Sesuaikan RR target PCO₂", category: "PICU & Kardiologi" },
+  { id: "epi", name: "Epinefrin Anafilaksis", description: "1:1000 intramuskular", category: "Kegawatan" },
+  { id: "pct", name: "PCT (Parasetamol) Kontinu", description: "Infus kontinu mL/jam", category: "Kegawatan" },
+  { id: "ett", name: "ETT & Kateter Umbilikus", description: "Ukuran & kedalaman", category: "Kegawatan" },
+];
+
+export function getCalculatorsByCategory(category: string): KlinisCalcDef[] {
+  return calculatorRegistry.filter((c) => c.category === category);
 }
 
-export function getAllKlinisCalculators(): KlinisCalcDef[] {
-  return Object.values(calculatorRegistry).flat();
+export function getAllCalculatorCategories(): string[] {
+  return [...new Set(calculatorRegistry.map((c) => c.category))];
 }

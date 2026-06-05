@@ -5,7 +5,7 @@ import { usePatient } from "../../patient-context";
 import { CalcCard, CalcInput, CalcSelect, CalcResult, ResultGrid, ResultItem, ResultAlert, InfoBox } from "../../components/calc-ui";
 
 const nmbs = [
-  { value: "succinylcholine", label: "Sukinilkolin", dose: 1.5, conc: 20, duration: "5-10 mnt", note: "KONTRAINDIKASI: hiperkalemia, denervasi, miopati, luka bakar >24jam, cedera mata terbuka" },
+  { value: "succinylcholine", label: "Sukinilkolin", dose: 1.5, conc: 20, duration: "5-10 mnt", note: "KONTRAINDIKASI: hiperkalemia, denervasi, miopati, luka bakar >24jam, cedera mata terbuka, riwayat malignant hyperthermia" },
   { value: "rocuronium", label: "Rokuronium", dose: 1.2, conc: 10, duration: "30-60 mnt", note: "First choice RSI. Reversibel Sugammadex 16 mg/kg." },
   { value: "vecuronium", label: "Vekuronium", dose: 0.1, conc: 1, duration: "25-40 mnt", note: "Maintenance RSI atau intermediate blockade." },
   { value: "cisatracurium", label: "Sisatrasuriem", dose: 0.15, conc: 2, duration: "Infus 1-3 mcg/kg/min", note: "Pilihan ARDS. Independen dari hati/ginjal. Monitor TOF." },
@@ -23,6 +23,9 @@ export function NMBCalc() {
 
   return (
     <CalcCard title="Neuromuscular Blockade" subtitle="Paralytic agents dosing" icon="💉" color="slate">
+      <InfoBox>
+        NMBA hanya diberikan bila <strong>sedasi adekuat DULU</strong> (RASS -2 atau lebih dalam). Monitor TOF (Train-of-Four) untuk titrasi.
+      </InfoBox>
       <div className="grid grid-cols-2 gap-3">
         <CalcInput label="BB (kg)" value={w} onChange={(v) => setW(v as number)} step={0.5} />
         <CalcSelect label="Obat" value={drug} onChange={setDrug} options={nmbs.map((n) => ({ value: n.value, label: n.label }))} />

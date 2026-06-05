@@ -20,13 +20,13 @@ export function AtropinCalc() {
 
   if (ind === "bradycardia") {
     doseMg = Math.max(0.1, Math.min(0.5, +(0.02 * w).toFixed(2)));
-    note = "Min 0.1mg (paradoxical bradycardia!), maks 1mg/dose";
+    note = "Min 0.1mg (paradoxical bradycardia!), maks 1mg/dosis dewasa. Ulangi sekali bila perlu.";
   } else if (ind === "rsi") {
     doseMg = Math.max(0.1, Math.min(0.4, +(0.02 * w).toFixed(2)));
-    note = "IM/IV 10 menit sebelum induksi";
+    note = "Premedikasi RSI: IM/IV 10 menit sebelum induksi. Kurangi bradikardi akibat ketamin/suksinilkolin.";
   } else {
     doseMg = Math.max(0.05, +(0.02 * w).toFixed(2));
-    note = "TITRATE sampai sekresi berkurang. q5-10 menit.";
+    note = "TITRATE sampai sekresi berkurang (tidak sampai dilatasi pupil). Dosis bisa sangat tinggi pada keracunan berat. q5-10 menit.";
   }
 
   const volMl = +(doseMg / 0.5).toFixed(2);

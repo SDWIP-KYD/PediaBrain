@@ -16,6 +16,9 @@ import { PRSLCalc } from "./components/prsl-calc";
 import { GrowthTablesCalc } from "./components/growth-tables";
 import { TPNReferenceCalc } from "./components/tpn-reference";
 import { KneeHeightCalc } from "./components/knee-height";
+import { CalorieCalculator } from "./components/calorie-calculator";
+import { GiziBurukCalc } from "./components/gizi-buruk";
+import { FormulaRumusCalc } from "./components/formula-rumus";
 
 const calcComponents: Record<string, React.FC> = {
   "nutri-assessment": NutriAssessment,
@@ -31,6 +34,9 @@ const calcComponents: Record<string, React.FC> = {
   "growth-tables": GrowthTablesCalc,
   "tpn-reference": TPNReferenceCalc,
   "knee-height": KneeHeightCalc,
+  "calorie-calculator": CalorieCalculator,
+  "gizi-buruk": GiziBurukCalc,
+  "formula-rumus": FormulaRumusCalc,
 };
 
 const subtabIcons: Record<string, string> = {

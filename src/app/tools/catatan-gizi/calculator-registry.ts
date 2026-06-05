@@ -23,6 +23,7 @@ const calculatorRegistry: Record<string, GiziLogCalcDef[]> = {
     { id: "micronutrient-log", name: "Micronutrient Log", description: "Vitamin & mineral dose tracking" },
   ],
   Planning: [
+    { id: "calorie-calculator", name: "Kebutuhan Kalori", description: "BBI × RDA, pengentalan susu, defisit check" },
     { id: "diet-plan", name: "Diet Plan", description: "Target kalori, makronutrien, meal plan" },
     { id: "nutri-care-plan", name: "Nutrition Care Plan", description: "Problem, goals, intervensi, monitoring" },
   ],
@@ -32,6 +33,8 @@ const calculatorRegistry: Record<string, GiziLogCalcDef[]> = {
     { id: "growth-tables", name: "Tabel Pertumbuhan", description: "BB harian/bulanan, TB, LK, RDA by age" },
     { id: "tpn-reference", name: "Referensi TPN/NP", description: "Komposisi, GIR formula, osmolaritas, ReSoMal" },
     { id: "knee-height", name: "Knee Height → TB", description: "Estimasi tinggi badan untuk pasien tidur" },
+    { id: "gizi-buruk", name: "Manajemen Gizi Buruk", description: "Fase S-T-R WHO, F75/F100/F135, contoh kasus" },
+    { id: "formula-rumus", name: "Formula & Rumus", description: "BBI, kalori, BMI, tingkat kenaikan BB" },
   ],
 };
 

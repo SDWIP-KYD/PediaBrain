@@ -13,7 +13,7 @@ interface InoDrug {
 
 const inoDrugs: Record<string, InoDrug> = {
   dopamine: { name: "Dopamin", concentration: "40 mg/mL", range: "Low: 1-5 (renal)\nMid: 5-10 (inotrop)\nHigh: >10 (vasokonstr)" },
-  dobutamine: { name: "Dobutamin", concentration: "12.5 mg/mL", range: "Inotrop: 5-20 mcg/kg/mnt" },
+  dobutamine: { name: "Dobutamin", concentration: "12.5 mg/mL", range: "Inotrop: 5-20 mcg/kg/mnt\nKronotrop lemah" },
   epinephrine: { name: "Epinefrin", concentration: "1 mg/mL", range: "Low: 0.05-0.1 (β)\nHigh: >0.3 (α+β)" },
   norepinephrine: { name: "Norepinefrin", concentration: "1 mg/mL", range: "0.05-2 mcg/kg/mnt\nVasopresor" },
 };
@@ -30,10 +30,8 @@ export function InotropikCalc() {
 
   const wtKg = wt / 1000;
   const drugMg = +(dose * wtKg * 6).toFixed(2);
+  const rate = vol > 0 ? +(dose * wtKg * 6 / vol).toFixed(2) : 0;
   const concActual = vol > 0 ? +(drugMg / vol).toFixed(3) : 0;
-  const finalRate = concActual > 0 ? +(dose * wtKg * 6 / concActual / (vol > 0 ? vol / vol : 1)).toFixed(2) : 0;
-  // Rule of 6: drug mg in vol mL → rate mL/hr = dose mcg/kg/min
-  const rate = vol > 0 ? +(dose * wtKg * 6 / (drugMg / vol)).toFixed(2) : 0;
 
   const info = inoDrugs[drug];
 
@@ -75,7 +73,7 @@ export function InotropikCalc() {
         <ResultGrid cols={3}>
           <ResultItem label="Obat dalam syringe" value={`${drugMg}`} unit="mg" />
           <ResultItem label="Rate" value={`${rate}`} unit="mL/jam" />
-          <ResultItem label="Konsentrasi" value={`${concActual}`} unit="mg/mL" />
+          <ResultItem label="Konsentrasi" value={`${concActual}`} unit="mg/mL" note={`${drugMg} mg dalam ${vol}mL D5%`} />
         </ResultGrid>
         <p className="text-[10px] text-muted-foreground whitespace-pre-line">{info.range}</p>
       </CalcResult>

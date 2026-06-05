@@ -101,6 +101,44 @@ export function GrowthTablesCalc() {
             ))}
           </div>
         </div>
+
+        {/* Tabel Pertumbuhan Lengkap */}
+        <div>
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">📊 Tabel Pertumbuhan Lengkap</p>
+          <div className="overflow-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left py-1.5 px-2 text-muted-foreground">Usia</th>
+                  <th className="text-left py-1.5 px-2 text-muted-foreground">BB Harian (g)</th>
+                  <th className="text-left py-1.5 px-2 text-muted-foreground">BB Bulanan (g)</th>
+                  <th className="text-left py-1.5 px-2 text-muted-foreground">TB (cm/bln)</th>
+                  <th className="text-left py-1.5 px-2 text-muted-foreground">LK (cm/bln)</th>
+                  <th className="text-left py-1.5 px-2 text-muted-foreground">RDA</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { usia: "0–3 bln", bbHarian: "30", bbBulanan: "900", tb: "3.5", lk: "1.0", rda: "115" },
+                  { usia: "3–6 bln", bbHarian: "20", bbBulanan: "600", tb: "2.0", lk: "1.0", rda: "110" },
+                  { usia: "6–9 bln", bbHarian: "15", bbBulanan: "450", tb: "1.5", lk: "0.5", rda: "100" },
+                  { usia: "9–12 bln", bbHarian: "12", bbBulanan: "360", tb: "1.2", lk: "0.5", rda: "100" },
+                  { usia: "1–3 thn", bbHarian: "8", bbBulanan: "240", tb: "1.0", lk: "0.25", rda: "100" },
+                  { usia: "4–6 thn", bbHarian: "6", bbBulanan: "180", tb: "0.5", lk: "0.25", rda: "90–100" },
+                ].map((d, i) => (
+                  <tr key={i} className="border-b border-border/50">
+                    <td className="py-1 px-2">{d.usia}</td>
+                    <td className="py-1 px-2 font-mono text-blue-300">{d.bbHarian}</td>
+                    <td className="py-1 px-2 font-mono text-blue-300">{d.bbBulanan}</td>
+                    <td className="py-1 px-2 font-mono text-blue-300">{d.tb}</td>
+                    <td className="py-1 px-2 font-mono text-blue-300">{d.lk}</td>
+                    <td className="py-1 px-2 font-mono text-amber-300">{d.rda}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </CalcCard>
   );

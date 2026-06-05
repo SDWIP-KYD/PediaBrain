@@ -31,8 +31,8 @@ export function GFRCalc() {
     gfr = (42.3 * heightCm) / (scrMg * 1.73);
     formula = `GFR = 42.3 × ${heightCm} / (${scrMg} × 1.73)`;
   } else if (method === "bedside") {
-    gfr = (0.43 * heightCm) / scrMg;
-    formula = `GFR = 0.43 × ${heightCm} / ${scrMg}`;
+    gfr = (0.413 * heightCm) / scrMg;
+    formula = `GFR = 0.413 × ${heightCm} / ${scrMg}`;
   } else {
     gfr = (0.48 * heightCm) / scrMg;
     formula = `GFR = 0.48 × ${heightCm} / ${scrMg}`;

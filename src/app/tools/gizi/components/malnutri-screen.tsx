@@ -1,70 +1,102 @@
 "use client";
 
 import { useState } from "react";
-import { usePatient } from "../../patient-context";
-import { CalcCard, CalcInput, CalcSelect, CalcResult, ResultItem, ResultGrid, InfoBox, ResultAlert } from "../../components/calc-ui";
+import { CalcCard, CalcResult, ResultItem, ResultGrid, InfoBox, ResultAlert } from "../../components/calc-ui";
 
-const intakeOptions = [
-  { value: "full", label: "Full intake" },
-  { value: "partial", label: "Partial (<50%)" },
-  { value: "minimal", label: "Minimal (<25%)" },
-  { value: "none", label: "None (NPO)" },
+interface ChecklistItem {
+  id: string;
+  label: string;
+  points: number;
+}
+
+const checklistItems: ChecklistItem[] = [
+  {
+    id: "subjektif",
+    label: "Status gizi subjektif: berat badan turun atau tidak naik selama ≥2 bulan",
+    points: 1,
+  },
+  {
+    id: "penyakit",
+    label: "Penyakit berisiko tinggi: ada",
+    points: 2,
+  },
+  {
+    id: "asupan",
+    label: "Asupan makan berkurang: ≥5 hari berkurang atau tidak makan sama sekali",
+    points: 1,
+  },
+  {
+    id: "bb-turun",
+    label: "Berat badan turun: ≥5% dalam 1 bulan atau ≥10% dalam 6 bulan",
+    points: 1,
+  },
 ];
 
 export function MalnutriScreen() {
-  const { weightGram, ageMonths, patient } = usePatient();
-  const [weight, setWeight] = useState(weightGram / 1000);
-  const [prevWeight, setPrevWeight] = useState(weightGram / 1000 * 1.1);
-  const [intake, setIntake] = useState("full");
-  const [currentMuac, setCurrentMuac] = useState(patient.muac);
+  const [checked, setChecked] = useState<Record<string, boolean>>({
+    subjektif: false,
+    penyakit: false,
+    asupan: false,
+    "bb-turun": false,
+  });
 
-  const weightLossPct = prevWeight > 0 ? ((prevWeight - weight) / prevWeight) * 100 : 0;
-  const ageYr = ageMonths / 12;
+  const totalScore = checklistItems.reduce((sum, item) => {
+    return sum + (checked[item.id] ? item.points : 0);
+  }, 0);
 
-  let muacStatus = "Normal";
-  let muacColor = "text-green-400";
-  if (ageYr < 1) {
-    if (currentMuac < 11.5) { muacStatus = "Severe wasting"; muacColor = "text-red-500"; }
-    else if (currentMuac < 12.5) { muacStatus = "Moderate wasting"; muacColor = "text-orange-400"; }
+  let riskLevel: string;
+  let riskColor: string;
+  let action: string;
+  if (totalScore <= 1) {
+    riskLevel = "Rendah";
+    riskColor = "text-emerald-400";
+    action = "Skrining ulang saat pulang";
+  } else if (totalScore <= 3) {
+    riskLevel = "Sedang";
+    riskColor = "text-amber-400";
+    action = "Konsultasi dietisien";
   } else {
-    if (currentMuac < 11.5) { muacStatus = "Severe wasting"; muacColor = "text-red-500"; }
-    else if (currentMuac < 12.5) { muacStatus = "Moderate wasting"; muacColor = "text-orange-400"; }
-    else if (currentMuac < 14) { muacStatus = "Mild wasting"; muacColor = "text-yellow-400"; }
+    riskLevel = "Tinggi";
+    riskColor = "text-red-500";
+    action = "Intervensi gizi SEGERA";
   }
 
-  let riskScore = 0;
-  if (weightLossPct > 10) riskScore += 2;
-  else if (weightLossPct > 5) riskScore += 1;
-  if (intake === "none") riskScore += 3;
-  else if (intake === "minimal") riskScore += 2;
-  else if (intake === "partial") riskScore += 1;
-  if (muacStatus.includes("Severe")) riskScore += 2;
-  else if (muacStatus.includes("Moderate")) riskScore += 1;
-
-  let riskLevel: { label: string; type: "success" | "warning" | "danger" };
-  if (riskScore >= 4) riskLevel = { label: "High Risk — Rawat Inap", type: "danger" };
-  else if (riskScore >= 2) riskLevel = { label: "Moderate Risk — Monitoring", type: "warning" };
-  else riskLevel = { label: "Low Risk — Rawat Jalan", type: "success" };
+  const alertType = totalScore <= 1 ? "success" : totalScore <= 3 ? "warning" : "danger";
 
   return (
-    <CalcCard title="Malnutrition Screening" icon="📉">
+    <CalcCard title="Skrining Malnutrisi — STRONGkids" subtitle="Pediatric Nutrition Risk Score" icon="⚠️" color="red">
       <div className="space-y-3">
-        <CalcInput label="Berat Badan Saat Ini (kg)" unit="kg" value={weight} onChange={(v) => setWeight(typeof v === "string" ? parseFloat(v) || 0 : v)} min={0.5} step={0.1} />
-        <CalcInput label="Berat Badan Sebelumnya (kg)" unit="kg" value={prevWeight} onChange={(v) => setPrevWeight(typeof v === "string" ? parseFloat(v) || 0 : v)} min={0.5} step={0.1} />
-        <CalcInput label="MUAC (cm)" unit="cm" value={currentMuac} onChange={(v) => setCurrentMuac(typeof v === "string" ? parseFloat(v) || 0 : v)} min={5} max={30} step={0.1} />
-        <CalcSelect label="Asupan Makanan" value={intake} onChange={setIntake} options={intakeOptions} />
-        <CalcResult>
+        <InfoBox>
+          <strong>STRONGkids:</strong> 0 = risiko rendah; 1–3 = risiko sedang; 4–5 = risiko tinggi. Digunakan untuk pasien rawat inap.
+        </InfoBox>
+
+        <div className="space-y-2">
+          {checklistItems.map((item) => (
+            <label key={item.id} className="flex items-start gap-3 text-sm cursor-pointer leading-relaxed">
+              <input
+                type="checkbox"
+                checked={checked[item.id] || false}
+                onChange={(e) => setChecked({ ...checked, [item.id]: e.target.checked })}
+                className="mt-1 accent-emerald-500"
+              />
+              <span>
+                <strong>{item.label.split(":")[0]}:</strong>
+                {item.label.split(":").slice(1).join(":")}
+                <span className="text-muted-foreground ml-1">(skor {item.points})</span>
+              </span>
+            </label>
+          ))}
+        </div>
+
+        <CalcResult color="red">
           <ResultGrid cols={2}>
-            <ResultItem label="Weight Loss" value={`${weightLossPct.toFixed(1)}%`} />
-            <ResultItem label="MUAC Status" value={muacStatus} className={muacColor} />
-            <ResultItem label="Risk Score" value={`${riskScore}/7`} />
-            <ResultItem label="Risk Level" value={riskLevel.label} className={riskLevel.type === "danger" ? "text-red-500" : riskLevel.type === "warning" ? "text-yellow-400" : "text-green-400"} />
+            <ResultItem label="Skor STRONGkids" value={`${totalScore}/5`} />
+            <ResultItem label="Risiko Malnutrisi" value={riskLevel} className={riskColor} />
           </ResultGrid>
         </CalcResult>
-        <ResultAlert type={riskLevel.type}>
-          {riskLevel.type === "danger" ? "Rawat inap diperlukan. Pertimbangkan nasogastrik feeding dan evaluasi metabolik." :
-           riskLevel.type === "warning" ? "Monitoring ketat. Pertimbangkan konsultasi gizi dan peningkatan frekuensi makan." :
-           "Lanjutkan asupan normal. Kontrol berat badan mingguan."}
+
+        <ResultAlert type={alertType}>
+          {action}
         </ResultAlert>
       </div>
     </CalcCard>

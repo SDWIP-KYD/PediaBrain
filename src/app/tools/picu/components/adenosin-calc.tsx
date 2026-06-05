@@ -18,7 +18,7 @@ export function AdenosinCalc() {
   return (
     <CalcCard title="Adenosin SVT" subtitle="SVT conversion dosing" icon="💊" color="purple">
       <InfoBox>
-        Sediaan 3 mg/mL. Bolus sangat cepat (1-2 detik) + flush 10-20 mL NS. Masa paruh {"<"}10 detik.
+        Sediaan 3 mg/mL. Bolus sangat cepat (1-2 detik) + flush 5-10 mL NS. Gunakan IV paling dekat jantung. Masa paruh {"<"}10 detik.
       </InfoBox>
       <CalcInput label="BB (kg)" value={w} onChange={(v) => setW(v as number)} step={0.5} />
       <CalcResult color="purple">

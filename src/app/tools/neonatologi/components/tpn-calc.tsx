@@ -25,7 +25,7 @@ export function TPNCalc() {
   const ivRate = Math.max(0, totalHr - entHr);
   const girAct = +((glu * ivRate) / (wtKg * 6)).toFixed(2);
   const proG = +(pro * wtKg).toFixed(2);
-  const lipMl = +((lip * wtKg) / 0.2).toFixed(2);
+  const lipMl = +((lip * wtKg) / 5).toFixed(2);
   const calGlu = +(girAct * 0.0057 * wtKg * 1440).toFixed(1);
   const calPro = +(pro * 4).toFixed(1);
   const calLip = +(lip * 10).toFixed(1);

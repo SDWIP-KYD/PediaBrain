@@ -11,6 +11,11 @@ const shockTypes = [
   { value: "obstructive", label: "Obstructive" },
 ];
 
+const sexes = [
+  { value: "m", label: "Laki-laki" },
+  { value: "f", label: "Perempuan" },
+];
+
 export function SyokCalc() {
   const { weightGram, ageYears } = usePatient();
   const [w, setW] = useState(weightGram / 1000);
@@ -18,6 +23,7 @@ export function SyokCalc() {
   const [hr, setHR] = useState(150);
   const [sys, setSys] = useState(70);
   const [dia, setDia] = useState(40);
+  const [sex, setSex] = useState("m");
   const [type, setType] = useState("septic");
 
   const map = +((sys + 2 * dia) / 3).toFixed(0);
@@ -38,12 +44,15 @@ export function SyokCalc() {
       <div className="grid grid-cols-3 gap-3">
         <CalcInput label="BB (kg)" value={w} onChange={(v) => setW(v as number)} step={0.5} />
         <CalcInput label="Usia (thn)" value={age} onChange={(v) => setAge(v as number)} />
-        <CalcSelect label="Tipe Syok" value={type} onChange={setType} options={shockTypes} />
+        <CalcSelect label="Jenis Kelamin" value={sex} onChange={setSex} options={sexes} />
       </div>
       <div className="grid grid-cols-3 gap-3">
         <CalcInput label="HR" value={hr} onChange={(v) => setHR(v as number)} />
         <CalcInput label="Sistole" value={sys} onChange={(v) => setSys(v as number)} />
         <CalcInput label="Diastole" value={dia} onChange={(v) => setDia(v as number)} />
+      </div>
+      <div className="grid grid-cols-1 gap-3">
+        <CalcSelect label="Tipe Syok" value={type} onChange={setType} options={shockTypes} />
       </div>
       <CalcResult color="red">
         <ResultGrid cols={2}>
@@ -57,9 +66,26 @@ export function SyokCalc() {
         </ResultAlert>
         {isShock && (
           <div className="text-[11px] text-muted-foreground space-y-1">
-            <p><strong>Bolus:</strong> {bolus} mL {type === "hypovolemic" ? "NS" : type === "septic" ? "NS/RL" : "Hati-hati!"} dalam 15 menit</p>
-            {type === "cardiogenic" && <p className="text-amber-400">⚠️ Hindari bolus besar! Dobutamin/Milrinone. STAT Echo!</p>}
-            {type === "obstructive" && <p className="text-amber-400">⚠️ Tension PTX → needle decompression. Tamponade → pericardiocentesis.</p>}
+            {type === "septic" && (
+              <p>
+                🔴 <strong>Septic Shock:</strong> Bolus NS {bolus} mL (10 mL/kg) dalam 15 mnt → reassess × 3. Norepinefrin 0.05 mcg/kg/mnt. Kultur darah → antibiotik broad spectrum dalam 1 jam.
+              </p>
+            )}
+            {type === "hypovolemic" && (
+              <p>
+                💧 <strong>Hypovolemic Shock:</strong> Bolus {bolus}–{Math.round(20 * w)} mL NS/RL segera. Bila perdarahan → PRC 10 mL/kg + FFP 10 mL/kg (ratio 1:1).
+              </p>
+            )}
+            {type === "cardiogenic" && (
+              <p className="text-amber-400">
+                ⚠️ <strong>Cardiogenic Shock:</strong> HINDARI bolus besar! Dobutamin/Milrinone. STAT Echo! Evaluasi: tamponade, aritmia, miokarditis.
+              </p>
+            )}
+            {type === "obstructive" && (
+              <p className="text-amber-400">
+                ⚠️ <strong>Obstructive Shock:</strong> Tension PTX → needle decompression 2ICS MCL → chest drain. Tamponade → pericardiosentesis. PE masif → trombolisis.
+              </p>
+            )}
           </div>
         )}
       </CalcResult>

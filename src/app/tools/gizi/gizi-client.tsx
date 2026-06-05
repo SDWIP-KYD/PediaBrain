@@ -30,6 +30,9 @@ import { SpecialNutriCalc } from "./components/special-nutri-calc";
 import { RefeedingProtocol } from "./components/refeeding-protocol";
 import { FoodCompCalc } from "./components/food-comp-calc";
 import { MealPlanCalc } from "./components/meal-plan-calc";
+import { GIRCalc } from "./components/gir-calc";
+import { ElektrolitTPNCalc } from "./components/elektrolit-tpn";
+import { SuplementasiCalc } from "./components/suplementasi-calc";
 
 const calcComponents: Record<string, React.FC> = {
   "bmi-calc": BMICalc,
@@ -59,6 +62,9 @@ const calcComponents: Record<string, React.FC> = {
   "refeeding-protocol": RefeedingProtocol,
   "food-comp-calc": FoodCompCalc,
   "meal-plan-calc": MealPlanCalc,
+  "gir-calc": GIRCalc,
+  "elektrolit-tpn": ElektrolitTPNCalc,
+  "suplementasi-calc": SuplementasiCalc,
 };
 
 const subtabIcons: Record<string, string> = {

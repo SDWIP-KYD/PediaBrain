@@ -56,6 +56,9 @@ export function DrugDetail({ drug, onBack }: DrugDetailProps) {
     "Neurologi": "pink",
     "Hematologi": "orange",
     "Gawat Darurat": "green",
+    "Alergi/Imunologi": "violet",
+    "Nutrisi/Vitamin": "yellow",
+    "Dermatologi/Topikal": "teal",
   };
 
   return (

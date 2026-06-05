@@ -28,8 +28,16 @@ export function PELOD2Calc() {
     if (total >= score) mortality = mort;
   }
 
+  let interpretation = "";
+  if (total >= 8) interpretation = "Mortalitas tinggi (>25%). Evaluasi tujuan perawatan, ICU tiering.";
+  else if (total >= 5) interpretation = "Mortalitas sedang. Monitoring intensif. Re-evaluasi tiap 24 jam.";
+  else interpretation = "Mortalitas rendah (<10%). Monitoring standar PICU.";
+
   return (
     <CalcCard title="PELOD-2" subtitle="Pediatric sepsis severity scoring" icon="📊" color="yellow">
+      <InfoBox>
+        PELOD-2 menilai 6 organ sistem. Setiap poin ↑ mortalitas ↑. Skor ≥8: mortalitas {">"}25%.
+      </InfoBox>
       <div className="space-y-3">
         {pelod2Params.map((p, i) => (
           <div key={i} className="space-y-1">
@@ -55,6 +63,9 @@ export function PELOD2Calc() {
           <ResultItem label="PELOD-2 Score" value={`${total}`} />
           <ResultItem label="Estimasi Mortalitas" value={mortality} />
         </ResultGrid>
+        <ResultAlert type={total >= 8 ? "danger" : total >= 5 ? "warning" : "success"}>
+          {interpretation}
+        </ResultAlert>
       </CalcResult>
     </CalcCard>
   );

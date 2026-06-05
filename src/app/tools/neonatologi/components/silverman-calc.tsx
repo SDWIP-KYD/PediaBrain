@@ -4,11 +4,11 @@ import { useState } from "react";
 import { CalcCard, CalcSelect, CalcResult, ResultGrid, ResultItem, ResultAlert } from "../../components/calc-ui";
 
 const saParams = [
-  { label: "Nasal Flaring", options: ["0 - Tidak ada", "1 --ringan", "2 -sedang", "3 -berat"] },
-  { label: "Subcostal Retraction", options: ["0 - Tidak ada", "1 - ringan", "2 - sedang", "3 - berat"] },
-  { label: "Intercostal Retraction", options: ["0 - Tidak ada", "1 - ringan", "2 - sedang", "3 - berat"] },
-  { label: "Xiphoid Retraction", options: ["0 - Tidak ada", "1 - ringan", "2 - sedang", "3 - berat"] },
-  { label: "Expiratory Grunting", options: ["0 - Tidak ada", "1 - ringan", "2 - sedang", "3 - berat"] },
+  { label: "Gerakan Dada", options: ["0 — Sinkron", "1 — Lag inspirasi", "2 — Paradoksal"] },
+  { label: "Retraksi Interkostal", options: ["0 — Tidak ada", "1 — Minimal", "2 — Nyata"] },
+  { label: "Retraksi Xifoid", options: ["0 — Tidak ada", "1 — Minimal", "2 — Nyata"] },
+  { label: "Flap Hidung", options: ["0 — Tidak ada", "1 — Minimal", "2 — Nyata"] },
+  { label: "Grunting (Ekspirasi)", options: ["0 — Tidak ada", "1 — Auskultasi", "2 — Terdengar"] },
 ];
 
 export function SilvermanCalc() {
@@ -26,7 +26,7 @@ export function SilvermanCalc() {
   else { interp = "Berat (7–10)"; interpType = "danger"; action = "Intubasi dan ventilasi mekanik"; }
 
   return (
-    <CalcCard title="Silverman-Anderson" subtitle="Respiratory distress scoring" icon="🫁" color="orange">
+    <CalcCard title="Skor Silverman-Anderson" subtitle="Derajat Distres Napas Neonatus" icon="🫁" color="red">
       <div className="space-y-3">
         {saParams.map((param, i) => (
           <div key={i} className="space-y-1">
@@ -47,9 +47,9 @@ export function SilvermanCalc() {
           </div>
         ))}
       </div>
-      <CalcResult color="orange">
+      <CalcResult color="red">
         <ResultGrid cols={2}>
-          <ResultItem label="Total Skor" value={`${total}`} unit="/ 15" />
+          <ResultItem label="Skor Silverman" value={`${total}`} unit="/ 10" />
           <ResultItem label="Interpretasi" value={interp} />
         </ResultGrid>
         <ResultAlert type={interpType}>{action}</ResultAlert>

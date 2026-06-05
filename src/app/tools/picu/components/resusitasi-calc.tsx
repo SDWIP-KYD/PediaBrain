@@ -11,12 +11,22 @@ const conditions = [
   { value: "bradycardia", label: "Symptomatic Bradycardia" },
 ];
 
+const rhythms = [
+  { value: "vf", label: "VF / Pulseless VT" },
+  { value: "pea", label: "PEA / Asistol" },
+  { value: "svt", label: "SVT" },
+  { value: "afib", label: "AF / Flutter" },
+  { value: "none", label: "—" },
+];
+
 export function ResusitasiCalc() {
   const { weightGram, ageYears } = usePatient();
   const [w, setW] = useState(weightGram / 1000);
   const [cond, setCond] = useState("cardiac");
+  const [rhythm, setRhythm] = useState("vf");
 
   const r0 = (n: number) => Math.round(n);
+  const r2 = (n: number) => Math.round(n * 100) / 100;
   const minBP = ageYears < 1 ? 70 : ageYears < 10 ? 70 + 2 * ageYears : 90;
 
   const epiDose = +(0.01 * w).toFixed(2);
@@ -29,10 +39,18 @@ export function ResusitasiCalc() {
 
   return (
     <CalcCard title="Resusitasi Cepat" subtitle="Panduan resusitasi & drug doses" icon="🫀" color="red">
+      <InfoBox>
+        ⚠️ Gunakan sebagai panduan. Verifikasi semua dosis sebelum pemberian. Prioritas: ABCDE, airway management, kompresi berkualitas. Aktifkan tim code blue.
+      </InfoBox>
       <div className="grid grid-cols-2 gap-3">
         <CalcInput label="BB (kg)" value={w} onChange={(v) => setW(v as number)} step={0.5} />
         <CalcSelect label="Kondisi" value={cond} onChange={setCond} options={conditions} />
       </div>
+      {cond === "cardiac" && (
+        <div className="grid grid-cols-2 gap-3">
+          <CalcSelect label="Ritme EKG" value={rhythm} onChange={setRhythm} options={rhythms} />
+        </div>
+      )}
       <CalcResult color="red">
         <ResultGrid cols={2}>
           <ResultItem label="Epinefrin IV/IO" value={`${epiDose}`} unit="mg" note={`${epiVol} mL (1:10000)`} />
@@ -43,9 +61,26 @@ export function ResusitasiCalc() {
           <ResultItem label="Min BP" value={`${minBP}`} unit="mmHg" note={`age ${ageYears}th`} />
         </ResultGrid>
         {cond === "cardiac" && (
-          <ResultAlert type="danger">
-            <strong>CPR:</strong> 100-120/mnt, kedalaman ⅓ diameter dada, ratio 15:2. Epinefrin q3-5 min. VF/pVT: Defib + Amiodaron 5w mg atau Lidokain 1 mg/kg. Cek 5H5T.
-          </ResultAlert>
+          <>
+            <ResultAlert type="danger">
+              <strong>CPR:</strong> 100-120/mnt, kedalaman ⅓ diameter dada, ratio 15:2. Epinefrin q3-5 min. Cek 5H5T.
+            </ResultAlert>
+            {rhythm === "vf" && (
+              <ResultAlert type="danger">
+                <strong>⚡ VF/pVT:</strong> Defibrilasi: 2 J/kg → 4 J/kg → max 10 J/kg + Amiodaron: 5mg/kg IV/IO atau Lidokain 1mg/kg
+              </ResultAlert>
+            )}
+            {rhythm !== "vf" && rhythm !== "none" && (
+              <ResultAlert type="warning">
+                <strong>📋 Cari & koreksi 5H5T:</strong> Hipovolemia, Hipoksia, H⁺, Hipokalemia/Hiperkalemia, Hipotermia / Tension pneumo, Tamponade, Toksin, Trombo pulmonal, Trombo koroner
+              </ResultAlert>
+            )}
+            {rhythm === "none" && (
+              <ResultAlert type="warning">
+                <strong>📋 Cari & koreksi 5H5T:</strong> Hipovolemia, Hipoksia, H⁺, Hipokalemia/Hiperkalemia, Hipotermia / Tension pneumo, Tamponade, Toksin, Trombo pulmonal, Trombo koroner
+              </ResultAlert>
+            )}
+          </>
         )}
         {cond === "shock" && (
           <ResultAlert type="warning">

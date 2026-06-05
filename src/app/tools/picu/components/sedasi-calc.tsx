@@ -41,7 +41,7 @@ export function SedasiCalc() {
       drugs: [
         `Infus: ${r2(1 * w * 60)} mg/hr (1-4 mg/kg/hr, maks 4)`,
       ],
-      notes: "HANYA ≥3 tahun. Durasi <48 jam. Cek trigliserida q24jam. Risiko PRIS.",
+      notes: "HANYA ≥3 tahun. Durasi <48 jam. Cek trigliserida q24jam. Risiko Propofol Infusion Syndrome (PRIS): asidosis metabolik + rabdomiolisis.",
     },
     ketamine: {
       drugs: [
@@ -73,6 +73,30 @@ export function SedasiCalc() {
 
   return (
     <CalcCard title="Obat Sedasi & Analgesia" subtitle="PICU sedation/analgesia regimens" icon="💊" color="purple">
+      <div className="rounded-lg border border-border bg-muted/50 mb-4">
+        <div className="px-3 py-2 border-b border-border text-[10px] font-mono uppercase tracking-widest text-muted-foreground">RASS Score Reference</div>
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="border-b border-border">
+              <th className="px-3 py-1.5 text-left text-[10px] font-mono uppercase text-muted-foreground">Skor</th>
+              <th className="px-3 py-1.5 text-left text-[10px] font-mono uppercase text-muted-foreground">Deskripsi</th>
+              <th className="px-3 py-1.5 text-left text-[10px] font-mono uppercase text-muted-foreground">Target</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td className="px-3 py-1.5 text-red-400">+4</td><td className="px-3 py-1.5">Combative — berbahaya</td><td className="px-3 py-1.5"></td></tr>
+            <tr><td className="px-3 py-1.5 text-amber-400">+3</td><td className="px-3 py-1.5">Sangat agitasi</td><td className="px-3 py-1.5"></td></tr>
+            <tr><td className="px-3 py-1.5 text-amber-400">+2</td><td className="px-3 py-1.5">Agitasi</td><td className="px-3 py-1.5"></td></tr>
+            <tr><td className="px-3 py-1.5 text-yellow-400">+1</td><td className="px-3 py-1.5">Gelisah</td><td className="px-3 py-1.5"></td></tr>
+            <tr><td className="px-3 py-1.5 text-emerald-400">0</td><td className="px-3 py-1.5">Alert & tenang</td><td className="px-3 py-1.5 text-emerald-400">Pasien awake</td></tr>
+            <tr><td className="px-3 py-1.5 text-blue-400">-1</td><td className="px-3 py-1.5">Drowsy (mata buka {">"}10dtk)</td><td className="px-3 py-1.5 text-blue-400">Light sedasi</td></tr>
+            <tr><td className="px-3 py-1.5 text-blue-400">-2</td><td className="px-3 py-1.5">Light sedasi (buka singkat)</td><td className="px-3 py-1.5 text-blue-400">Target umum</td></tr>
+            <tr><td className="px-3 py-1.5 text-purple-400">-3</td><td className="px-3 py-1.5">Moderate sedasi</td><td className="px-3 py-1.5 text-amber-400">Selektif</td></tr>
+            <tr><td className="px-3 py-1.5 text-red-400">-4</td><td className="px-3 py-1.5">Deep sedasi</td><td className="px-3 py-1.5 text-amber-400">Pilihan tertentu</td></tr>
+            <tr><td className="px-3 py-1.5 text-red-400">-5</td><td className="px-3 py-1.5">Unarousable</td><td className="px-3 py-1.5 text-red-400">Hindari</td></tr>
+          </tbody>
+        </table>
+      </div>
       <div className="grid grid-cols-2 gap-3">
         <CalcInput label="BB (kg)" value={w} onChange={(v) => setW(v as number)} step={0.5} />
         <CalcSelect label="Regimen" value={reg} onChange={setReg} options={regimens} />

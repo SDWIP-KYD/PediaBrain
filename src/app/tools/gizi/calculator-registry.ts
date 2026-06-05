@@ -30,15 +30,18 @@ const calculatorRegistry: Record<string, NCalcDef[]> = {
     { id: "stress-factor", name: "Stress Factor", description: "Multiplier REE" },
     { id: "akg-calc", name: "AKG Indonesia 2019", description: "Angka Kecukupan Gizi per usia" },
     { id: "macro-dist-calc", name: "Distribusi Makronutrien", description: "Karbohidrat, Protein, Lemak — harian" },
+    { id: "gir-calc", name: "Glucose Infusion Rate (GIR)", description: "Target GIR & konversi konsentrasi" },
   ],
   "Mikronutrien": [
     { id: "vitamin-calc", name: "Vitamin Requirements", description: "Vitamin A,D,E,K,B,C usia" },
     { id: "mineral-calc", name: "Mineral Requirements", description: "Ca, Mg, Zn, Se usia" },
     { id: "iron-calc", name: "Iron Requirements", description: "Kebutuhan zat besi usia" },
+    { id: "suplementasi-calc", name: "Suplementasi Defisiensi", description: "Fe, Zn, Vit A, Vit D, B12, Folat dosis" },
   ],
   "Feeding": [
     { id: "enteral-calc", name: "Enteral Feeding", description: "Rate, tube, formula" },
     { id: "tpn-gizi", name: "TPN Calculator", description: "Dextrose, AA, lipid" },
+    { id: "elektrolit-tpn", name: "Elektrolit TPN", description: "Na, K, Ca, P, Mg — kebutuhan harian" },
     { id: "breastfeed-calc", name: "Breastfeeding", description: "Estimasi volume ASI" },
     { id: "asi-fort-calc", name: "ASI & Fortifikasi", description: "HMF needs, kcal ASI + formula" },
     { id: "mpasi-calc", name: "MPASI Guidelines", description: "Panduan makanan pendamping ASI" },

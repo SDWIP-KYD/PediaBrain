@@ -15,7 +15,7 @@ export const drugSubtabs = [
 
 const calculatorRegistry: Record<string, DrugCalcDef[]> = {
   "Semua Obat": [
-    { id: "all", name: "Semua Obat", description: "Daftar lengkap 50 obat pediatrik" },
+    { id: "all", name: "Semua Obat", description: "Daftar lengkap obat pediatrik" },
   ],
   "Antibiotik": [
     { id: "antibiotics", name: "Antibiotik", description: "Amoxicillin, Ceftriaxone, Vancomycin, dll" },
@@ -27,12 +27,15 @@ const calculatorRegistry: Record<string, DrugCalcDef[]> = {
     { id: "cardiovascular", name: "Kardiovaskuler", description: "Digoxin, Enalapril, Dopamine, dll" },
   ],
   "Lainnya": [
-    { id: "respiratory", name: "Respirasi", description: "Salbutamol, Montelukast, dll" },
-    { id: "gastrointestinal", name: "Gastrointestinal", description: "Ondansetron, Omeprazole, dll" },
+    { id: "respiratory", name: "Respirasi", description: "Salbutamol, Budesonide, dll" },
+    { id: "gastrointestinal", name: "Gastrointestinal", description: "Ondansetron, Omeprazole, Zinc, dll" },
     { id: "endocrine", name: "Endokrin", description: "Hydrocortisone, Insulin, dll" },
-    { id: "neurology", name: "Neurologi", description: "Phenobarbital, Levetiracetam, dll" },
+    { id: "neurology", name: "Neurologi", description: "Phenobarbital, Levetiracetam, Midazolam, dll" },
     { id: "hematology", name: "Hematologi", description: "Heparin, Warfarin, dll" },
-    { id: "emergency", name: "Gawat Darurat", description: "Epinephrine, Naloxone, dll" },
+    { id: "emergency", name: "Gawat Darurat", description: "Epinephrine, Naloxone, Adenosine, dll" },
+    { id: "allergy", name: "Alergi/Imunologi", description: "Cetirizine, Loratadine, dll" },
+    { id: "nutrition", name: "Nutrisi/Vitamin", description: "Zat Besi, Vitamin A/D/K, dll" },
+    { id: "topical", name: "Dermatologi/Topikal", description: "Hydrocortisone cream, Mupirocin, dll" },
   ],
   "Alat & Referensi": [
     { id: "equipment", name: "Kalkulator Alat", description: "ETT, NGT, IV, Foley sizing by age/weight" },

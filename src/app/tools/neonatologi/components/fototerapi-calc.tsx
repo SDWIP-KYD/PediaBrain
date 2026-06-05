@@ -67,9 +67,9 @@ export function FototerapiCalc() {
           value={risk}
           onChange={setRisk}
           options={[
-            { value: "low", label: "Low risk" },
-            { value: "med", label: "Medium risk" },
-            { value: "high", label: "High risk" },
+            { value: "low", label: "Rendah (sehat, ≥38 mgg)" },
+            { value: "med", label: "Sedang (35–37 mgg)" },
+            { value: "high", label: "Tinggi (≥1 faktor risiko)" },
           ]}
         />
       </div>
@@ -79,6 +79,11 @@ export function FototerapiCalc() {
           <ResultItem label="Threshold Transfusi" value={`${exchangeTh}`} unit="mg/dL" />
         </ResultGrid>
         <ResultAlert type={recType}>{rec}</ResultAlert>
+        {ga < 35 && (
+          <p className="mt-2 text-xs text-amber-700">
+            ⚠️ Prematur &lt;35 mgg: threshold lebih rendah, gunakan panduan NICU setempat
+          </p>
+        )}
       </CalcResult>
     </CalcCard>
   );

@@ -33,7 +33,7 @@ export function VentPICUCalc() {
           onChange={setDx}
           options={Object.keys(dxSettings).map((k) => ({
             value: k,
-            label: k === "ards" ? "ARDS" : k === "icp" ? "Raised ICP" : k === "neuro" ? "Neuromuscular" : k === "post-op" ? "Post-Op Cardiac" : k === "pphn" ? "PPHN" : k.charAt(0).toUpperCase() + k.slice(1),
+            label: k === "ards" ? "ARDS / ALI" : k === "asthma" ? "Status Asmatikus" : k === "icp" ? "Raised ICP" : k === "neuro" ? "Penyakit Neuromuskular" : k === "post-op" ? "Post-Op Cardiac" : k === "pphn" ? "PPHN" : k.charAt(0).toUpperCase() + k.slice(1),
           }))}
         />
       </div>

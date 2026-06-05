@@ -46,10 +46,10 @@ export function PRISMCalc() {
   if (bili > 5) score += 6;
 
   let risk = "";
-  if (score < 5) risk = "Low risk";
-  else if (score < 10) risk = "Moderate";
-  else if (score < 15) risk = "High";
-  else risk = "Very high";
+  if (score < 5) risk = "Risiko Rendah";
+  else if (score < 10) risk = "Risiko Sedang";
+  else if (score < 15) risk = "Risiko Tinggi";
+  else risk = "Risiko Sangat Tinggi";
 
   let mortality = "<1%";
   for (const [s, m] of mortalityTable) {
@@ -76,7 +76,7 @@ export function PRISMCalc() {
         <ResultGrid cols={2}>
           <ResultItem label="PRISM-III Score" value={`${score}`} />
           <ResultItem label="Mortalitas" value={mortality} />
-          <ResultItem label="Risk" value={risk} />
+          <ResultItem label="Kategori" value={risk} />
         </ResultGrid>
       </CalcResult>
     </CalcCard>

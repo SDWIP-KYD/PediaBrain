@@ -9,6 +9,7 @@ const conditions = [
   { value: "raised-icp", label: "Raised ICP" },
   { value: "asthma", label: "Status Asthmaticus" },
   { value: "shock", label: "Shock (hemodinamik tidak stabil)" },
+  { value: "trauma", label: "Trauma" },
 ];
 
 const r0 = (n: number) => Math.round(n);
@@ -37,6 +38,9 @@ export function RSICalc() {
   } else if (cond === "shock") {
     pretreat = "Pre-oksigenasi 3-5 menit, NRM 100% O₂, SpO₂ ≥93%";
     induction = `Ketamin ${r0(w)} mg IV (1-2 mg/kg) atau Etomidat ${r2(0.3 * w)} mg IV`;
+  } else if (cond === "trauma") {
+    pretreat = "Pre-oksigenasi 3-5 menit, NRM 100% O₂, SpO₂ ≥93%. C-spine immobilization. Cek & Drain cairan toraks bila perlu.";
+    induction = `Propofol ${r0(1 * w)} mg IV (1-2 mg/kg) — hemodinamik lebih stabil atau Etomidat ${r2(0.3 * w)} mg IV (0.3 mg/kg) — pilihan trauma`;
   } else {
     pretreat = "Pre-oksigenasi 3-5 menit, NRM 100% O₂, SpO₂ ≥93%";
     induction = `Propofol ${r0(2 * w)} mg IV (2-3 mg/kg, maks 200mg) atau Midazolam ${r2(0.2 * w)} mg + Ketamin ${r0(2 * w)} mg`;
@@ -56,6 +60,7 @@ export function RSICalc() {
           <p><strong>💉 Induksi:</strong> {induction}</p>
           <p><strong>💉 Paralitik:</strong> {paralytic}</p>
           <p><strong>🩺 ETT:</strong> {ageYears < 1 ? "3.5" : `${ettUncuffed}`} mm (uncuffed) / {ageYears < 1 ? "3.5" : `${ettCuffed}`} mm (cuffed)</p>
+          <p><strong>✅ Konfirmasi intubasi:</strong> Capnografi (EtCO₂), auskultasi, CXR</p>
         </div>
         <ResultAlert type="warning">
           ⚠️ Sukinilkolin KONTRAINDIKASI: hiperkalemia, denervasi, miopati, luka bakar {">"}24jam, cedera mata terbuka, riwayat keluarga.
