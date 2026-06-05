@@ -38,23 +38,21 @@ const categories = [
   },
   {
     id: "nephrology",
-    title: "Nephrology",
-    subtitle: "GFR, elektrolit, AKI, hipertensi, dialisis",
+    title: "Nefrologi",
+    subtitle: "GFR, elektrolit, AKI, dialisis, transplantasi",
     icon: "🫘",
-    href: "/tools/nephrology",
+    href: "/tools/nephro",
     color: "green",
     count: 21,
-    disabled: true,
   },
   {
     id: "nutrition",
-    title: "Nutrition",
-    subtitle: "BMI, kalori, makronutrien, TPN, refeeding",
+    title: "Gizi",
+    subtitle: "BMI, kalori, makronutrien, mikronutrien, feeding",
     icon: "🍼",
-    href: "/tools/nutrition",
+    href: "/tools/gizi",
     color: "orange",
     count: 16,
-    disabled: true,
   },
   {
     id: "catatan-klinis",
@@ -68,12 +66,11 @@ const categories = [
   {
     id: "referensi-obat",
     title: "Referensi Obat",
-    subtitle: "Drug reference & dose calculator",
+    subtitle: "50 obat pediatric + auto-dose calculator",
     icon: "💊",
     href: "/tools/referensi-obat",
     color: "pink",
     count: 50,
-    disabled: true,
   },
   {
     id: "sepsis",
@@ -136,28 +133,6 @@ export function ToolsClient() {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {categories.map((cat) => {
           const isActive = pathname === cat.href || pathname.startsWith(cat.href + "/");
-          const isDisabled = cat.disabled;
-
-          if (isDisabled) {
-            return (
-              <div
-                key={cat.id}
-                className={cn(
-                  "rounded-xl border p-4 opacity-50 cursor-not-allowed",
-                  "border-border bg-card/50"
-                )}
-              >
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">{cat.icon}</span>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold truncate">{cat.title}</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">{cat.subtitle}</p>
-                    <p className="text-[10px] text-muted-foreground/50 mt-2">Segera hadir</p>
-                  </div>
-                </div>
-              </div>
-            );
-          }
 
           return (
             <Link
