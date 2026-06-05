@@ -59,12 +59,11 @@ const categories = [
   {
     id: "catatan-klinis",
     title: "Catatan Klinis",
-    subtitle: "Pediatric clinical reference atlas",
+    subtitle: "SOAP, resume, rujukan, pemeriksaan fisik, prosedur, surat",
     icon: "📋",
     href: "/tools/catatan-klinis",
     color: "purple",
     count: 13,
-    disabled: true,
   },
   {
     id: "referensi-obat",
