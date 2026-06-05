@@ -407,6 +407,30 @@ export async function movePatientToRoom(id: string, room: string | null) {
   revalidatePath("/pasien");
 }
 
+export async function getPatientsByRoom() {
+  const rows = await db
+    .select({
+      id: patients.id,
+      name: patients.name,
+      medicalRecordNo: patients.medicalRecordNo,
+      bed: patients.bed,
+      room: patients.room,
+      birthDate: patients.birthDate,
+      sex: patients.sex,
+      diagnosis: sql<string | null>`(
+        SELECT ${patientVisits.diagnosisPrimary}
+        FROM ${patientVisits}
+        WHERE ${patientVisits.patientId} = ${patients.id}
+        ORDER BY ${patientVisits.visitDate} DESC
+        LIMIT 1
+      )`,
+    })
+    .from(patients)
+    .orderBy(patients.room, patients.bed);
+
+  return rows;
+}
+
 export async function findPatientByName(name: string) {
   return await db.select().from(patients).where(ilike(patients.name, `%${name}%`)).limit(5);
 }

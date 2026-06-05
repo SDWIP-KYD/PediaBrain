@@ -8,7 +8,6 @@ import Link from "next/link";
 import { PatientSearch } from "./patient-search";
 import { CreatePatientDialogWrapper } from "./create-dialog-wrapper";
 import { PasienAIInput } from "./pasien-ai-input";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const PAGE_SIZE_DEFAULT = 25;
 
@@ -115,7 +114,16 @@ export default async function PasienPage({
             {searchQuery && <span className="ml-2 text-neon">· "{searchQuery}"</span>}
           </p>
         </div>
-        <CreatePatientDialogWrapper />
+        <div className="flex items-center gap-2">
+          <Link
+            href="/pasien/kanban"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border hover:bg-accent text-sm"
+          >
+            <LayoutGrid className="h-3.5 w-3.5" />
+            Board
+          </Link>
+          <CreatePatientDialogWrapper />
+        </div>
       </div>
 
       {dbError ? (
@@ -123,18 +131,6 @@ export default async function PasienPage({
           <p className="text-sm text-destructive">{dbError}</p>
         </div>
       ) : (
-        <Tabs defaultValue="list">
-          <TabsList>
-            <TabsTrigger value="list">
-              <Users className="h-3.5 w-3.5" />
-              Daftar
-            </TabsTrigger>
-            <TabsTrigger value="kanban" render={<Link href="/pasien/kanban" />}>
-              <LayoutGrid className="h-3.5 w-3.5" />
-              Board
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="list">
         <Card>
           <CardHeader className="pb-3">
             <PatientSearch initialQuery={searchQuery} />
@@ -247,8 +243,6 @@ export default async function PasienPage({
             )}
           </CardContent>
         </Card>
-          </TabsContent>
-        </Tabs>
       )}
       <PasienAIInput />
     </div>

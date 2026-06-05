@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useTransition, useOptimistic } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { GripVertical, User, Calendar } from "lucide-react";
-import { movePatientToRoom } from "@/app/actions";
-import { useRouter } from "next/navigation";
+import { GripVertical, Loader2 } from "lucide-react";
+import { movePatientToRoom, getPatientsByRoom } from "@/app/actions";
 import { cn } from "@/lib/utils";
 
 interface KanbanPatient {
@@ -18,6 +17,8 @@ interface KanbanPatient {
   diagnosis: string | null;
 }
 
+const ROOMS = ["DAHLIA", "ANGGREK", "MELATI", "SERUNI"];
+
 const ROOM_COLORS: Record<string, string> = {
   DAHLIA: "border-t-pink-500",
   ANGGREK: "border-t-purple-500",
@@ -25,67 +26,102 @@ const ROOM_COLORS: Record<string, string> = {
   SERUNI: "border-t-blue-500",
 };
 
-export function PatientKanban({
-  rooms,
-  patients: initial,
-}: {
-  rooms: string[];
-  patients: KanbanPatient[];
-}) {
-  const router = useRouter();
+export function PatientKanban() {
+  const [patients, setPatients] = useState<KanbanPatient[]>([]);
+  const [loading, setLoading] = useState(true);
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverRoom, setDragOverRoom] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
-  const [optimisticPatients, applyOptimistic] = useOptimistic(
-    initial,
-    (state, action: { id: string; room: string | null }) =>
-      state.map((p) => (p.id === action.id ? { ...p, room: action.room } : p))
-  );
+  const [movingId, setMovingId] = useState<string | null>(null);
 
-  const byRoom = rooms.reduce<Record<string, KanbanPatient[]>>((acc, room) => {
-    acc[room] = optimisticPatients.filter((p) => p.room === room);
+  useEffect(() => {
+    loadPatients();
+  }, []);
+
+  async function loadPatients() {
+    try {
+      const data = await getPatientsByRoom();
+      setPatients(data);
+    } catch (error) {
+      console.error("Failed to load patients:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const byRoom = ROOMS.reduce<Record<string, KanbanPatient[]>>((acc, room) => {
+    acc[room] = patients.filter((p) => p.room === room);
     return acc;
   }, {});
 
-  const unassigned = optimisticPatients.filter((p) => !p.room || !rooms.includes(p.room));
+  const unassigned = patients.filter((p) => !p.room || !ROOMS.includes(p.room));
 
   function handleDragStart(e: React.DragEvent, id: string) {
     setDraggedId(id);
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("text/plain", id);
+    const target = e.currentTarget as HTMLElement;
+    target.style.opacity = "0.5";
   }
 
-  function handleDragOver(e: React.DragEvent, room: string | null) {
+  function handleDragEnd(e: React.DragEvent) {
+    setDraggedId(null);
+    setDragOverRoom(null);
+    const target = e.currentTarget as HTMLElement;
+    target.style.opacity = "1";
+  }
+
+  function handleDragOver(e: React.DragEvent, room: string) {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
-    setDragOverRoom(room ?? "__unassigned__");
+    setDragOverRoom(room);
   }
 
   function handleDragLeave() {
     setDragOverRoom(null);
   }
 
-  function handleDrop(e: React.DragEvent, targetRoom: string | null) {
+  async function handleDrop(e: React.DragEvent, targetRoom: string) {
     e.preventDefault();
     const id = e.dataTransfer.getData("text/plain");
     if (!id) return;
+
     setDraggedId(null);
     setDragOverRoom(null);
 
-    const patient = optimisticPatients.find((p) => p.id === id);
+    const patient = patients.find((p) => p.id === id);
     if (!patient || patient.room === targetRoom) return;
 
-    startTransition(async () => {
-      applyOptimistic({ id, room: targetRoom });
+    setMovingId(id);
+
+    setPatients((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, room: targetRoom } : p))
+    );
+
+    try {
       await movePatientToRoom(id, targetRoom);
-      router.refresh();
-    });
+    } catch (error) {
+      console.error("Failed to move patient:", error);
+      setPatients((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, room: patient.room } : p))
+      );
+    } finally {
+      setMovingId(null);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <span className="ml-2 text-sm text-muted-foreground">Memuat data pasien...</span>
+      </div>
+    );
   }
 
   return (
     <div className="overflow-x-auto pb-4">
       <div className="flex gap-3 min-w-fit">
-        {rooms.map((room) => {
+        {ROOMS.map((room) => {
           const items = byRoom[room] ?? [];
           const isOver = dragOverRoom === room;
           return (
@@ -117,7 +153,9 @@ export function PatientKanban({
                       key={p.id}
                       patient={p}
                       onDragStart={handleDragStart}
+                      onDragEnd={handleDragEnd}
                       isDragging={draggedId === p.id}
+                      isMoving={movingId === p.id}
                     />
                   ))
                 )}
@@ -128,9 +166,9 @@ export function PatientKanban({
 
         {unassigned.length > 0 && (
           <div
-            onDragOver={(e) => handleDragOver(e, null)}
+            onDragOver={(e) => handleDragOver(e, "__unassigned__")}
             onDragLeave={handleDragLeave}
-            onDrop={(e) => handleDrop(e, null)}
+            onDrop={(e) => handleDrop(e, "")}
             className={cn(
               "w-64 shrink-0 rounded-lg border border-t-4 border-t-gray-400 bg-card transition-all",
               dragOverRoom === "__unassigned__" && "ring-2 ring-neon ring-offset-2 ring-offset-background"
@@ -148,7 +186,9 @@ export function PatientKanban({
                   key={p.id}
                   patient={p}
                   onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
                   isDragging={draggedId === p.id}
+                  isMoving={movingId === p.id}
                 />
               ))}
             </div>
@@ -162,49 +202,55 @@ export function PatientKanban({
 function PatientCard({
   patient,
   onDragStart,
+  onDragEnd,
   isDragging,
+  isMoving,
 }: {
   patient: KanbanPatient;
   onDragStart: (e: React.DragEvent, id: string) => void;
+  onDragEnd: (e: React.DragEvent) => void;
   isDragging: boolean;
+  isMoving: boolean;
 }) {
   return (
-    <Link href={`/pasien/${patient.id}`}>
-      <div
-        draggable
-        onDragStart={(e) => onDragStart(e, patient.id)}
-        className={cn(
-          "rounded-md border border-border bg-background p-2 cursor-grab active:cursor-grabbing hover:border-neon/40 transition-all",
-          isDragging && "opacity-40"
-        )}
-      >
-        <div className="flex items-start gap-1.5">
-          <GripVertical className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <p className="font-medium text-xs truncate">{patient.name}</p>
-              {patient.sex && (
-                <span className="text-[10px] text-muted-foreground shrink-0">
-                  {patient.sex === "L" ? "♂" : "♀"}
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-              {patient.bed && (
-                <span className="font-mono bg-muted px-1 rounded">{patient.bed}</span>
-              )}
-              {patient.medicalRecordNo && (
-                <span className="font-mono truncate">{patient.medicalRecordNo}</span>
-              )}
-            </div>
-            {patient.diagnosis && (
-              <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2 leading-tight">
-                {patient.diagnosis}
-              </p>
+    <div
+      draggable
+      onDragStart={(e) => onDragStart(e, patient.id)}
+      onDragEnd={onDragEnd}
+      className={cn(
+        "rounded-md border border-border bg-background p-2 cursor-grab active:cursor-grabbing hover:border-neon/40 transition-all",
+        isDragging && "opacity-40",
+        isMoving && "opacity-60 animate-pulse"
+      )}
+    >
+      <div className="flex items-start gap-1.5">
+        <GripVertical className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <Link href={`/pasien/${patient.id}`} className="font-medium text-xs truncate hover:text-neon transition-colors">
+              {patient.name}
+            </Link>
+            {patient.sex && (
+              <span className="text-[10px] text-muted-foreground shrink-0">
+                {patient.sex === "L" ? "♂" : "♀"}
+              </span>
             )}
           </div>
+          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+            {patient.bed && (
+              <span className="font-mono bg-muted px-1 rounded">{patient.bed}</span>
+            )}
+            {patient.medicalRecordNo && (
+              <span className="font-mono truncate">{patient.medicalRecordNo}</span>
+            )}
+          </div>
+          {patient.diagnosis && (
+            <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2 leading-tight">
+              {patient.diagnosis}
+            </p>
+          )}
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
