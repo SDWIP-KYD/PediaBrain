@@ -34,8 +34,7 @@ export default function RootLayout({
       <body className="min-h-full flex bg-background text-foreground overflow-x-hidden">
         <Sidebar />
         <div className="flex-1 lg:ml-56 min-h-screen flex flex-col overflow-x-hidden">
-          <header className="sticky top-0 z-40 flex items-center justify-between gap-2 px-4 py-2 lg:px-6 border-b border-border bg-background/95 backdrop-blur">
-            <div className="flex items-center gap-2 min-w-[40px] lg:hidden" />
+          <header className="sticky top-0 z-40 flex items-center gap-2 px-3 py-2 lg:px-6 border-b border-border bg-background/95 backdrop-blur min-h-[48px]">
             <Navbar />
             <div className="flex items-center gap-2 shrink-0">
               <GlobalSearch />
