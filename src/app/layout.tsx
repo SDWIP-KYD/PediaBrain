@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Sidebar } from "@/components/sidebar";
+import { Navbar } from "@/components/navbar";
 import { GlobalSearch } from "@/components/global-search";
 import { QuickCapture } from "@/components/quick-capture";
-import { Brain } from "lucide-react";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -34,19 +33,20 @@ export default function RootLayout({
     >
       <body className="min-h-full flex bg-background text-foreground overflow-x-hidden">
         <Sidebar />
-        <main className="flex-1 lg:ml-56 min-h-screen overflow-x-hidden">
-          <div className="flex items-center justify-between px-4 pt-3 lg:px-6 lg:pt-4">
-            <Link href="/" className="flex items-center gap-2 font-bold text-base tracking-tight hover:opacity-80 transition-opacity lg:hidden">
-              <Brain className="h-5 w-5 text-neon" />
-              <span>Pedia-Brain</span>
-            </Link>
-            <div className="hidden lg:block" />
-            <GlobalSearch />
-          </div>
-          <div className="px-4 py-4 lg:px-6 lg:py-6 max-w-5xl">
-            {children}
-          </div>
-        </main>
+        <div className="flex-1 lg:ml-56 min-h-screen flex flex-col overflow-x-hidden">
+          <header className="sticky top-0 z-40 flex items-center justify-between gap-2 px-4 py-2 lg:px-6 border-b border-border bg-background/95 backdrop-blur">
+            <div className="flex items-center gap-2 min-w-[40px] lg:hidden" />
+            <Navbar />
+            <div className="flex items-center gap-2 shrink-0">
+              <GlobalSearch />
+            </div>
+          </header>
+          <main className="flex-1 overflow-x-hidden">
+            <div className="px-4 py-4 lg:px-6 lg:py-6 max-w-5xl">
+              {children}
+            </div>
+          </main>
+        </div>
         <QuickCapture />
       </body>
     </html>

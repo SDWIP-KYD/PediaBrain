@@ -3,11 +3,12 @@ import { patients, patientVisits } from "@/lib/db/schema";
 import { desc, eq, ilike, or, sql } from "drizzle-orm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { UserPlus, Users, Calendar, Phone, User } from "lucide-react";
+import { UserPlus, Users, Calendar, Phone, User, LayoutGrid } from "lucide-react";
 import Link from "next/link";
 import { PatientSearch } from "./patient-search";
 import { CreatePatientDialogWrapper } from "./create-dialog-wrapper";
 import { PasienAIInput } from "./pasien-ai-input";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const PAGE_SIZE_DEFAULT = 25;
 
@@ -122,6 +123,18 @@ export default async function PasienPage({
           <p className="text-sm text-destructive">{dbError}</p>
         </div>
       ) : (
+        <Tabs defaultValue="list">
+          <TabsList>
+            <TabsTrigger value="list">
+              <Users className="h-3.5 w-3.5" />
+              Daftar
+            </TabsTrigger>
+            <TabsTrigger value="kanban" render={<Link href="/pasien/kanban" />}>
+              <LayoutGrid className="h-3.5 w-3.5" />
+              Board
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="list">
         <Card>
           <CardHeader className="pb-3">
             <PatientSearch initialQuery={searchQuery} />
@@ -234,6 +247,8 @@ export default async function PasienPage({
             )}
           </CardContent>
         </Card>
+          </TabsContent>
+        </Tabs>
       )}
       <PasienAIInput />
     </div>

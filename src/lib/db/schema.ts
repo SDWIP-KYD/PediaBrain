@@ -56,6 +56,8 @@ export const patients = pgTable("patients", {
   parentName: varchar("parent_name", { length: 255 }),
   phone: varchar("phone", { length: 50 }),
   address: text("address"),
+  room: varchar("room", { length: 50 }),
+  bed: varchar("bed", { length: 20 }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

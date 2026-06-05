@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogTitle, DialogClose } from "@/components/ui/dialog";
-import { Pin, Download, Pencil, X } from "lucide-react";
+import { Pin, Download, Pencil, X, ExternalLink } from "lucide-react";
 import { MarkdownContent } from "@/components/markdown-content";
 
 interface NoteRow {
@@ -59,9 +60,9 @@ export function NotePopup({
                 ))}
               </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-1 shrink-0">
               <Button
-                size="sm"
+                size="icon-sm"
                 variant="ghost"
                 onClick={() => {
                   const blob = new Blob([`# ${note.title}\n\n${note.content}`], { type: "text/markdown" });
@@ -72,6 +73,7 @@ export function NotePopup({
                   a.click();
                   URL.revokeObjectURL(url);
                 }}
+                title="Download"
               >
                 <Download className="h-3.5 w-3.5" />
               </Button>
@@ -81,7 +83,15 @@ export function NotePopup({
                   Edit
                 </Button>
               )}
-              <DialogClose render={<Button size="sm" variant="ghost"><X className="h-4 w-4" /></Button>} />
+              {!onEdit && (
+                <Link href={`/notes?open=${note.id}`} onClick={close}>
+                  <Button size="sm" variant="outline">
+                    <ExternalLink className="h-3.5 w-3.5 mr-1" />
+                    Buka
+                  </Button>
+                </Link>
+              )}
+              <DialogClose render={<Button size="icon-sm" variant="ghost"><X className="h-4 w-4" /></Button>} />
             </div>
           </div>
           <div className="p-4 overflow-y-auto flex-1 min-h-0">

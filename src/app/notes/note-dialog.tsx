@@ -140,7 +140,7 @@ export function NoteDialog({
       await autosaveNote(note.id, { title, content, tags: tagsArr });
       lastSaved.current = { title, content, tags };
       setAutosaveStatus("saved");
-    }, 2000);
+    }, 10000);
     return () => {
       if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
     };
@@ -150,6 +150,7 @@ export function NoteDialog({
     if (!title.trim() || !content.trim()) return;
     setPending(true);
     try {
+      if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
       const fd = new FormData();
       fd.set("title", title);
       fd.set("content", content);

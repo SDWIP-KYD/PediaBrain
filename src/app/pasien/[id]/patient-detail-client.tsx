@@ -20,6 +20,7 @@ import { EditVisitDialog } from "./edit-visit-dialog";
 type Patient = {
   id: string; name: string; birthDate: string | null; sex: string | null;
   medicalRecordNo: string | null; parentName: string | null; phone: string | null; address: string | null;
+  room: string | null; bed: string | null;
 };
 
 type Visit = {
@@ -99,6 +100,7 @@ export function PatientDetailClient({
             {patient.sex === "L" ? "Laki-laki" : patient.sex === "P" ? "Perempuan" : "-"}
             {age && ` · ${age}`}
             {patient.medicalRecordNo && ` · RM: ${patient.medicalRecordNo}`}
+            {patient.room && ` · ${patient.room}${patient.bed ? ` / ${patient.bed}` : ""}`}
           </p>
         </div>
         <EditPatientDialog patient={patient} />

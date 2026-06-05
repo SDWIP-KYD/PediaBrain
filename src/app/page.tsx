@@ -15,7 +15,7 @@ import {
   AlertCircle,
   StickyNote,
 } from "lucide-react";
-import { DashboardCalendar } from "./dashboard-calendar";
+import { DashboardCalendar, DashboardTodayFollowUpActions } from "./dashboard-calendar";
 import { StickyNotesSection } from "./sticky-notes";
 import { CreateFollowUpDialogWrapper } from "./follow-ups/create-dialog-wrapper";
 import { DashboardNotesClient, DashboardPinned } from "./dashboard-notes-client";
@@ -85,6 +85,7 @@ export default async function DashboardPage() {
     content: f.content,
     dueDate: f.dueDate,
     status: f.status,
+    recurrence: f.recurrence,
   }));
 
   const serializedSticky = latestSticky
@@ -131,7 +132,7 @@ export default async function DashboardPage() {
       </Card>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
+        <Card className="overflow-hidden">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between gap-2">
               <CardTitle className="text-sm font-medium flex items-center gap-2 min-w-0">
@@ -184,20 +185,35 @@ export default async function DashboardPage() {
                 </div>
               </div>
             ) : (
-              <div className="space-y-3">
-                {todayFollowUps.map((fu) => (
-                  <div
-                    key={fu.id}
-                    className="flex items-start justify-between gap-3 p-3 rounded-lg border bg-muted/30"
-                  >
-                    <div className="text-sm min-w-0">
-                      <p className="font-medium">{fu.title}</p>
-                      <p className="text-muted-foreground text-xs mt-0.5">
-                        {fu.content || "-"}
-                      </p>
+              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                {todayFollowUps.map((fu) => {
+                  const item = {
+                    id: fu.id,
+                    title: fu.title,
+                    content: fu.content,
+                    dueDate: fu.dueDate,
+                    status: fu.status,
+                    recurrence: fu.recurrence ?? "none",
+                  };
+                  return (
+                    <div
+                      key={fu.id}
+                      className="rounded-lg border bg-muted/30 overflow-hidden"
+                    >
+                      <div className="flex items-start justify-between gap-2 p-2.5">
+                        <p className="font-medium text-sm flex-1 min-w-0">{fu.title}</p>
+                        <DashboardTodayFollowUpActions item={item} />
+                      </div>
+                      {fu.content && (
+                        <div className="px-2.5 pb-2.5 max-h-[80px] overflow-y-auto border-t border-border/30">
+                          <p className="text-xs text-muted-foreground whitespace-pre-wrap break-words leading-relaxed pt-1.5">
+                            {fu.content}
+                          </p>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </CardContent>

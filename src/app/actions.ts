@@ -245,6 +245,8 @@ export async function createPatient(data: {
   parentName?: string;
   phone?: string;
   address?: string;
+  room?: string;
+  bed?: string;
 }) {
   const [inserted] = await db.insert(patients).values({
     medicalRecordNo: data.medicalRecordNo || null,
@@ -254,6 +256,8 @@ export async function createPatient(data: {
     parentName: data.parentName || null,
     phone: data.phone || null,
     address: data.address || null,
+    room: data.room || null,
+    bed: data.bed || null,
   }).returning();
   revalidatePath("/pasien");
   return inserted;
@@ -267,6 +271,8 @@ export async function updatePatient(id: string, data: {
   parentName?: string;
   phone?: string;
   address?: string;
+  room?: string;
+  bed?: string;
 }) {
   await db.update(patients).set({
     medicalRecordNo: data.medicalRecordNo || null,
@@ -276,6 +282,8 @@ export async function updatePatient(id: string, data: {
     parentName: data.parentName || null,
     phone: data.phone || null,
     address: data.address || null,
+    room: data.room ?? undefined,
+    bed: data.bed ?? undefined,
     updatedAt: new Date(),
   }).where(eq(patients.id, id));
   revalidatePath("/pasien");
@@ -375,6 +383,28 @@ export async function updateVisit(id: string, data: {
 export async function deleteVisit(id: string, patientId: string) {
   await db.delete(patientVisits).where(eq(patientVisits.id, id));
   revalidatePath(`/pasien/${patientId}`);
+}
+
+export async function autosaveFollowUp(
+  id: string,
+  data: { title: string; content: string | null; dueDate: string; status: string; recurrence: string }
+) {
+  await db
+    .update(followUps)
+    .set({
+      title: data.title,
+      content: data.content,
+      dueDate: data.dueDate,
+      status: data.status,
+      recurrence: data.recurrence,
+      createdAt: new Date(),
+    })
+    .where(eq(followUps.id, id));
+}
+
+export async function movePatientToRoom(id: string, room: string | null) {
+  await db.update(patients).set({ room, updatedAt: new Date() }).where(eq(patients.id, id));
+  revalidatePath("/pasien");
 }
 
 export async function findPatientByName(name: string) {

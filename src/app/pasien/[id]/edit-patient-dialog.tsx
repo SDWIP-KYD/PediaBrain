@@ -9,9 +9,12 @@ import { updatePatient } from "@/app/actions";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
+const ROOMS = ["DAHLIA", "ANGGREK", "MELATI", "SERUNI"];
+
 type Patient = {
   id: string; name: string; birthDate: string | null; sex: string | null;
   medicalRecordNo: string | null; parentName: string | null; phone: string | null; address: string | null;
+  room?: string | null; bed?: string | null;
 };
 
 export function EditPatientDialog({ patient }: { patient: Patient }) {
@@ -26,6 +29,8 @@ export function EditPatientDialog({ patient }: { patient: Patient }) {
     parentName: patient.parentName || "",
     phone: patient.phone || "",
     address: patient.address || "",
+    room: patient.room || "",
+    bed: patient.bed || "",
   });
 
   function handleSubmit(e: React.FormEvent) {
@@ -40,6 +45,8 @@ export function EditPatientDialog({ patient }: { patient: Patient }) {
         parentName: form.parentName || undefined,
         phone: form.phone || undefined,
         address: form.address || undefined,
+        room: form.room || undefined,
+        bed: form.bed || undefined,
       });
       setOpen(false);
       router.refresh();
@@ -73,6 +80,22 @@ export function EditPatientDialog({ patient }: { patient: Patient }) {
                 ))}
               </div>
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] text-muted-foreground uppercase tracking-wider block mb-1">Ruang</label>
+                <select
+                  value={form.room}
+                  onChange={(e) => setForm({ ...form, room: e.target.value })}
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-2.5 text-sm"
+                >
+                  <option value="">—</option>
+                  {ROOMS.map((r) => (
+                    <option key={r} value={r}>{r}</option>
+                  ))}
+                </select>
+              </div>
+              <Field label="No. Bed" value={form.bed} onChange={(v) => setForm({ ...form, bed: v })} placeholder="cth: K.01.1" />
+            </div>
             <Field label="Nama Orang Tua" value={form.parentName} onChange={(v) => setForm({ ...form, parentName: v })} />
             <Field label="No. Telp" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />
             <Field label="Alamat" value={form.address} onChange={(v) => setForm({ ...form, address: v })} />
@@ -89,15 +112,15 @@ export function EditPatientDialog({ patient }: { patient: Patient }) {
   );
 }
 
-function Field({ label, value, onChange, type = "text", required = false }: {
-  label: string; value: string; onChange: (v: string) => void; type?: string; required?: boolean;
+function Field({ label, value, onChange, type = "text", required = false, placeholder }: {
+  label: string; value: string; onChange: (v: string) => void; type?: string; required?: boolean; placeholder?: string;
 }) {
   return (
     <div>
       <label className="text-[11px] text-muted-foreground uppercase tracking-wider block mb-1">
         {label}{required && <span className="text-destructive ml-1">*</span>}
       </label>
-      <Input type={type} value={value} onChange={(e) => onChange(e.target.value)} required={required} className="h-9" />
+      <Input type={type} value={value} onChange={(e) => onChange(e.target.value)} required={required} placeholder={placeholder} className="h-9" />
     </div>
   );
 }

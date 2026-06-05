@@ -20,6 +20,8 @@ interface NoteRow {
 
 export function DashboardPinned({ pinned }: { pinned: NoteRow[] }) {
   const [openId, setOpenId] = useState<string | null>(null);
+  const [editNote, setEditNote] = useState<NoteRow | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
   const openNote = pinned.find((n) => n.id === openId) ?? null;
   if (pinned.length === 0) return null;
   return (
@@ -47,9 +49,25 @@ export function DashboardPinned({ pinned }: { pinned: NoteRow[] }) {
           ))}
         </div>
       </div>
-      {openNote && <NotePopup note={openNote} onClose={() => setOpenId(null)} />}
+      {openNote && (
+        <NotePopup
+          note={openNote}
+          onEdit={() => { setEditNote(openNote); setEditOpen(true); setOpenId(null); }}
+          onClose={() => setOpenId(null)}
+        />
+      )}
+      <NoteDialog open={editOpen} onOpenChange={setEditOpen} note={editNote} />
     </>
   );
+}
+
+function getPreview(content: string, maxChars = 150): { text: string; hasMore: boolean } {
+  const trimmed = content.trim();
+  if (trimmed.length <= maxChars) return { text: trimmed, hasMore: false };
+  const sliced = trimmed.slice(0, maxChars);
+  const lastNewline = sliced.lastIndexOf("\n");
+  const text = lastNewline > maxChars - 30 ? sliced.slice(0, lastNewline) : sliced;
+  return { text, hasMore: true };
 }
 
 export function DashboardNotesClient({
@@ -85,8 +103,7 @@ export function DashboardNotesClient({
         ) : (
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {recent.map((note) => {
-              const words = note.content.split(/\s+/).slice(0, 100).join(" ");
-              const hasMore = note.content.split(/\s+/).length > 100;
+              const preview = getPreview(note.content, 150);
               return (
                 <div
                   key={note.id}
@@ -107,26 +124,26 @@ export function DashboardNotesClient({
                   </div>
                   <button
                     onClick={() => setOpenId(note.id)}
-                    className="block text-left text-xs text-muted-foreground w-full"
+                    className="block text-left text-xs text-muted-foreground w-full max-h-[60px] overflow-hidden whitespace-pre-wrap break-words leading-relaxed"
                   >
-                    <DashboardMarkdown content={words} />
-                    {hasMore && <span className="text-[10px]">...</span>}
+                    {preview.text}
+                    {preview.hasMore && <span className="text-[10px]"> ...</span>}
                   </button>
                   <div className="flex items-center gap-1 mt-2 pt-2 border-t border-border/50">
-                    <Link
-                      href={`/notes?open=${note.id}`}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-neon/20 text-neon hover:bg-neon hover:text-background transition-colors"
-                    >
-                      <ExternalLink className="h-2.5 w-2.5" />
-                      Buka di Notes
-                    </Link>
                     <button
                       onClick={() => { setEditNote(note); setEditOpen(true); }}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium border border-border text-muted-foreground hover:bg-accent transition-colors"
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-neon/20 text-neon hover:bg-neon hover:text-background transition-colors"
                     >
                       <Pencil className="h-2.5 w-2.5" />
                       Edit
                     </button>
+                    <Link
+                      href={`/notes?open=${note.id}`}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium border border-border text-muted-foreground hover:bg-accent transition-colors"
+                    >
+                      <ExternalLink className="h-2.5 w-2.5" />
+                      Buka
+                    </Link>
                   </div>
                 </div>
               );
@@ -135,7 +152,13 @@ export function DashboardNotesClient({
         )}
       </div>
 
-      {openNote && <NotePopup note={openNote} onClose={() => setOpenId(null)} />}
+      {openNote && (
+        <NotePopup
+          note={openNote}
+          onEdit={() => { setEditNote(openNote); setEditOpen(true); setOpenId(null); }}
+          onClose={() => setOpenId(null)}
+        />
+      )}
       <NoteDialog open={editOpen} onOpenChange={setEditOpen} note={editNote} />
     </>
   );
