@@ -4,6 +4,8 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { drugSubtabs } from "./calculator-registry";
 import { DrugDetail } from "./components/drug-detail";
+import { EquipmentCalc } from "./components/equipment-calc";
+import { LatinRef } from "./components/latin-ref";
 import { drugs, type DrugDefinition, drugCategories } from "./data/drugs";
 
 export function ReferensiObatClient() {
@@ -35,6 +37,33 @@ export function ReferensiObatClient() {
 
   if (selectedDrug) {
     return <DrugDetail drug={selectedDrug} onBack={() => setSelectedDrug(null)} />;
+  }
+
+  if (activeTab === "Alat & Referensi") {
+    return (
+      <div className="space-y-4">
+        <div className="overflow-x-auto scrollbar-hide">
+          <div className="flex gap-1.5 min-w-max pb-1">
+            {drugSubtabs.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={cn(
+                  "shrink-0 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all flex items-center gap-1.5",
+                  activeTab === tab
+                    ? "bg-neon/10 border-neon/30 text-neon"
+                    : "bg-card border-border text-muted-foreground hover:bg-accent hover:text-foreground"
+                )}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        </div>
+        <EquipmentCalc />
+        <LatinRef />
+      </div>
+    );
   }
 
   const categoryOptions = [

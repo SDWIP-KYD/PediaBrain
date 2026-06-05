@@ -19,6 +19,17 @@ import { TPNGiziCalc } from "./components/tpn-gizi";
 import { BreastfeedCalc } from "./components/breastfeed-calc";
 import { MalnutriScreen } from "./components/malnutri-screen";
 import { RefeedingRisk } from "./components/refeeding-risk";
+import { WaterlowCalc } from "./components/waterlow-calc";
+import { CatchupCalc } from "./components/catchup-calc";
+import { AKGCalc } from "./components/akg-calc";
+import { MacroDistCalc } from "./components/macro-dist-calc";
+import { ASIFortCalc } from "./components/asi-fort-calc";
+import { MPASICalc } from "./components/mpasi-calc";
+import { SAMProtocol } from "./components/sam-protocol";
+import { SpecialNutriCalc } from "./components/special-nutri-calc";
+import { RefeedingProtocol } from "./components/refeeding-protocol";
+import { FoodCompCalc } from "./components/food-comp-calc";
+import { MealPlanCalc } from "./components/meal-plan-calc";
 
 const calcComponents: Record<string, React.FC> = {
   "bmi-calc": BMICalc,
@@ -37,6 +48,17 @@ const calcComponents: Record<string, React.FC> = {
   "breastfeed-calc": BreastfeedCalc,
   "malnutri-screen": MalnutriScreen,
   "refeeding-risk": RefeedingRisk,
+  "waterlow-calc": WaterlowCalc,
+  "catchup-calc": CatchupCalc,
+  "akg-calc": AKGCalc,
+  "macro-dist-calc": MacroDistCalc,
+  "asi-fort-calc": ASIFortCalc,
+  "mpasi-calc": MPASICalc,
+  "sam-protocol": SAMProtocol,
+  "special-nutri-calc": SpecialNutriCalc,
+  "refeeding-protocol": RefeedingProtocol,
+  "food-comp-calc": FoodCompCalc,
+  "meal-plan-calc": MealPlanCalc,
 };
 
 const subtabIcons: Record<string, string> = {
@@ -45,6 +67,8 @@ const subtabIcons: Record<string, string> = {
   "Mikronutrien": "💊",
   "Feeding": "🍼",
   "Assessment": "📉",
+  "Kondisi Khusus": "🏥",
+  "Bahan Makanan": "🍽️",
 };
 
 export function GiziClient() {

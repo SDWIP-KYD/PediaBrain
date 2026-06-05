@@ -23,6 +23,12 @@ import { SilvermanCalc } from "./components/silverman-calc";
 import { FototerapiCalc } from "./components/fototerapi-calc";
 import { AGDCalc } from "./components/agd-calc";
 import { NatriumCalc } from "./components/natrium-calc";
+import { NutrisiNeonatusCalc } from "./components/nutrisi-neonatus-calc";
+import { EnteralNeonatusCalc } from "./components/enteral-neonatus-calc";
+import { PMACalc } from "./components/pma-calc";
+import { TransfusiPRCCalc } from "./components/transfusi-prc-calc";
+import { TransfusiTukarCalc } from "./components/transfusi-tukar-calc";
+import { ObatResusitasiCalc } from "./components/obat-resusitasi-calc";
 
 const calcComponents: Record<string, React.FC> = {
   kafein: KafeinCalc,
@@ -45,6 +51,12 @@ const calcComponents: Record<string, React.FC> = {
   fototerapi: FototerapiCalc,
   agd: AGDCalc,
   natrium: NatriumCalc,
+  nutrisi: NutrisiNeonatusCalc,
+  enteral: EnteralNeonatusCalc,
+  pma: PMACalc,
+  transfusiprc: TransfusiPRCCalc,
+  transfusitukar: TransfusiTukarCalc,
+  obatresusitasi: ObatResusitasiCalc,
 };
 
 const subtabIcons: Record<string, string> = {
@@ -53,6 +65,8 @@ const subtabIcons: Record<string, string> = {
   Ventilator: "🫁",
   Skor: "📊",
   AGD: "🧪",
+  Nutrisi: "🥛",
+  "Alat Hitung": "🔢",
 };
 
 export function NeonatologiClient() {

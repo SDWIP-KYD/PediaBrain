@@ -10,6 +10,7 @@ export const drugSubtabs = [
   "Analgesik",
   "Kardiovaskuler",
   "Lainnya",
+  "Alat & Referensi",
 ] as const;
 
 const calculatorRegistry: Record<string, DrugCalcDef[]> = {
@@ -32,6 +33,10 @@ const calculatorRegistry: Record<string, DrugCalcDef[]> = {
     { id: "neurology", name: "Neurologi", description: "Phenobarbital, Levetiracetam, dll" },
     { id: "hematology", name: "Hematologi", description: "Heparin, Warfarin, dll" },
     { id: "emergency", name: "Gawat Darurat", description: "Epinephrine, Naloxone, dll" },
+  ],
+  "Alat & Referensi": [
+    { id: "equipment", name: "Kalkulator Alat", description: "ETT, NGT, IV, Foley sizing by age/weight" },
+    { id: "latin", name: "Singkatan Latin", description: "30 singkatan umum resep medis" },
   ],
 };
 

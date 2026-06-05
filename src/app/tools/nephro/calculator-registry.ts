@@ -11,6 +11,10 @@ export const nephroSubtabs = [
   "GFR & Clearance",
   "AKI & Staging",
   "Elektrolit & Asam-Basa",
+  "Hipertensi",
+  "Cairan & Edema",
+  "Urin & Proteinuria",
+  "Obat Nefrologi",
   "Dialisis",
   "Glomerulonefritis",
   "Transplantasi",
@@ -34,6 +38,25 @@ const calculatorRegistry: Record<string, NephroCalcDef[]> = {
     { id: "hyponatremia", name: "Hyponatremia Mgmt", description: "Na+ <135 correction" },
     { id: "met-acidosis", name: "Metabolic Acidosis", description: "AG, delta-delta, RTA" },
     { id: "rta-calc", name: "RTA Classification", description: "Type 1/2/3/4 RTA" },
+  ],
+  "Hipertensi": [
+    { id: "bp-classification", name: "BP Classification (AAP 2017)", description: "Age-based BP percentiles for pediatric hypertension staging" },
+    { id: "antihipertensi-pediatrik", name: "Antihipertensi Pediatrik", description: "Drug protocols for crisis, stage 1, stage 2, CKD, nephrotic" },
+    { id: "map-target", name: "MAP & Target", description: "MAP formula + target BP reduction percentages" },
+  ],
+  "Cairan & Edema": [
+    { id: "maintenance-fluid", name: "Maintenance Fluid", description: "Holliday-Segar 100/50/20 method" },
+    { id: "dehidrasi-assessment", name: "Dehidrasi Assessment", description: "Iso/hypo/hypernatremic dehydration + rehydration volumes" },
+    { id: "diuretik-dosis", name: "Diuretik Dosis", description: "Furosemide, spironolactone, HCTZ dosing by weight" },
+  ],
+  "Urin & Proteinuria": [
+    { id: "upcr-calc", name: "UPCR", description: "Urine Protein:Creatinine Ratio interpretation" },
+    { id: "osmolalitas-urin-rfi", name: "Osmolalitas Urin & RFI", description: "Renal Failure Index calculator" },
+    { id: "sindrom-nefrotik", name: "Sindrom Nefrotik", description: "Steroid protocols (remission/relapse)" },
+  ],
+  "Obat Nefrologi": [
+    { id: "immunosupresi-nefrologi", name: "Imunosupresi Nefrologi", description: "7 protocols (NS, ITP, HSP, transplant)" },
+    { id: "penyesuaian-dosis-ckd", name: "Penyesuaian Dosis CKD", description: "13 drugs × 3 GFR stages adjustment table" },
   ],
   "Dialisis": [
     { id: "crrt-prescription", name: "CRRT Prescription", description: "CVVH/CVVHD/CVVHDF" },

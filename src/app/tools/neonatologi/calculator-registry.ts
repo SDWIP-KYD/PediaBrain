@@ -39,9 +39,19 @@ export const neonatologiCalculators: CalculatorDef[] = [
   // AGD & Elektrolit
   { id: "agd", title: "Interpretasi AGD", subtitle: "Asam-Basa Neonatus", icon: "🧪", color: "teal", subtab: "AGD" },
   { id: "natrium", title: "Koreksi Natrium", subtitle: "Hiponatremia", icon: "⚗️", color: "blue", subtab: "AGD" },
+
+  // Nutrisi
+  { id: "nutrisi", title: "Kebutuhan Nutrisi Neonatus", subtitle: "Target harian berdasarkan BB & usia", icon: "🥛", color: "orange", subtab: "Nutrisi" },
+  { id: "enteral", title: "Panduan Enteral Neonatus", subtitle: "Trophic feeding & advancement", icon: "🤱", color: "pink", subtab: "Nutrisi" },
+
+  // Alat Hitung
+  { id: "pma", title: "Usia Koreksi (PMA)", subtitle: "Postmenstrual Age & Corrected Age", icon: "📅", color: "teal", subtab: "Alat Hitung" },
+  { id: "transfusiprc", title: "Transfusi PRC Neonatus", subtitle: "Volume & Kecepatan", icon: "🩸", color: "red", subtab: "Alat Hitung" },
+  { id: "transfusitukar", title: "Transfusi Tukar", subtitle: "Double Volume Exchange Transfusion", icon: "🔄", color: "yellow", subtab: "Alat Hitung" },
+  { id: "obatresusitasi", title: "Obat Resusitasi Neonatus", subtitle: "Berdasarkan BB lahir", icon: "🚨", color: "purple", subtab: "Alat Hitung" },
 ];
 
-export const subtabs = ["Obat", "Cairan & TPN", "Ventilator", "Skor", "AGD"];
+export const subtabs = ["Obat", "Cairan & TPN", "Ventilator", "Skor", "AGD", "Nutrisi", "Alat Hitung"];
 
 export function getCalculatorsForSubtab(subtab: string) {
   return neonatologiCalculators.filter((c) => c.subtab === subtab);

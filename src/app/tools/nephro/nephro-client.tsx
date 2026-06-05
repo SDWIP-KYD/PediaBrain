@@ -24,6 +24,17 @@ import { ComplementCalc } from "./components/complement";
 import { ANCACalc } from "./components/anca";
 import { KDIGOTransplantCalc } from "./components/kdigo-transplant";
 import { BKVirusCalc } from "./components/bk-virus";
+import { BPClassificationCalc } from "./components/bp-classification";
+import { AntihipertensiPediatrikCalc } from "./components/antihipertensi-pediatrik";
+import { MAPTargetCalc } from "./components/map-target";
+import { MaintenanceFluidCalc } from "./components/maintenance-fluid";
+import { DehidrasiAssessmentCalc } from "./components/dehidrasi-assessment";
+import { DiuretikDosisCalc } from "./components/diuretik-dosis";
+import { UPCRCalc } from "./components/upcr-calc";
+import { OsmolalitasUrinRFICalc } from "./components/osmolalitas-urin-rfi";
+import { SindromNefrotikCalc } from "./components/sindrom-nefrotik";
+import { ImunosupresiNefrologiCalc } from "./components/immunosupresi-nefrologi";
+import { PenyesuaianDosisCKDCalc } from "./components/penyesuaian-dosis-ckd";
 
 const calcComponents: Record<string, React.FC> = {
   "gfr-calc": GFRCalc,
@@ -47,12 +58,27 @@ const calcComponents: Record<string, React.FC> = {
   "anca": ANCACalc,
   "kdigo-transplant": KDIGOTransplantCalc,
   "bk-virus": BKVirusCalc,
+  "bp-classification": BPClassificationCalc,
+  "antihipertensi-pediatrik": AntihipertensiPediatrikCalc,
+  "map-target": MAPTargetCalc,
+  "maintenance-fluid": MaintenanceFluidCalc,
+  "dehidrasi-assessment": DehidrasiAssessmentCalc,
+  "diuretik-dosis": DiuretikDosisCalc,
+  "upcr-calc": UPCRCalc,
+  "osmolalitas-urin-rfi": OsmolalitasUrinRFICalc,
+  "sindrom-nefrotik": SindromNefrotikCalc,
+  "immunosupresi-nefrologi": ImunosupresiNefrologiCalc,
+  "penyesuaian-dosis-ckd": PenyesuaianDosisCKDCalc,
 };
 
 const subtabIcons: Record<string, string> = {
   "GFR & Clearance": "🫘",
   "AKI & Staging": "🔬",
   "Elektrolit & Asam-Basa": "⚡",
+  "Hipertensi": "💓",
+  "Cairan & Edema": "💧",
+  "Urin & Proteinuria": "🧪",
+  "Obat Nefrologi": "💊",
   "Dialisis": "🫁",
   "Glomerulonefritis": "🧬",
   "Transplantasi": "🏥",

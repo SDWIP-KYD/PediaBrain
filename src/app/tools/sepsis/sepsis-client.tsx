@@ -3,14 +3,29 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { sepsisSubtabs, getSepsisCalculatorsForSubtab } from "./calculator-registry";
-import { SepsisBundle } from "./components/sepsis-bundle";
+import { SepsisDefinisi } from "./components/definisi";
+import { SepsisPatofisiologi } from "./components/patofisiologi";
+import { SepsisKlinis } from "./components/klinis";
+import { SepsisDiagnosis } from "./components/diagnosis";
+import { SepsisTatalaksana } from "./components/tatalaksana";
+import { SepsisEvaluasi } from "./components/evaluasi";
 
 const calcComponents: Record<string, React.FC> = {
-  "sepsis-bundle": SepsisBundle,
+  "sepsis-definisi": SepsisDefinisi,
+  "sepsis-patofisiologi": SepsisPatofisiologi,
+  "sepsis-klinis": SepsisKlinis,
+  "sepsis-diagnosis": SepsisDiagnosis,
+  "sepsis-tatalaksana": SepsisTatalaksana,
+  "sepsis-evaluasi": SepsisEvaluasi,
 };
 
 const subtabIcons: Record<string, string> = {
-  "Sepsis Bundle": "🦠",
+  "Definisi": "📖",
+  "Patofisiologi": "🔬",
+  "Klinis": "🩺",
+  "Diagnosis": "🔍",
+  "Tatalaksana": "💊",
+  "Evaluasi": "📊",
 };
 
 export function SepsisClient() {
