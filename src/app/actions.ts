@@ -484,6 +484,7 @@ export type BulkSyncInput = {
     diagnosis?: string | null;
     notes?: string | null;
     dpjp?: string | null;
+    status?: "rawat_inap" | "pulang";
   }[];
 };
 
@@ -676,6 +677,25 @@ export async function bulkEditPatients(input: BulkSyncInput): Promise<BulkSyncRe
     let found = rmNorm ? existingByRm.get(rmNorm) : null;
     if (!found) found = existingByName.get(nameNorm);
 
+    if (inp.status === "pulang") {
+      if (found) {
+        await db.update(patients).set({
+          status: "pulang",
+          room: null,
+          bed: null,
+          updatedAt: new Date(),
+        }).where(eq(patients.id, found.id));
+        changes.push({
+          type: "discharged",
+          patientName: found.name,
+          patientId: found.id,
+          fromRoom: found.room,
+          fromBed: found.bed,
+        });
+      }
+      continue;
+    }
+
     if (!found) {
       const [inserted] = await db.insert(patients).values({
         name: inp.name.trim(),
@@ -753,7 +773,7 @@ export async function bulkEditPatients(input: BulkSyncInput): Promise<BulkSyncRe
       created: changes.filter((c) => c.type === "created").length,
       moved: changes.filter((c) => c.type === "moved").length,
       updated: changes.filter((c) => c.type === "updated").length,
-      discharged: 0,
+      discharged: changes.filter((c) => c.type === "discharged").length,
       total: changes.length,
     },
   };

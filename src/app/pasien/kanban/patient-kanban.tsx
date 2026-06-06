@@ -758,7 +758,7 @@ function KanbanAIChat({ onClose, onSyncComplete }: {
       const res = await fetch("/api/ai/kanban-parse", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: content }),
+        body: JSON.stringify({ message: content, mode }),
       });
       const data = await res.json();
       if (data.error) {
@@ -781,7 +781,14 @@ function KanbanAIChat({ onClose, onSyncComplete }: {
       let result: Awaited<ReturnType<typeof bulkSyncPatients>>;
       if (mode === "edit") {
         result = await bulkEditPatients({ patients: parsedPatients });
-        setMessages((prev) => [...prev, { role: "system", content: `✅ ${result.summary.created} baru, ${result.summary.moved} pindah, ${result.summary.updated} update. Pasien lain aman.` }]);
+        const dischargedIds = result.changes.filter(c => c.type === "discharged" && c.patientId).map(c => c.patientId!);
+        setLastDischargedIds(dischargedIds);
+        const parts: string[] = [];
+        if (result.summary.created) parts.push(`${result.summary.created} baru`);
+        if (result.summary.moved) parts.push(`${result.summary.moved} pindah`);
+        if (result.summary.updated) parts.push(`${result.summary.updated} update`);
+        if (result.summary.discharged) parts.push(`${result.summary.discharged} pulang`);
+        setMessages((prev) => [...prev, { role: "system", content: `✅ ${parts.join(", ") || "Tidak ada perubahan"}. Pasien lain aman.` }]);
       } else {
         result = await bulkSyncPatients({ patients: parsedPatients });
         const dischargedIds = result.changes.filter(c => c.type === "discharged" && c.patientId).map(c => c.patientId!);
@@ -829,11 +836,12 @@ function KanbanAIChat({ onClose, onSyncComplete }: {
               </>
             ) : (
               <>
-                <p className="text-[11px] text-muted-foreground text-center pt-1">Edit / tambah pasien <b>tanpa menghapus</b> pasien lain.</p>
+                <p className="text-[11px] text-muted-foreground text-center pt-1">Edit pasien: tambah, update, atau pulangkan.</p>
                 <div className="rounded-md border border-blue-500/20 bg-blue-500/5 p-1.5 text-[10px] text-blue-300/80 space-y-0.5">
-                  <p>• Pasien baru: otomatis dibuat</p>
-                  <p>• Pasien lama: di-update / pindah kamar</p>
-                  <p>• Pasien lain: <b>tidak terpengaruh</b></p>
+                  <p>• "Tambah K.07 / Ani / ISPA di SERUNI"</p>
+                  <p>• "Budi pindah ke ANGGREK K.02"</p>
+                  <p>• "Pulangkan Siti"</p>
+                  <p>• Hanya pasien yang disebut yang berubah</p>
                 </div>
               </>
             )}
@@ -901,7 +909,7 @@ function KanbanAIChat({ onClose, onSyncComplete }: {
 
       <div className="border-t border-border p-1.5 flex gap-1.5">
         <textarea value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleParse(); } }}
-          placeholder={mode === "sync" ? "Paste list lengkap pasien..." : "Edit pasien: 'Budi pindah ke K.03 MELATI' atau tambah: 'K.07 / Ani / 123456 / ISPA di SERUNI'"}
+          placeholder={mode === "sync" ? "Paste list lengkap pasien..." : "Tambah/Edit/Pulang pasien. Contoh: 'Tambah K.07 / Ani / ISPA di SERUNI' atau 'Pulangkan Budi'"}
           rows={2}
           className={cn("flex-1 min-h-[36px] max-h-20 resize-none rounded-md border bg-background px-2 py-1 text-[11px] focus:outline-none",
             mode === "edit" ? "border-border focus:border-blue-500" : "border-border focus:border-emerald-500"

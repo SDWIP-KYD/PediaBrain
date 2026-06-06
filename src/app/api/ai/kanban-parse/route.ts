@@ -9,6 +9,7 @@ type ParsedPatient = {
   diagnosis: string | null;
   notes: string | null;
   dpjp: string | null;
+  status?: "rawat_inap" | "pulang";
 };
 
 const ID_MONTHS: Record<string, string> = {
@@ -66,7 +67,56 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "AI credentials not set" }, { status: 500 });
   }
 
-  const systemPrompt = `Kamu adalah parser list pasien rawat inap pediatric.
+  const mode = body.mode || "sync";
+
+  const editSystemPrompt = `Kamu adalah asisten edit pasien rawat inap pediatric.
+
+TUGAS: Interpret instruksi user dan ekstrak aksi yang diminta ke JSON array.
+
+USER BISA MEMINTA:
+- Tambah pasien baru
+- Edit pasien (pindah kamar/bed, update catatan, update DPJP)
+- Pulangkan pasien (discharge)
+
+FORMAT OUTPUT (JSON saja, no markdown, no explanation):
+{
+  "patients": [
+    {
+      "room": "DAHLIA|ANGGREK|MELATI|SERUNI",
+      "bed": "K.01.1 atau null",
+      "name": "nama lengkap pasien",
+      "medicalRecordNo": "no RM atau null",
+      "birthDate": "YYYY-MM-DD atau null",
+      "diagnosis": "diagnosis atau null",
+      "notes": "catatan atau null",
+      "dpjp": "nama DPJP atau null",
+      "status": "rawat_inap atau pulang"
+    }
+  ]
+}
+
+ATURAN PENTING:
+- status "rawat_inap" = pasien yang ditambah/diupdate (default jika tidak disebut)
+- status "pulang" = pasien yang ingin dipulangkan/discharge
+- Jika user bilang "pulangkan Budi", maka Budi dapat status "pulang"
+- Jika user bilang "tambah Ani di MELATI K.03", maka Ani dapat status "rawat_inap"
+- Jika user bilang "Budi pindah ke ANGGREK K.02", maka Budi dapat status "rawat_inap" dengan room=ANGGREK bed=K.02
+- Jika user bilang "tambah catatan untuk Budi: gentamisin", maka Budi dapat status "rawat_inap" dengan notes="gentamisin"
+- Jika user hanya menyebut 1-2 pasien, HANYA return pasien tersebut. JANGAN return pasien lain.
+- Room: uppercase (DAHLIA, ANGGREK, MELATI, SERUNI)
+- Bed: pola "K.XX" atau "K.XX.X"
+- Nama: setelah bed, sebelum nomor RM
+- MedicalRecordNo: angka 4-7 digit
+- BirthDate: DD-MM-YYYY → YYYY-MM-DD
+- Diagnosis: teks diagnosis
+- Notes: catatan tambahan
+- DPJP: dari baris "*DPJP : ...*"
+- Jika ada title "An." atau "Ny.", hilangkan dari nama
+- Abaikan nomor urut, baris kosong, baris "-", TOTAL
+
+Output HARUS JSON valid.`;
+
+  const syncSystemPrompt = `Kamu adalah parser list pasien rawat inap pediatric.
 
 TUGAS: Extract daftar pasien dari teks yang diberikan menjadi JSON array.
 
@@ -102,6 +152,8 @@ ATURAN PENTING:
 
 Output HARUS JSON valid.`;
 
+  const systemPrompt = mode === "edit" ? editSystemPrompt : syncSystemPrompt;
+
   try {
     const raw = await callAI(baseUrl, apiKey, model, systemPrompt, body.message, 4096, 0.1);
     let cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
@@ -124,9 +176,13 @@ Output HARUS JSON valid.`;
 
     const validRooms = ["DAHLIA", "ANGGREK", "MELATI", "SERUNI"];
     const patients = parsed.patients
-      .filter((p) => p && p.name && validRooms.includes((p.room || "").toUpperCase()))
+      .filter((p) => {
+        if (!p || !p.name) return false;
+        if (p.status === "pulang") return true;
+        return validRooms.includes((p.room || "").toUpperCase());
+      })
       .map((p) => ({
-        room: p.room.toUpperCase(),
+        room: p.room?.toUpperCase() || "",
         bed: p.bed || null,
         name: p.name.trim(),
         medicalRecordNo: p.medicalRecordNo || null,
@@ -134,6 +190,7 @@ Output HARUS JSON valid.`;
         diagnosis: p.diagnosis || null,
         notes: p.notes || null,
         dpjp: p.dpjp || null,
+        status: p.status || "rawat_inap",
       }));
 
     return NextResponse.json({ mode: "live", patients });
