@@ -751,14 +751,18 @@ function KanbanAIChat({ onClose, onSyncComplete }: {
     const content = input.trim();
     if (!content || loading) return;
     setInput("");
-    setMessages((prev) => [...prev, { role: "user", content: content.slice(0, 200) + (content.length > 200 ? "..." : "") }]);
+    const userMsg = content.slice(0, 200) + (content.length > 200 ? "..." : "");
+    setMessages((prev) => [...prev, { role: "user", content: userMsg }]);
     setLoading(true);
     setParsedPatients(null);
     try {
+      const history = messages
+        .filter(m => m.role === "user" || m.role === "assistant")
+        .map(m => ({ role: m.role, content: m.content }));
       const res = await fetch("/api/ai/kanban-parse", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: content, mode }),
+        body: JSON.stringify({ message: content, mode, history }),
       });
       const data = await res.json();
       if (data.error) {

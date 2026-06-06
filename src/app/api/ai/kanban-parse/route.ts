@@ -38,9 +38,10 @@ function parseIndonesianDateLoose(s: string): string | null {
   return null;
 }
 
-async function callAI(baseUrl: string, apiKey: string, model: string, systemPrompt: string, userMessage: string, maxTokens: number, temperature: number): Promise<string> {
+async function callAI(baseUrl: string, apiKey: string, model: string, systemPrompt: string, userMessage: string, history: { role: string; content: string }[] = [], maxTokens: number, temperature: number): Promise<string> {
   const msgs = [
     { role: "system", content: systemPrompt },
+    ...history.filter(h => h.role === "user" || h.role === "assistant").map(h => ({ role: h.role, content: h.content })),
     { role: "user", content: userMessage },
   ];
   const res = await fetch(`${baseUrl.replace(/\/$/, "")}/chat/completions`, {
@@ -103,6 +104,8 @@ ATURAN PENTING:
 - Jika user bilang "Budi pindah ke ANGGREK K.02", maka Budi dapat status "rawat_inap" dengan room=ANGGREK bed=K.02
 - Jika user bilang "tambah catatan untuk Budi: gentamisin", maka Budi dapat status "rawat_inap" dengan notes="gentamisin"
 - Jika user hanya menyebut 1-2 pasien, HANYA return pasien tersebut. JANGAN return pasien lain.
+- KONTEKS PERCAKAPAN: Jika user memberikan koreksi atau tambahan (misal "bukan Ani tapi Budi", "tambah juga K.05", "jangan pulangkan"), GUNAKAN konteks pesan sebelumnya untuk memahami maksud user. Return hasil yang sudah dikoreksi/dilengkapi, bukan duplikat.
+- Jika user bilang "jangan tambah catatan" atau "batalin", return array kosong {"patients": []}
 - Room: uppercase (DAHLIA, ANGGREK, MELATI, SERUNI)
 - Bed: pola "K.XX" atau "K.XX.X"
 - Nama: setelah bed, sebelum nomor RM
@@ -155,7 +158,8 @@ Output HARUS JSON valid.`;
   const systemPrompt = mode === "edit" ? editSystemPrompt : syncSystemPrompt;
 
   try {
-    const raw = await callAI(baseUrl, apiKey, model, systemPrompt, body.message, 4096, 0.1);
+    const history = Array.isArray(body.history) ? body.history : [];
+    const raw = await callAI(baseUrl, apiKey, model, systemPrompt, body.message, history, 4096, 0.1);
     let cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
     
     let parsed: { patients: ParsedPatient[] };
