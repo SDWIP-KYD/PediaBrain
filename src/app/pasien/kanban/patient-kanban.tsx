@@ -4,12 +4,12 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Link from "next/link";
 import {
   GripVertical, Loader2, StickyNote, LogOut, X, Check, User,
-  Bot, Send, Bell, Trash2, Plus, ArrowRightLeft,
+  Bot, Send, Bell, Trash2, Plus, ArrowRightLeft, Undo2,
   Stethoscope, ChevronDown, Settings, Pencil, Check as CheckIcon, X as XIcon,
 } from "lucide-react";
 import {
   movePatientToRoom, getPatientsByRoom, updatePatientNotes, dischargePatient,
-  bulkSyncPatients, type BulkSyncChange,
+  bulkSyncPatients, bulkEditPatients, undoBulkSync, type BulkSyncChange,
 } from "@/app/actions";
 import { cn } from "@/lib/utils";
 
@@ -727,19 +727,21 @@ function KanbanAIChat({ onClose, onSyncComplete }: {
   onClose: () => void;
   onSyncComplete: (result: Awaited<ReturnType<typeof bulkSyncPatients>>) => void;
 }) {
-  const [mode, setMode] = useState<"sync" | "add">("sync");
+  const [mode, setMode] = useState<"sync" | "edit">("sync");
   const [messages, setMessages] = useState<{ role: "user" | "assistant" | "system"; content: string }[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [parsedPatients, setParsedPatients] = useState<any[] | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [lastDischargedIds, setLastDischargedIds] = useState<string[]>([]);
+  const [undoing, setUndoing] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, loading, parsedPatients]);
 
-  function handleSwitchMode(newMode: "sync" | "add") {
+  function handleSwitchMode(newMode: "sync" | "edit") {
     setMode(newMode);
     setMessages([]);
     setParsedPatients(null);
@@ -763,8 +765,8 @@ function KanbanAIChat({ onClose, onSyncComplete }: {
         setMessages((prev) => [...prev, { role: "system", content: "❌ " + data.error }]);
       } else if (data.patients) {
         setParsedPatients(data.patients);
-        const prefix = mode === "add" ? "Tambah" : "Terdeteksi";
-        const suffix = mode === "add" ? "Klik 'Tambah' untuk menyimpan." : "Review lalu klik Sinkronkan.";
+        const prefix = mode === "edit" ? "Terdeteksi" : "Terdeteksi";
+        const suffix = mode === "edit" ? "Klik 'Simpan' untuk update. Pasien lain tidak akan terhapus." : "Review lalu klik Sinkronkan.";
         setMessages((prev) => [...prev, { role: "assistant", content: `${prefix} ${data.patients.length} pasien. ${suffix}` }]);
       }
     } catch (e) {
@@ -776,8 +778,16 @@ function KanbanAIChat({ onClose, onSyncComplete }: {
     if (!parsedPatients || syncing) return;
     setSyncing(true);
     try {
-      const result = await bulkSyncPatients({ patients: parsedPatients });
-      setMessages((prev) => [...prev, { role: "system", content: `✅ ${result.summary.created} baru, ${result.summary.moved} pindah, ${result.summary.updated} update, ${result.summary.discharged} pulang` }]);
+      let result: Awaited<ReturnType<typeof bulkSyncPatients>>;
+      if (mode === "edit") {
+        result = await bulkEditPatients({ patients: parsedPatients });
+        setMessages((prev) => [...prev, { role: "system", content: `✅ ${result.summary.created} baru, ${result.summary.moved} pindah, ${result.summary.updated} update. Pasien lain aman.` }]);
+      } else {
+        result = await bulkSyncPatients({ patients: parsedPatients });
+        const dischargedIds = result.changes.filter(c => c.type === "discharged" && c.patientId).map(c => c.patientId!);
+        setLastDischargedIds(dischargedIds);
+        setMessages((prev) => [...prev, { role: "system", content: `✅ ${result.summary.created} baru, ${result.summary.moved} pindah, ${result.summary.updated} update, ${result.summary.discharged} pulang` }]);
+      }
       setParsedPatients(null);
       setTimeout(() => onSyncComplete(result), 800);
     } catch (e) {
@@ -785,11 +795,24 @@ function KanbanAIChat({ onClose, onSyncComplete }: {
     } finally { setSyncing(false); }
   }
 
+  async function handleUndo() {
+    if (!lastDischargedIds.length || undoing) return;
+    setUndoing(true);
+    try {
+      const { restored } = await undoBulkSync(lastDischargedIds);
+      setMessages((prev) => [...prev, { role: "system", content: `↩️ ${restored} pasien dikembalikan.` }]);
+      setLastDischargedIds([]);
+      setTimeout(() => onSyncComplete({ changes: [], summary: { created: 0, moved: 0, updated: 0, discharged: 0, total: 0 } }), 800);
+    } catch (e) {
+      setMessages((prev) => [...prev, { role: "system", content: "❌ Gagal undo: " + (e instanceof Error ? e.message : "Error") }]);
+    } finally { setUndoing(false); }
+  }
+
   return (
     <div className="flex flex-col border-t border-border bg-background/30 max-h-[55vh]">
       <div className="flex border-b border-border bg-muted/20">
         <button onClick={() => handleSwitchMode("sync")} className={cn("flex-1 text-[10px] font-semibold py-1.5 transition-colors", mode === "sync" ? "bg-emerald-500/15 text-emerald-300 border-b-2 border-emerald-400" : "text-muted-foreground hover:text-foreground")}>Sync Semua</button>
-        <button onClick={() => handleSwitchMode("add")} className={cn("flex-1 text-[10px] font-semibold py-1.5 transition-colors", mode === "add" ? "bg-blue-500/15 text-blue-300 border-b-2 border-blue-400" : "text-muted-foreground hover:text-foreground")}>+ Tambah Pasien</button>
+        <button onClick={() => handleSwitchMode("edit")} className={cn("flex-1 text-[10px] font-semibold py-1.5 transition-colors", mode === "edit" ? "bg-blue-500/15 text-blue-300 border-b-2 border-blue-400" : "text-muted-foreground hover:text-foreground")}>AI Edit Pasien</button>
       </div>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-2 space-y-2 min-h-[120px]">
@@ -806,10 +829,11 @@ function KanbanAIChat({ onClose, onSyncComplete }: {
               </>
             ) : (
               <>
-                <p className="text-[11px] text-muted-foreground text-center pt-1">Tambah <b>1-2 pasien</b> tanpa sync semua.</p>
+                <p className="text-[11px] text-muted-foreground text-center pt-1">Edit / tambah pasien <b>tanpa menghapus</b> pasien lain.</p>
                 <div className="rounded-md border border-blue-500/20 bg-blue-500/5 p-1.5 text-[10px] text-blue-300/80 space-y-0.5">
-                  <p>Contoh: "Tambah K.05 / Budi / 123456 / 01-01-2020 / ISPA di MELATI"</p>
-                  <p>Atau paste 1-2 baris pasien</p>
+                  <p>• Pasien baru: otomatis dibuat</p>
+                  <p>• Pasien lama: di-update / pindah kamar</p>
+                  <p>• Pasien lain: <b>tidak terpengaruh</b></p>
                 </div>
               </>
             )}
@@ -822,6 +846,7 @@ function KanbanAIChat({ onClose, onSyncComplete }: {
               m.role === "user" ? "bg-emerald-500/15 text-foreground" :
               m.content.startsWith("✅") ? "border border-emerald-500/30 bg-emerald-500/5 text-emerald-200" :
               m.content.startsWith("❌") ? "border border-rose-500/30 bg-rose-500/5 text-rose-200" :
+              m.content.startsWith("↩️") ? "border border-amber-500/30 bg-amber-500/5 text-amber-200" :
               "bg-muted/40"
             )}>
               <div className="flex items-center gap-1 mb-0.5">
@@ -835,10 +860,10 @@ function KanbanAIChat({ onClose, onSyncComplete }: {
 
         {parsedPatients && (
           <div className={cn("rounded-lg border p-2 text-[11px] space-y-1.5",
-            mode === "add" ? "border-blue-500/30 bg-blue-500/5" : "border-emerald-500/30 bg-emerald-500/5"
+            mode === "edit" ? "border-blue-500/30 bg-blue-500/5" : "border-emerald-500/30 bg-emerald-500/5"
           )}>
             <p className={cn("text-[10px] font-semibold uppercase tracking-wider",
-              mode === "add" ? "text-blue-300" : "text-emerald-300"
+              mode === "edit" ? "text-blue-300" : "text-emerald-300"
             )}>{parsedPatients.length} pasien</p>
             <div className="max-h-32 overflow-y-auto space-y-1 pr-1">
               {parsedPatients.map((p, i) => (
@@ -850,13 +875,20 @@ function KanbanAIChat({ onClose, onSyncComplete }: {
             </div>
             <div className="flex gap-1 pt-0.5">
               <button onClick={handleSync} disabled={syncing} className={cn("flex-1 inline-flex items-center justify-center gap-1 text-[11px] font-medium px-2 py-1 rounded-md text-white transition-colors disabled:opacity-50",
-                mode === "add" ? "bg-blue-500 hover:bg-blue-600" : "bg-emerald-500 hover:bg-emerald-600"
+                mode === "edit" ? "bg-blue-500 hover:bg-blue-600" : "bg-emerald-500 hover:bg-emerald-600"
               )}>
-                {syncing ? <><Loader2 className="h-3 w-3 animate-spin" />Simpan...</> : <><Check className="h-3 w-3" />{mode === "add" ? "Tambah" : "Sinkronkan"}</>}
+                {syncing ? <><Loader2 className="h-3 w-3 animate-spin" />Simpan...</> : <><Check className="h-3 w-3" />Simpan</>}
               </button>
               <button onClick={() => setParsedPatients(null)} className="px-2 py-1 rounded-md bg-muted text-muted-foreground hover:bg-muted/80 text-[11px]">Batal</button>
             </div>
           </div>
+        )}
+
+        {lastDischargedIds.length > 0 && !parsedPatients && (
+          <button onClick={handleUndo} disabled={undoing} className="w-full flex items-center justify-center gap-1.5 text-[11px] font-medium px-2 py-1.5 rounded-md border border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 transition-colors disabled:opacity-50">
+            {undoing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Undo2 className="h-3 w-3" />}
+            Undo {lastDischargedIds.length} pasien pulang
+          </button>
         )}
 
         {loading && (
@@ -869,14 +901,14 @@ function KanbanAIChat({ onClose, onSyncComplete }: {
 
       <div className="border-t border-border p-1.5 flex gap-1.5">
         <textarea value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleParse(); } }}
-          placeholder={mode === "sync" ? "Paste list lengkap pasien..." : "Tambah K.05 / Budi / 123456 / 01-01-2020 / ISPA di MELATI"}
+          placeholder={mode === "sync" ? "Paste list lengkap pasien..." : "Edit pasien: 'Budi pindah ke K.03 MELATI' atau tambah: 'K.07 / Ani / 123456 / ISPA di SERUNI'"}
           rows={2}
           className={cn("flex-1 min-h-[36px] max-h-20 resize-none rounded-md border bg-background px-2 py-1 text-[11px] focus:outline-none",
-            mode === "add" ? "border-border focus:border-blue-500" : "border-border focus:border-emerald-500"
+            mode === "edit" ? "border-border focus:border-blue-500" : "border-border focus:border-emerald-500"
           )}
         />
         <button onClick={handleParse} disabled={loading || !input.trim()} className={cn("h-auto px-2 rounded-md text-white transition-colors disabled:opacity-50",
-          mode === "add" ? "bg-blue-500 hover:bg-blue-600" : "bg-emerald-500 hover:bg-emerald-600"
+          mode === "edit" ? "bg-blue-500 hover:bg-blue-600" : "bg-emerald-500 hover:bg-emerald-600"
         )}>
           <Send className="h-3 w-3" />
         </button>
