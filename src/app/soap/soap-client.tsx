@@ -6,8 +6,9 @@ import { useRouter } from "next/navigation";
 import {
   Loader2, Send, Check, Copy, ChevronDown, User, Bot, Save,
   ClipboardList, MessageSquare, FileText, ArrowLeft, Calendar, Pencil,
+  UserPlus, X,
 } from "lucide-react";
-import { createVisit } from "@/app/actions";
+import { createVisit, createPatient } from "@/app/actions";
 import { cn } from "@/lib/utils";
 
 type Patient = {
@@ -68,6 +69,9 @@ export default function SoapClient({ patients }: { patients: Patient[] }) {
   const [saving, setSaving] = useState(false);
   const [savedVisitId, setSavedVisitId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [showNewPatient, setShowNewPatient] = useState(false);
+  const [newPatient, setNewPatient] = useState({ name: "", medicalRecordNo: "", birthDate: "", sex: "", room: "DAHLIA", bed: "", parentName: "", phone: "" });
+  const [creatingPatient, setCreatingPatient] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const outputRef = useRef<HTMLDivElement>(null);
 
@@ -252,7 +256,48 @@ Format output harus sesuai template SOAP standar.`;
   };
 
   if (!selectedPatient) {
-    return <PatientPicker patients={patients} onSelect={handleSelectPatient} />;
+    return (
+      <PatientPicker
+        patients={patients}
+        onSelect={handleSelectPatient}
+        onCreateNew={async (data) => {
+          setCreatingPatient(true);
+          try {
+            const created = await createPatient({
+              name: data.name,
+              medicalRecordNo: data.medicalRecordNo || undefined,
+              birthDate: data.birthDate || undefined,
+              sex: data.sex || undefined,
+              room: data.room || undefined,
+              bed: data.bed || undefined,
+              parentName: data.parentName || undefined,
+              phone: data.phone || undefined,
+            });
+            if (created) {
+              const newP: Patient = {
+                id: created.id,
+                name: created.name,
+                medicalRecordNo: created.medicalRecordNo,
+                bed: created.bed,
+                room: created.room,
+                birthDate: created.birthDate,
+                sex: created.sex,
+                status: created.status,
+                notes: created.notes,
+                dpjp: created.dpjp,
+                diagnosis: null,
+              };
+              handleSelectPatient(newP);
+            }
+          } catch (e) {
+            alert("Gagal membuat pasien: " + (e instanceof Error ? e.message : "Error"));
+          } finally {
+            setCreatingPatient(false);
+          }
+        }}
+        creating={creatingPatient}
+      />
+    );
   }
 
   return (
@@ -394,8 +439,20 @@ Format output harus sesuai template SOAP standar.`;
   );
 }
 
-function PatientPicker({ patients, onSelect }: { patients: Patient[]; onSelect: (p: Patient) => void }) {
+function PatientPicker({
+  patients,
+  onSelect,
+  onCreateNew,
+  creating,
+}: {
+  patients: Patient[];
+  onSelect: (p: Patient) => void;
+  onCreateNew: (data: { name: string; medicalRecordNo?: string; birthDate?: string; sex?: string; room?: string; bed?: string; parentName?: string; phone?: string }) => void;
+  creating: boolean;
+}) {
   const [search, setSearch] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ name: "", medicalRecordNo: "", birthDate: "", sex: "L", room: "DAHLIA", bed: "", parentName: "", phone: "" });
   const filtered = useMemo(() => {
     if (!search.trim()) return patients;
     const q = search.toLowerCase();
@@ -404,38 +461,129 @@ function PatientPicker({ patients, onSelect }: { patients: Patient[]; onSelect: 
     );
   }, [patients, search]);
 
+  const handleSubmitNew = () => {
+    if (!form.name.trim() || creating) return;
+    onCreateNew({
+      name: form.name.trim(),
+      medicalRecordNo: form.medicalRecordNo.trim() || undefined,
+      birthDate: form.birthDate || undefined,
+      sex: form.sex || undefined,
+      room: form.room || undefined,
+      bed: form.bed.trim() || undefined,
+      parentName: form.parentName.trim() || undefined,
+      phone: form.phone.trim() || undefined,
+    });
+  };
+
   return (
     <div className="max-w-2xl mx-auto p-3 sm:p-4 space-y-3">
       <div className="flex items-center gap-2">
         <ClipboardList className="h-5 w-5 text-emerald-400" />
         <h1 className="text-lg font-bold">SOAP Creator</h1>
       </div>
-      <p className="text-xs text-muted-foreground">Pilih pasien rawat inap untuk membuat SOAP note dengan bantuan AI.</p>
-      <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Cari nama atau no RM..."
-        className="w-full px-3 py-2 text-sm bg-background border border-border rounded-md focus:outline-none focus:border-emerald-500" />
-      <div className="space-y-1.5 max-h-[60vh] overflow-y-auto">
-        {filtered.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center py-8">Tidak ada pasien ditemukan.</p>
-        ) : (
-          filtered.map((p) => (
-            <button key={p.id} onClick={() => onSelect(p)}
-              className="w-full flex items-center gap-3 p-2.5 rounded-md border border-border hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-colors text-left">
-              <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
-                <User className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold truncate">{p.name}</p>
-                <p className="text-[10px] text-muted-foreground">
-                  {p.medicalRecordNo || "—"} • {p.room || "—"} {p.bed || ""} • {ageFromBirthDate(p.birthDate)}
-                </p>
-              </div>
-              <span className={cn("text-[9px] font-semibold px-1.5 py-0.5 rounded", p.sex === "L" ? "bg-blue-500/20 text-blue-300" : "bg-pink-500/20 text-pink-300")}>
-                {p.sex || "?"}
-              </span>
-            </button>
-          ))
-        )}
-      </div>
+      <p className="text-xs text-muted-foreground">Pilih pasien rawat inap atau buat pasien baru untuk membuat SOAP note.</p>
+
+      <button
+        onClick={() => setShowForm(!showForm)}
+        className={cn("w-full flex items-center gap-2 px-3 py-2 rounded-md border text-sm font-medium transition-colors",
+          showForm
+            ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+            : "bg-muted/30 border-border text-foreground hover:border-emerald-500/30 hover:bg-emerald-500/5")}
+      >
+        {showForm ? <X className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
+        {showForm ? "Batal buat pasien baru" : "+ Buat Pasien Baru"}
+      </button>
+
+      {showForm && (
+        <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3 space-y-2">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-300">Pasien Baru</p>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="col-span-2">
+              <label className="text-[10px] text-muted-foreground">Nama Pasien *</label>
+              <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="An. Budi"
+                className="w-full mt-0.5 px-2 py-1.5 text-[12px] bg-background border border-border rounded focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div>
+              <label className="text-[10px] text-muted-foreground">No RM</label>
+              <input value={form.medicalRecordNo} onChange={(e) => setForm({ ...form, medicalRecordNo: e.target.value })} placeholder="123456"
+                className="w-full mt-0.5 px-2 py-1.5 text-[12px] bg-background border border-border rounded focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div>
+              <label className="text-[10px] text-muted-foreground">Tanggal Lahir</label>
+              <input type="date" value={form.birthDate} onChange={(e) => setForm({ ...form, birthDate: e.target.value })}
+                className="w-full mt-0.5 px-2 py-1.5 text-[12px] bg-background border border-border rounded focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div>
+              <label className="text-[10px] text-muted-foreground">Jenis Kelamin</label>
+              <select value={form.sex} onChange={(e) => setForm({ ...form, sex: e.target.value })}
+                className="w-full mt-0.5 px-2 py-1.5 text-[12px] bg-background border border-border rounded focus:outline-none focus:border-emerald-500">
+                <option value="L">Laki-laki</option>
+                <option value="P">Perempuan</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] text-muted-foreground">Ruangan</label>
+              <select value={form.room} onChange={(e) => setForm({ ...form, room: e.target.value })}
+                className="w-full mt-0.5 px-2 py-1.5 text-[12px] bg-background border border-border rounded focus:outline-none focus:border-emerald-500">
+                <option value="DAHLIA">DAHLIA</option>
+                <option value="ANGGREK">ANGGREK</option>
+                <option value="MELATI">MELATI</option>
+                <option value="SERUNI">SERUNI</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] text-muted-foreground">Kamar/Bed</label>
+              <input value={form.bed} onChange={(e) => setForm({ ...form, bed: e.target.value })} placeholder="K.01"
+                className="w-full mt-0.5 px-2 py-1.5 text-[12px] bg-background border border-border rounded focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div>
+              <label className="text-[10px] text-muted-foreground">Orang Tua</label>
+              <input value={form.parentName} onChange={(e) => setForm({ ...form, parentName: e.target.value })} placeholder="Ny. Ani"
+                className="w-full mt-0.5 px-2 py-1.5 text-[12px] bg-background border border-border rounded focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div className="col-span-2">
+              <label className="text-[10px] text-muted-foreground">No HP</label>
+              <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="08123456789"
+                className="w-full mt-0.5 px-2 py-1.5 text-[12px] bg-background border border-border rounded focus:outline-none focus:border-emerald-500" />
+            </div>
+          </div>
+          <button onClick={handleSubmitNew} disabled={!form.name.trim() || creating}
+            className="w-full inline-flex items-center justify-center gap-1.5 text-[12px] font-semibold px-3 py-2 rounded-md bg-emerald-500 hover:bg-emerald-600 text-white transition-colors disabled:opacity-50">
+            {creating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserPlus className="h-3.5 w-3.5" />}
+            Buat & Lanjut ke SOAP
+          </button>
+        </div>
+      )}
+
+      {!showForm && (
+        <>
+          <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Cari nama atau no RM..."
+            className="w-full px-3 py-2 text-sm bg-background border border-border rounded-md focus:outline-none focus:border-emerald-500" />
+          <div className="space-y-1.5 max-h-[50vh] overflow-y-auto">
+            {filtered.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-8">Tidak ada pasien ditemukan.</p>
+            ) : (
+              filtered.map((p) => (
+                <button key={p.id} onClick={() => onSelect(p)}
+                  className="w-full flex items-center gap-3 p-2.5 rounded-md border border-border hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-colors text-left">
+                  <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate">{p.name}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {p.medicalRecordNo || "—"} • {p.room || "—"} {p.bed || ""} • {ageFromBirthDate(p.birthDate)}
+                    </p>
+                  </div>
+                  <span className={cn("text-[9px] font-semibold px-1.5 py-0.5 rounded", p.sex === "L" ? "bg-blue-500/20 text-blue-300" : "bg-pink-500/20 text-pink-300")}>
+                    {p.sex || "?"}
+                  </span>
+                </button>
+              ))
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
