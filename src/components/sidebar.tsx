@@ -12,12 +12,14 @@ import {
   Activity,
   LogOut,
   Stethoscope,
+  ClipboardList,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 
 const quickLinks = [
   { href: "/pasien", label: "Tambah Pasien", icon: UserPlus },
+  { href: "/soap", label: "SOAP Creator", icon: ClipboardList },
   { href: "/ai-toolbox", label: "AI ToolBox", icon: Sparkles },
   { href: "/follow-ups", label: "Follow-up", icon: CalendarClock },
 ];
