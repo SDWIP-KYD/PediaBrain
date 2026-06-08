@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays } from "lucide-react";
-import { schedule, doctors, weekDays } from "../jadwal-dpjp/data";
+import { schedule, doctors, weekDays } from "../../app/jadwal-dpjp/data";
 
 function getTodayDayName(): string {
   const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
