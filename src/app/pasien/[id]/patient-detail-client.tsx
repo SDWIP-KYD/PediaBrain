@@ -159,36 +159,58 @@ export function PatientDetailClient({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {latestVisit ? (
-              <div className="space-y-2">
-                <div>
-                  <Badge variant="outline" className="text-xs font-mono">{latestVisit.visitDate}</Badge>
-                </div>
-                {latestVisit.diagnosisPrimary && (
-                  <div>
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">Diagnosis Utama</p>
-                    <p className="text-sm text-foreground break-words">{latestVisit.diagnosisPrimary}</p>
-                  </div>
-                )}
-                {latestVisit.diagnosisSecondary && (
-                  <div>
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">Diagnosis Lain</p>
-                    <p className="text-sm text-foreground break-words">{latestVisit.diagnosisSecondary}</p>
-                  </div>
-                )}
-                {latestSections?.diagnosa && (
-                  <div className="rounded-lg border border-neon/20 bg-neon/5 p-3">
-                    <p className="text-xs font-semibold text-neon mb-1">Diagnosa / Assessment</p>
-                    <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed break-words">{latestSections.diagnosa}</p>
-                  </div>
-                )}
-                {!latestVisit.diagnosisPrimary && !latestVisit.diagnosisSecondary && !latestSections?.diagnosa && (
-                  <p className="text-muted-foreground text-sm">Belum ada diagnosis</p>
+            <div className="space-y-2">
+              {/* Action buttons */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <AddVisitDialogWrapper patientId={patient.id} />
+                <Button variant="outline" size="sm" className="h-7 text-xs gap-1">
+                  <ClipboardList className="h-3 w-3" /> SOAP Creator
+                </Button>
+                {latestVisit && (
+                  <LabExtractModal
+                    visitId={latestVisit.id}
+                    patientName={patient.name}
+                    onSave={() => window.location.reload()}
+                    trigger={
+                      <Button variant="outline" size="sm" className="h-7 text-xs gap-1">
+                        <Beaker className="h-3 w-3" /> Tambah Lab
+                      </Button>
+                    }
+                  />
                 )}
               </div>
-            ) : (
-              <p className="text-muted-foreground text-sm">Belum ada kunjungan</p>
-            )}
+
+              {latestVisit ? (
+                <>
+                  <div>
+                    <Badge variant="outline" className="text-xs font-mono">{latestVisit.visitDate}</Badge>
+                  </div>
+                  {latestVisit.diagnosisPrimary && (
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">Diagnosis Utama</p>
+                      <p className="text-sm text-foreground break-words">{latestVisit.diagnosisPrimary}</p>
+                    </div>
+                  )}
+                  {latestVisit.diagnosisSecondary && (
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">Diagnosis Lain</p>
+                      <p className="text-sm text-foreground break-words">{latestVisit.diagnosisSecondary}</p>
+                    </div>
+                  )}
+                  {latestSections?.diagnosa && (
+                    <div className="rounded-lg border border-neon/20 bg-neon/5 p-3">
+                      <p className="text-xs font-semibold text-neon mb-1">Diagnosa / Assessment</p>
+                      <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed break-words">{latestSections.diagnosa}</p>
+                    </div>
+                  )}
+                  {!latestVisit.diagnosisPrimary && !latestVisit.diagnosisSecondary && !latestSections?.diagnosa && (
+                    <p className="text-muted-foreground text-sm">Belum ada diagnosis</p>
+                  )}
+                </>
+              ) : (
+                <p className="text-muted-foreground text-sm">Belum ada kunjungan</p>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
