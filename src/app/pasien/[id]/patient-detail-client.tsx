@@ -73,16 +73,39 @@ export function PatientDetailClient({
 
   function openFullReport(v: Visit) {
     setPopupVisit(v);
-    const s = v.sections as Record<string, string> | null;
-    if (s && typeof s === "object" && Object.keys(s).length > 0) {
+    let s: Record<string, string> | null = null;
+    if (v.sections) {
+      // Handle both object and stringified JSON
+      if (typeof v.sections === "string") {
+        try { s = JSON.parse(v.sections); } catch { s = null; }
+      } else if (typeof v.sections === "object" && v.sections !== null) {
+        s = v.sections as Record<string, string>;
+      }
+    }
+    if (s && Object.keys(s).length > 0) {
       setPopupSections(s);
     } else {
       const fallback: Record<string, string> = {};
-      if (v.anamnesis) fallback.subjektif = v.anamnesis;
+      if (v.chiefComplaint) fallback.subjektif = `Keluhan Utama: ${v.chiefComplaint}`;
+      if (v.anamnesis) {
+        fallback.subjektif = fallback.subjektif
+          ? `${fallback.subjektif}\n\n${v.anamnesis}`
+          : v.anamnesis;
+      }
       if (v.physicalExam) fallback.objektif = v.physicalExam;
       if (v.therapy) fallback.terapi = v.therapy;
       if (v.diagnosisPrimary || v.diagnosisSecondary) {
         fallback.diagnosa = [v.diagnosisPrimary, v.diagnosisSecondary].filter(Boolean).join("\n");
+      }
+      // Anthropometry
+      const antro: string[] = [];
+      if (v.weightKg) antro.push(`BB: ${v.weightKg} kg`);
+      if (v.heightCm) antro.push(`TB: ${v.heightCm} cm`);
+      if (v.headCircumferenceCm) antro.push(`LK: ${v.headCircumferenceCm} cm`);
+      if (antro.length > 0) {
+        fallback.objektif = fallback.objektif
+          ? `Antropometri: ${antro.join(", ")}\n\n${fallback.objektif}`
+          : `Antropometri: ${antro.join(", ")}`;
       }
       if (v.notes) fallback.identitas = v.notes;
       setPopupSections(fallback);
