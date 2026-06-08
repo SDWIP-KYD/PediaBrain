@@ -1,4 +1,6 @@
+import { cookies } from "next/headers";
 import { db } from "@/lib/db";
+import { verifySessionToken } from "@/lib/auth";
 import { notes } from "@/lib/db/schema";
 import { desc, eq, or, ilike, sql } from "drizzle-orm";
 import { DataTable } from "./data-table";
@@ -16,6 +18,9 @@ export default async function NotesPage({
   const pageNum = Math.max(1, Number(page) || 1);
   const offset = (pageNum - 1) * pageSize;
   const searchQuery = (q ?? "").trim();
+  const secret = process.env.SESSION_SECRET;
+  const token = (await cookies()).get("session")?.value;
+  const canEdit = Boolean(secret && token && verifySessionToken(token, secret).valid);
 
   let data: {
     id: string;
@@ -93,6 +98,7 @@ export default async function NotesPage({
           totalPages={totalPages}
           initialOpenId={open ?? null}
           searchQuery={searchQuery}
+          canEdit={canEdit}
         />
       )}
     </div>

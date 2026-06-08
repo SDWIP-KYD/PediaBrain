@@ -1,11 +1,23 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
+import { verifySessionToken } from "@/lib/auth";
 import { notes, followUps, stickyNotes, noteVersions, patients, patientVisits, patientLabResults, patientMedications } from "@/lib/db/schema";
 import { eq, and, or, ilike, sql, asc, desc } from "drizzle-orm";
 
+async function requireAuth() {
+  const secret = process.env.SESSION_SECRET;
+  const token = (await cookies()).get("session")?.value;
+
+  if (!secret || !token || !verifySessionToken(token, secret).valid) {
+    throw new Error("Login diperlukan untuk mengubah data.");
+  }
+}
+
 export async function createNote(formData: FormData) {
+  await requireAuth();
   const title = formData.get("title") as string;
   const content = formData.get("content") as string;
   const tagsRaw = formData.get("tags") as string;
@@ -25,6 +37,7 @@ export async function createNote(formData: FormData) {
 }
 
 export async function updateNote(id: string, formData: FormData) {
+  await requireAuth();
   const title = formData.get("title") as string;
   const content = formData.get("content") as string;
   const tagsRaw = formData.get("tags") as string;
@@ -45,12 +58,14 @@ export async function updateNote(id: string, formData: FormData) {
 }
 
 export async function deleteNote(id: string) {
+  await requireAuth();
   await db.delete(notes).where(eq(notes.id, id));
   revalidatePath("/notes");
   revalidatePath("/");
 }
 
 export async function togglePinNote(id: string) {
+  await requireAuth();
   const [note] = await db.select().from(notes).where(eq(notes.id, id));
   if (note) {
     await db.update(notes).set({ isPinned: !note.isPinned }).where(eq(notes.id, id));
@@ -214,6 +229,7 @@ export async function autosaveNote(
   id: string,
   data: { title: string; content: string; tags: string[] }
 ) {
+  await requireAuth();
   await db
     .update(notes)
     .set({ title: data.title, content: data.content, tags: data.tags, updatedAt: new Date() })
@@ -224,6 +240,7 @@ export async function saveNoteVersion(
   noteId: string,
   data: { title: string; content: string; tags: string[] }
 ) {
+  await requireAuth();
   await db.insert(noteVersions).values({
     noteId,
     title: data.title,
@@ -242,6 +259,7 @@ export async function getNoteVersions(noteId: string) {
 }
 
 export async function restoreNoteVersion(versionId: string) {
+  await requireAuth();
   const [version] = await db.select().from(noteVersions).where(eq(noteVersions.id, versionId));
   if (!version) return;
   await db

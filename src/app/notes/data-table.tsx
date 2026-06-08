@@ -27,11 +27,13 @@ function NoteViewDialog({
   open,
   onOpenChange,
   onEdit,
+  canEdit,
 }: {
   note: NoteRow;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onEdit: () => void;
+  canEdit: boolean;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -67,10 +69,12 @@ function NoteViewDialog({
               >
                 <Download className="h-3.5 w-3.5" />
               </Button>
-              <Button size="sm" variant="outline" onClick={onEdit}>
-                <Pencil className="h-3.5 w-3.5 mr-1" />
-                Edit
-              </Button>
+              {canEdit && (
+                <Button size="sm" variant="outline" onClick={onEdit}>
+                  <Pencil className="h-3.5 w-3.5 mr-1" />
+                  Edit
+                </Button>
+              )}
               <DialogClose render={<Button size="sm" variant="ghost"><X className="h-4 w-4" /></Button>} />
             </div>
           </div>
@@ -85,7 +89,7 @@ function NoteViewDialog({
   );
 }
 
-const columns: ColumnDef<NoteRow>[] = [
+const buildColumns = (canEdit: boolean): ColumnDef<NoteRow>[] => [
   {
     accessorKey: "title",
     header: "Judul",
@@ -139,39 +143,43 @@ const columns: ColumnDef<NoteRow>[] = [
       const note = row.original;
       return (
         <div className="flex items-center gap-0.5">
-          <Button
-            variant="ghost"
-            size="icon"
-            className={note.isPinned ? "text-neon" : ""}
-            onClick={async (e) => {
-              e.stopPropagation();
-              await togglePinNote(note.id);
-            }}
-          >
-            <Pin className={`h-3.5 w-3.5 ${note.isPinned ? "fill-neon" : ""}`} />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              (table.options.meta as { onEdit: (note: NoteRow) => void })?.onEdit(note);
-            }}
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={async (e) => {
-              e.stopPropagation();
-              if (confirm(`Hapus catatan "${note.title}"?`)) {
-                await deleteNote(note.id);
-              }
-            }}
-          >
-            <Trash2 className="h-4 w-4 text-destructive" />
-          </Button>
+          {canEdit && (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={note.isPinned ? "text-neon" : ""}
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  await togglePinNote(note.id);
+                }}
+              >
+                <Pin className={`h-3.5 w-3.5 ${note.isPinned ? "fill-neon" : ""}`} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  (table.options.meta as { onEdit: (note: NoteRow) => void })?.onEdit(note);
+                }}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  if (confirm(`Hapus catatan "${note.title}"?`)) {
+                    await deleteNote(note.id);
+                  }
+                }}
+              >
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </>
+          )}
         </div>
       );
     },
@@ -186,6 +194,7 @@ export function DataTable({
   totalPages,
   initialOpenId,
   searchQuery,
+  canEdit,
 }: {
   data: NoteRow[];
   total: number;
@@ -194,6 +203,7 @@ export function DataTable({
   totalPages: number;
   initialOpenId?: string | null;
   searchQuery?: string;
+  canEdit: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -218,7 +228,7 @@ export function DataTable({
 
   const table = useReactTable({
     data,
-    columns,
+    columns: buildColumns(canEdit),
     state: { sorting, globalFilter },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
@@ -288,17 +298,23 @@ export function DataTable({
             <Search className="h-4 w-4 mr-1" />
             Cari
           </Button>
-          <Button
-            onClick={() => {
-              setEditingNote(null);
-              setDialogOpen(true);
-            }}
-            className="flex-1 sm:flex-none"
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            <span className="sm:hidden">Baru</span>
-            <span className="hidden sm:inline">Catatan Baru</span>
-          </Button>
+          {canEdit ? (
+            <Button
+              onClick={() => {
+                setEditingNote(null);
+                setDialogOpen(true);
+              }}
+              className="flex-1 sm:flex-none"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              <span className="sm:hidden">Baru</span>
+              <span className="hidden sm:inline">Catatan Baru</span>
+            </Button>
+          ) : (
+            <Button className="flex-1 sm:flex-none" onClick={() => router.push("/login?from=/notes")}>
+              Login untuk edit
+            </Button>
+          )}
         </div>
       </div>
 
@@ -327,6 +343,7 @@ export function DataTable({
             setDialogOpen(true);
             setViewDialogOpen(false);
           }}
+          canEdit={canEdit}
         />
       )}
 
@@ -346,7 +363,7 @@ export function DataTable({
           <TableBody>
             {data.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={buildColumns(canEdit).length} className="h-24 text-center text-muted-foreground">
                   {searchQuery ? "Tidak ada catatan yang cocok" : "Belum ada catatan"}
                 </TableCell>
               </TableRow>
@@ -398,7 +415,7 @@ export function DataTable({
         </div>
       </div>
 
-      <NoteDialog open={dialogOpen} onOpenChange={setDialogOpen} note={editingNote} />
+      {canEdit && <NoteDialog open={dialogOpen} onOpenChange={setDialogOpen} note={editingNote} />}
     </div>
   );
 }
