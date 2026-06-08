@@ -128,9 +128,12 @@ export function GrowthChartCard({ patientSex, birthDate, measurements }: Props) 
       Z_LINES.forEach((z) => {
         point[`z${z}`] = zSeries.find((s) => s.z === z)!.data[i].value;
       });
+      // Add patient measurement if exists for this month (rounded)
+      const pat = patientPoints.find((p) => Math.abs(p.month - month) <= 0.5);
+      if (pat) point.patient = pat.value;
       return point;
     });
-  }, [dataset, zSeries]);
+  }, [dataset, zSeries, patientPoints]);
 
   const yLabel = chartIndicator === "weight-for-age" ? "BB (kg)"
     : chartIndicator === "height-for-age" ? "TB (cm)"
@@ -216,8 +219,20 @@ export function GrowthChartCard({ patientSex, birthDate, measurements }: Props) 
                     />
                   ))}
 
-                  {/* Patient data as scatter points cannot be overlaid easily on lines in recharts in composable way */}
-                  {/* We'll use plain line chart with dots */}
+                  {/* Patient data points */}
+                  {patientPoints.length > 0 && (
+                    <Line
+                      type="monotone"
+                      dataKey="patient"
+                      stroke="#a78bfa"
+                      strokeWidth={2}
+                      dot={{ r: 5, fill: "#a78bfa", stroke: "#1f2937", strokeWidth: 2 }}
+                      activeDot={{ r: 7, fill: "#a78bfa", stroke: "#fff", strokeWidth: 2 }}
+                      name="Pasien"
+                      isAnimationActive={false}
+                      connectNulls={false}
+                    />
+                  )}
                 </LineChart>
               </ResponsiveContainer>
             </div>
