@@ -17,6 +17,7 @@ import { PatientAIOverlay } from "./patient-ai-overlay";
 import { EditPatientDialog } from "./edit-patient-dialog";
 import { EditVisitDialog } from "./edit-visit-dialog";
 import { GrowthChartCard } from "@/components/growth-chart";
+import { VisitGrowthCurve } from "@/components/visit-growth-curve";
 
 type Patient = {
   id: string; name: string; birthDate: string | null; sex: string | null;
@@ -252,6 +253,16 @@ export function PatientDetailClient({
                               {v.headCircumferenceCm && <Badge variant="outline" className="text-xs">LK: {v.headCircumferenceCm} cm</Badge>}
                             </div>
                           </div>
+                        )}
+                        {/* Mini Growth Chart */}
+                        {patient.birthDate && patient.sex && (v.weightKg || v.heightCm || v.headCircumferenceCm) && (
+                          <VisitGrowthCurve
+                            sex={patient.sex as "L" | "P"}
+                            weightKg={v.weightKg}
+                            heightCm={v.heightCm}
+                            headCircumferenceCm={v.headCircumferenceCm}
+                            ageMonths={calcAgeMonths(patient.birthDate, v.visitDate)}
+                          />
                         )}
                         {subjektif && (
                           <div className="mt-2">
