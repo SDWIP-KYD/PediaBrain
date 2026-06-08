@@ -11,7 +11,7 @@ import { globalSearch } from "@/app/actions";
 interface SearchResult {
   notes: { id: string; title: string; tags: string[]; content: string; isPinned: boolean }[];
   followUps: { id: string; title: string; content: string | null; dueDate: string; status: string }[];
-  patients: { id: string; name: string; medicalRecordNo: string | null; birthDate: string | null; sex: string | null }[];
+  patients: { id: string; name: string; medicalRecordNo: string | null; birthDate: string | null; sex: string | null; diagnosis: string | null }[];
 }
 
 function highlightMatch(text: string, query: string): { text: string; highlight: boolean }[] {
@@ -127,6 +127,11 @@ export function GlobalSearch() {
                       {p.medicalRecordNo && (
                         <span className="text-muted-foreground text-xs">
                           RM: <HighlightedText text={p.medicalRecordNo} query={query} />
+                        </span>
+                      )}
+                      {p.diagnosis && (
+                        <span className="text-xs text-muted-foreground/70 truncate max-w-[150px]">
+                          <HighlightedText text={p.diagnosis} query={query} />
                         </span>
                       )}
                       {p.sex && <Badge variant="outline" className="text-xs shrink-0">{p.sex === "L" ? "♂" : "♀"}</Badge>}

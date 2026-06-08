@@ -16,6 +16,7 @@ import { AddVisitDialogWrapper } from "./add-visit-dialog";
 import { PatientAIOverlay } from "./patient-ai-overlay";
 import { EditPatientDialog } from "./edit-patient-dialog";
 import { EditVisitDialog } from "./edit-visit-dialog";
+import { GrowthChartCard } from "@/components/growth-chart";
 
 type Patient = {
   id: string; name: string; birthDate: string | null; sex: string | null;
@@ -26,6 +27,7 @@ type Patient = {
 type Visit = {
   id: string; patientId: string; visitDate: string;
   chiefComplaint: string | null; anamnesis: string | null; physicalExam: string | null;
+  weightKg: string | null; heightCm: string | null; headCircumferenceCm: string | null;
   diagnosisPrimary: string | null; diagnosisSecondary: string | null;
   therapy: string | null; notes: string | null;
   sections: Record<string, string> | null;
@@ -165,6 +167,24 @@ export function PatientDetailClient({
           </CardContent>
         </Card>
       </div>
+
+      {/* Growth Chart */}
+      {patient.birthDate && patient.sex && (visits.some(v => v.weightKg || v.heightCm || v.headCircumferenceCm)) && (
+        <GrowthChartCard
+          patientSex={patient.sex as "L" | "P"}
+          birthDate={patient.birthDate}
+          measurements={visits
+            .map((v) => ({
+              visitId: v.id,
+              visitDate: v.visitDate,
+              ageMonths: calcAgeMonths(patient.birthDate!, v.visitDate),
+              weightKg: v.weightKg,
+              heightCm: v.heightCm,
+              headCircumferenceCm: v.headCircumferenceCm,
+            }))
+            .filter((m) => m.ageMonths >= 0)}
+        />
+      )}
 
       {/* Visit History */}
       <Card>
@@ -354,4 +374,12 @@ function calculateAge(birthDate: string): string {
   const years = Math.floor(months / 12);
   const remMonths = months % 12;
   return remMonths > 0 ? `${years} thn ${remMonths} bln` : `${years} tahun`;
+}
+
+function calcAgeMonths(birthDate: string, referenceDate: string): number {
+  const birth = new Date(birthDate);
+  const ref = new Date(referenceDate);
+  const months = (ref.getFullYear() - birth.getFullYear()) * 12 + (ref.getMonth() - birth.getMonth());
+  if (ref.getDate() < birth.getDate()) return months - 1;
+  return Math.max(0, months);
 }

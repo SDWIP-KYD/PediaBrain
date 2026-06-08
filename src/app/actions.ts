@@ -152,7 +152,7 @@ export async function globalSearch(query: string) {
   if (!query?.trim()) return { notes: [], followUps: [], patients: [] };
   const q = `%${query}%`;
 
-  const [noteResults, fuResults, patientResults] = await Promise.all([
+  const [noteResults, fuResults, patientResults, diagnosisResults] = await Promise.all([
     db
       .select({ id: notes.id, title: notes.title, tags: notes.tags, content: notes.content, isPinned: notes.isPinned })
       .from(notes)
@@ -166,17 +166,47 @@ export async function globalSearch(query: string) {
       .orderBy(asc(followUps.dueDate))
       .limit(5),
     db
-      .select({ id: patients.id, name: patients.name, medicalRecordNo: patients.medicalRecordNo, birthDate: patients.birthDate, sex: patients.sex })
+      .select({
+        id: patients.id, name: patients.name, medicalRecordNo: patients.medicalRecordNo,
+        birthDate: patients.birthDate, sex: patients.sex, diagnosis: sql<string | null>`(
+          SELECT ${patientVisits.diagnosisPrimary} FROM ${patientVisits}
+          WHERE ${patientVisits.patientId} = ${patients.id}
+          AND ${patientVisits.diagnosisPrimary} IS NOT NULL
+          ORDER BY ${patientVisits.visitDate} DESC LIMIT 1
+        )`,
+      })
       .from(patients)
       .where(or(ilike(patients.name, q), ilike(patients.medicalRecordNo, q), ilike(patients.parentName, q)))
       .orderBy(desc(patients.updatedAt))
       .limit(5),
+    // Search by diagnosis
+    db
+      .select({
+        id: patients.id, name: patients.name, medicalRecordNo: patients.medicalRecordNo,
+        birthDate: patients.birthDate, sex: patients.sex,
+        diagnosis: patientVisits.diagnosisPrimary,
+      })
+      .from(patientVisits)
+      .innerJoin(patients, eq(patientVisits.patientId, patients.id))
+      .where(or(
+        ilike(patientVisits.diagnosisPrimary, q),
+        ilike(patientVisits.diagnosisSecondary, q),
+      ))
+      .orderBy(desc(patientVisits.visitDate))
+      .limit(5),
   ]);
+
+  // Merge diagnosis-only results with patient results (dedupe by id)
+  const seenIds = new Set(patientResults.map((p) => p.id));
+  const mergedPatients = [
+    ...patientResults,
+    ...diagnosisResults.filter((d) => !seenIds.has(d.id)),
+  ];
 
   return {
     notes: noteResults.map((n) => ({ ...n, tags: n.tags as string[] })),
     followUps: fuResults,
-    patients: patientResults,
+    patients: mergedPatients,
   };
 }
 
@@ -301,6 +331,9 @@ export async function createVisit(data: {
   chiefComplaint?: string;
   anamnesis?: string;
   physicalExam?: string;
+  weightKg?: string;
+  heightCm?: string;
+  headCircumferenceCm?: string;
   diagnosisPrimary?: string;
   diagnosisSecondary?: string;
   therapy?: string;
@@ -315,6 +348,9 @@ export async function createVisit(data: {
     chiefComplaint: data.chiefComplaint || null,
     anamnesis: data.anamnesis || null,
     physicalExam: data.physicalExam || null,
+    weightKg: data.weightKg || null,
+    heightCm: data.heightCm || null,
+    headCircumferenceCm: data.headCircumferenceCm || null,
     diagnosisPrimary: data.diagnosisPrimary || null,
     diagnosisSecondary: data.diagnosisSecondary || null,
     therapy: data.therapy || null,

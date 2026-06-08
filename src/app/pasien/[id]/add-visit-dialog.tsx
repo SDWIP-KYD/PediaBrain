@@ -25,6 +25,9 @@ export function AddVisitDialogWrapper({ patientId, compact }: { patientId: strin
     chiefComplaint: "",
     anamnesis: "",
     physicalExam: "",
+    weightKg: "",
+    heightCm: "",
+    headCircumferenceCm: "",
     diagnosisPrimary: "",
     diagnosisSecondary: "",
     therapy: "",
@@ -39,6 +42,9 @@ export function AddVisitDialogWrapper({ patientId, compact }: { patientId: strin
       chiefComplaint: "",
       anamnesis: "",
       physicalExam: "",
+      weightKg: "",
+      heightCm: "",
+      headCircumferenceCm: "",
       diagnosisPrimary: "",
       diagnosisSecondary: "",
       therapy: "",
@@ -58,6 +64,9 @@ export function AddVisitDialogWrapper({ patientId, compact }: { patientId: strin
         chiefComplaint: form.chiefComplaint || undefined,
         anamnesis: form.anamnesis || undefined,
         physicalExam: form.physicalExam || undefined,
+        weightKg: form.weightKg || undefined,
+        heightCm: form.heightCm || undefined,
+        headCircumferenceCm: form.headCircumferenceCm || undefined,
         diagnosisPrimary: form.diagnosisPrimary || undefined,
         diagnosisSecondary: form.diagnosisSecondary || undefined,
         therapy: form.therapy || undefined,
@@ -98,6 +107,11 @@ export function AddVisitDialogWrapper({ patientId, compact }: { patientId: strin
             <TextareaField label="Keluhan Utama" value={form.chiefComplaint} onChange={(v) => setForm({ ...form, chiefComplaint: v })} />
             <TextareaField label="Anamnesis" value={form.anamnesis} onChange={(v) => setForm({ ...form, anamnesis: v })} />
             <TextareaField label="Pemeriksaan Fisik" value={form.physicalExam} onChange={(v) => setForm({ ...form, physicalExam: v })} />
+            <div className="grid grid-cols-3 gap-3">
+              <Field label="BB (kg)" type="number" step="0.1" value={form.weightKg} onChange={(v) => setForm({ ...form, weightKg: v })} />
+              <Field label="TB (cm)" type="number" step="0.1" value={form.heightCm} onChange={(v) => setForm({ ...form, heightCm: v })} />
+              <Field label="LK (cm)" type="number" step="0.1" value={form.headCircumferenceCm} onChange={(v) => setForm({ ...form, headCircumferenceCm: v })} />
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Diagnosis Utama" value={form.diagnosisPrimary} onChange={(v) => setForm({ ...form, diagnosisPrimary: v })} />
               <Field label="Diagnosis Sekunder" value={form.diagnosisSecondary} onChange={(v) => setForm({ ...form, diagnosisSecondary: v })} />
@@ -158,14 +172,14 @@ export function AddVisitDialogWrapper({ patientId, compact }: { patientId: strin
   );
 }
 
-function Field({ label, value, onChange, type = "text", required = false }: { label: string; value: string; onChange: (v: string) => void; type?: string; required?: boolean }) {
+function Field({ label, value, onChange, type = "text", step, required = false }: { label: string; value: string; onChange: (v: string) => void; type?: string; step?: string; required?: boolean }) {
   return (
     <div>
       <label className="text-[11px] text-muted-foreground uppercase tracking-wider block mb-1">
         {label}
         {required && <span className="text-destructive ml-1">*</span>}
       </label>
-      <Input type={type} value={value} onChange={(e) => onChange(e.target.value)} required={required} className="h-9" />
+      <Input type={type} step={step} value={value} onChange={(e) => onChange(e.target.value)} required={required} className="h-9" />
     </div>
   );
 }
