@@ -23,6 +23,7 @@ import { StickyNotesSection } from "./sticky-notes";
 import { CreateFollowUpDialogWrapper } from "./follow-ups/create-dialog-wrapper";
 import { DashboardNotesClient, DashboardPinned } from "./dashboard-notes-client";
 import { AIChatbox } from "@/components/ai-chatbox";
+import { DashboardJadwalDPJP } from "@/components/dashboard-jadwal-dpjp";
 
 export const dynamic = "force-dynamic";
 
@@ -132,6 +133,8 @@ export default async function DashboardPage() {
       </div>
 
       <DashboardPinned pinned={serializedPinned} />
+
+      <DashboardJadwalDPJP />
 
       <Card>
         <CardHeader className="pb-2">
