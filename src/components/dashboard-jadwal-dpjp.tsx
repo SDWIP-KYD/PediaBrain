@@ -4,32 +4,35 @@ import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays } from "lucide-react";
-import { schedule, doctors, weekDays } from "../../app/jadwal-dpjp/data";
+import Link from "next/link";
+import { schedule, doctors } from "@/lib/jadwal-dpjp-data";
 
 function getTodayDayName(): string {
   const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
   return days[new Date().getDay()];
 }
 
-function parseTimeToMinutes(time: string): number {
-  const [h, m] = time.split(".").map(Number);
-  return h * 60 + m;
+function parseTimeToMinutes(timeStr: string): number {
+  const start = timeStr.split("–")[0].trim();
+  const [h, m] = start.split(".").map(Number);
+  return h * 60 + (m || 0);
+}
+
+function parseEndMinutes(timeStr: string): number {
+  const parts = timeStr.split("–");
+  const end = parts[1]?.trim() || parts[0].trim();
+  const [h, m] = end.split(".").map(Number);
+  return h * 60 + (m || 0);
 }
 
 export function DashboardJadwalDPJP() {
   const todayName = getTodayDayName();
-  const todaySchedule = useMemo(() => {
-    return schedule.find((s) => s.day === todayName);
+  const todaySlots = useMemo(() => {
+    const slots = schedule[todayName] || [];
+    return [...slots].sort((a, b) => parseTimeToMinutes(a.time) - parseTimeToMinutes(b.time));
   }, [todayName]);
 
-  const sortedSlots = useMemo(() => {
-    if (!todaySchedule?.slots) return [];
-    return [...todaySchedule.slots].sort(
-      (a, b) => parseTimeToMinutes(a.start) - parseTimeToMinutes(b.start)
-    );
-  }, [todaySchedule]);
-
-  const noSchedule = !sortedSlots.length;
+  const noSchedule = todaySlots.length === 0;
 
   return (
     <Card>
@@ -42,12 +45,12 @@ export function DashboardJadwalDPJP() {
               {todayName}
             </Badge>
           </CardTitle>
-          <a
+          <Link
             href="/jadwal-dpjp"
             className="text-xs text-muted-foreground hover:text-foreground shrink-0"
           >
             Lihat semua →
-          </a>
+          </Link>
         </div>
       </CardHeader>
       <CardContent>
@@ -59,14 +62,14 @@ export function DashboardJadwalDPJP() {
           </div>
         ) : (
           <div className="space-y-2">
-            {sortedSlots.map((slot, i) => {
+            {todaySlots.map((slot, i) => {
               const doctor = doctors.find((d) => d.id === slot.doctorId);
               if (!doctor) return null;
 
               const now = new Date();
               const currentMinutes = now.getHours() * 60 + now.getMinutes();
-              const startMinutes = parseTimeToMinutes(slot.start);
-              const endMinutes = parseTimeToMinutes(slot.end);
+              const startMinutes = parseTimeToMinutes(slot.time);
+              const endMinutes = parseEndMinutes(slot.time);
               const isNow = currentMinutes >= startMinutes && currentMinutes <= endMinutes;
               const isPast = currentMinutes > endMinutes;
 
@@ -81,16 +84,13 @@ export function DashboardJadwalDPJP() {
                       : "border-border bg-muted/30"
                   }`}
                 >
-                  <div
-                    className="w-0.5 h-8 rounded-full shrink-0"
-                    style={{ backgroundColor: doctor.colorHex }}
-                  />
+                  <div className={`w-0.5 h-8 rounded-full shrink-0 ${doctor.dotColor}`} />
                   <div className="flex-1 min-w-0">
                     <p className={`text-sm font-semibold ${isPast ? "line-through text-muted-foreground" : "text-foreground"}`}>
                       {doctor.name}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {slot.start} – {slot.end}
+                      {slot.time}
                     </p>
                   </div>
                   {isNow && (
@@ -98,7 +98,7 @@ export function DashboardJadwalDPJP() {
                       🟢 PRAKTIK
                     </Badge>
                   )}
-                  {isPast && (
+                  {isPast && !isNow && (
                     <Badge variant="outline" className="text-[10px] text-muted-foreground/50 shrink-0">
                       Selesai
                     </Badge>

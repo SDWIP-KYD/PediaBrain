@@ -1,25 +1,17 @@
 "use client";
 
 import { useMemo } from "react";
-import { doctors, schedule, weekDays, accounts } from "./data";
+import { doctors, schedule, weekDays, khanzaAccounts } from "@/lib/jadwal-dpjp-data";
 
-const DAYS_ORDER = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"];
-
-const colorMap: Record<string, { bg: string; border: string; text: string; dot: string }> = {
-  purple: { bg: "bg-purple-500/10", border: "border-purple-500/30", text: "text-purple-300", dot: "bg-purple-400" },
-  blue:   { bg: "bg-sky-500/10",   border: "border-sky-500/30",   text: "text-sky-300",   dot: "bg-sky-400" },
-  amber:  { bg: "bg-amber-500/10", border: "border-amber-500/30", text: "text-amber-300", dot: "bg-amber-400" },
-};
-
-function parseTime(t: string) {
-  const [h, m] = t.split(".").map(Number);
-  return h * 60 + m;
+function parseStartTime(timeStr: string): number {
+  const start = timeStr.split("–")[0].trim();
+  const [h, m] = start.split(".").map(Number);
+  return h * 60 + (m || 0);
 }
 
 export default function JadwalDPJP() {
   const today = useMemo(() => {
     const d = new Date().getDay();
-    // JS: 0=Sun, 1=Mon ... 6=Sat → convert to our order
     const map = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
     return map[d];
   }, []);
@@ -34,29 +26,26 @@ export default function JadwalDPJP() {
 
       {/* Doctor chips */}
       <div className="flex flex-wrap gap-2">
-        {doctors.map((doc) => {
-          const c = colorMap[doc.color] || colorMap.purple;
-          return (
-            <span
-              key={doc.id}
-              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border ${c.bg} ${c.border} ${c.text}`}
-            >
-              <span className={`w-2 h-2 rounded-full ${c.dot}`} />
-              {doc.name}
-            </span>
-          );
-        })}
+        {doctors.map((doc) => (
+          <span
+            key={doc.id}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border bg-card border-border"
+          >
+            <span className={`w-2 h-2 rounded-full ${doc.dotColor}`} />
+            {doc.name}
+          </span>
+        ))}
       </div>
 
       {/* Schedule grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {DAYS_ORDER.map((day) => {
-          const dayData = schedule.find((s) => s.day === day);
+        {weekDays.map((day) => {
+          const daySlots = schedule[day] || [];
           const isToday = day === today;
-          const slots = dayData?.slots ?? [];
 
-          // Sort slots by start time
-          const sorted = [...slots].sort((a, b) => parseTime(a.start) - parseTime(b.start));
+          const sorted = [...daySlots].sort(
+            (a, b) => parseStartTime(a.time) - parseStartTime(b.time)
+          );
 
           return (
             <div
@@ -89,16 +78,14 @@ export default function JadwalDPJP() {
                   {sorted.map((slot, i) => {
                     const doc = doctors.find((d) => d.id === slot.doctorId);
                     if (!doc) return null;
-                    const c = colorMap[doc.color] || colorMap.purple;
                     return (
                       <div
                         key={i}
-                        className={`rounded-xl px-3 py-2 text-xs ${c.bg} border-l-3 ${c.border}`}
-                        style={{ borderLeftWidth: "3px", borderLeftColor: doc.colorHex }}
+                        className={`rounded-xl px-3 py-2 text-xs border ${doc.colorClass}`}
                       >
-                        <div className={`font-bold ${c.text}`}>{doc.name}</div>
+                        <div className="font-bold text-foreground">{doc.name}</div>
                         <div className="text-muted-foreground mt-0.5 tabular-nums">
-                          {slot.start} – {slot.end}
+                          {slot.time}
                         </div>
                       </div>
                     );
@@ -114,7 +101,7 @@ export default function JadwalDPJP() {
       <div className="bg-card border border-border rounded-2xl p-4">
         <h3 className="text-sm font-bold text-foreground mb-2">Akun Khanza RS Akademis</h3>
         <div className="space-y-1">
-          {accounts.map((acc, i) => (
+          {khanzaAccounts.map((acc, i) => (
             <p key={i} className="text-xs text-muted-foreground">
               <span className="text-foreground font-medium">{acc.doctor}</span> :{" "}
               <code className="bg-muted px-1.5 py-0.5 rounded text-foreground">{acc.username}</code>
