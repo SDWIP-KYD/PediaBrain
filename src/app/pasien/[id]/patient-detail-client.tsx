@@ -7,7 +7,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   ArrowLeft, User, Phone, Calendar, FileText, Beaker, Pill,
-  ChevronDown, ExternalLink, Stethoscope, ClipboardList, Activity, TestTube, Syringe
+  ChevronDown, ExternalLink, Stethoscope, ClipboardList, Activity, TestTube, Syringe, Upload
 } from "lucide-react";
 import Link from "next/link";
 import { DeletePatientButton } from "./delete-button";
@@ -18,6 +18,7 @@ import { EditPatientDialog } from "./edit-patient-dialog";
 import { EditVisitDialog } from "./edit-visit-dialog";
 import { GrowthChartCard } from "@/components/growth-chart";
 import { VisitGrowthCurve } from "@/components/visit-growth-curve";
+import { LabExtractModal } from "@/components/lab-extract-modal";
 
 type Patient = {
   id: string; name: string; birthDate: string | null; sex: string | null;
@@ -301,21 +302,34 @@ export function PatientDetailClient({
                         )}
                         {(labs.length > 0 || meds.length > 0) && (
                           <div className="grid gap-2 sm:grid-cols-2 pt-1">
-                            {labs.length > 0 && (
-                              <div>
-                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1 mb-0.5">
+                            <div>
+                              <div className="flex items-center justify-between mb-0.5">
+                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
                                   <Beaker className="h-3 w-3" /> Lab ({labs.length})
                                 </p>
-                                <div className="space-y-0.5">
-                                  {labs.map((l) => (
+                                <LabExtractModal
+                                  visitId={v.id}
+                                  onSave={() => window.location.reload()}
+                                  trigger={
+                                    <span className="text-[10px] text-neon hover:underline cursor-pointer flex items-center gap-0.5">
+                                      <Upload className="h-2.5 w-2.5" /> Upload
+                                    </span>
+                                  }
+                                />
+                              </div>
+                              <div className="space-y-0.5">
+                                {labs.length === 0 ? (
+                                  <p className="text-xs text-muted-foreground italic">Belum ada data lab</p>
+                                ) : (
+                                  labs.map((l) => (
                                     <div key={l.id} className="text-xs font-mono">
                                       {l.testName}: {l.result ?? "-"} {l.unit ?? ""}
                                       {l.flag && <span className={l.flag === "high" || l.flag === "low" ? "text-yellow-500 ml-1" : "text-green-500 ml-1"}>({l.flag})</span>}
                                     </div>
-                                  ))}
-                                </div>
+                                  ))
+                                )}
                               </div>
-                            )}
+                            </div>
                             {meds.length > 0 && (
                               <div>
                                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1 mb-0.5">
