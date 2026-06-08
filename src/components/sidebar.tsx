@@ -13,6 +13,7 @@ import {
   LogOut,
   Stethoscope,
   ClipboardList,
+  CalendarDays,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
@@ -20,6 +21,7 @@ import { useState, useEffect } from "react";
 const quickLinks = [
   { href: "/pasien", label: "Tambah Pasien", icon: UserPlus },
   { href: "/soap", label: "SOAP Creator", icon: ClipboardList },
+  { href: "/jadwal-dpjp", label: "Jadwal DPJP", icon: CalendarDays },
   { href: "/ai-toolbox", label: "AI ToolBox", icon: Sparkles },
   { href: "/follow-ups", label: "Follow-up", icon: CalendarClock },
 ];
