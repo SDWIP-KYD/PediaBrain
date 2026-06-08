@@ -395,6 +395,9 @@ export async function updateVisit(id: string, data: {
   chiefComplaint?: string;
   anamnesis?: string;
   physicalExam?: string;
+  weightKg?: string;
+  heightCm?: string;
+  headCircumferenceCm?: string;
   diagnosisPrimary?: string;
   diagnosisSecondary?: string;
   therapy?: string;
@@ -406,6 +409,9 @@ export async function updateVisit(id: string, data: {
     chiefComplaint: data.chiefComplaint || null,
     anamnesis: data.anamnesis || null,
     physicalExam: data.physicalExam || null,
+    weightKg: data.weightKg || null,
+    heightCm: data.heightCm || null,
+    headCircumferenceCm: data.headCircumferenceCm || null,
     diagnosisPrimary: data.diagnosisPrimary || null,
     diagnosisSecondary: data.diagnosisSecondary || null,
     therapy: data.therapy || null,

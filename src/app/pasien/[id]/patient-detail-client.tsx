@@ -242,6 +242,17 @@ export function PatientDetailClient({
 
                     {isExpanded && (
                       <div className="px-3 pb-3 space-y-3 border-t border-border/50">
+                        {/* Anthropometry */}
+                        {(v.weightKg || v.heightCm || v.headCircumferenceCm) && (
+                          <div className="mt-2">
+                            <p className="text-xs font-semibold text-neon uppercase tracking-wider mb-1">Antropometri</p>
+                            <div className="flex flex-wrap gap-3 text-sm font-mono">
+                              {v.weightKg && <Badge variant="outline" className="text-xs">BB: {v.weightKg} kg</Badge>}
+                              {v.heightCm && <Badge variant="outline" className="text-xs">TB: {v.heightCm} cm</Badge>}
+                              {v.headCircumferenceCm && <Badge variant="outline" className="text-xs">LK: {v.headCircumferenceCm} cm</Badge>}
+                            </div>
+                          </div>
+                        )}
                         {subjektif && (
                           <div className="mt-2">
                             <p className="text-xs font-semibold text-neon uppercase tracking-wider mb-0.5">Subjektif</p>
