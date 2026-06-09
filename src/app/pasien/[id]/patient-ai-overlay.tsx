@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Bot, X, Send, Loader2, Sparkles, AlertCircle, User, Paperclip, Camera } from "lucide-react";
+import { Bot, X, Send, Loader2, Sparkles, AlertCircle, User, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createVisit } from "@/app/actions";
 import { useRouter } from "next/navigation";
@@ -249,12 +249,11 @@ export function PatientAIOverlay({ patientId, patientName }: { patientId: string
 
   return (
     <>
-      {/* Hidden file input */}
+      {/* Hidden file input — media picker (gallery OR camera) */}
       <input
         ref={fileInputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         className="hidden"
         onChange={handleImageUpload}
       />
@@ -307,7 +306,7 @@ export function PatientAIOverlay({ patientId, patientName }: { patientId: string
                     onClick={() => fileInputRef.current?.click()}
                     className="text-left text-[11px] p-2 rounded border border-neon/30 bg-neon/5 hover:bg-neon/10 transition-colors flex items-center gap-1.5"
                   >
-                    <Camera className="h-3 w-3 text-neon" /> Upload foto lab
+                    <Paperclip className="h-3 w-3 text-neon" /> Upload foto lab
                   </button>
                 </div>
               </div>
