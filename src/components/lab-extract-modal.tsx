@@ -47,12 +47,45 @@ export function LabExtractModal({ visitId, patientName, trigger, onSave }: LabEx
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Compress image client-side before sending to server
+  const compressImage = (file: File, maxWidth = 1200, quality = 0.7): Promise<File> => {
+    return new Promise((resolve) => {
+      if (file.size < 200 * 1024) { resolve(file); return; } // Skip if <200KB
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let w = img.width, h = img.height;
+        if (w > maxWidth) { h = (maxWidth / w) * h; w = maxWidth; }
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
+        canvas.toBlob(
+          (blob) => {
+            URL.revokeObjectURL(url);
+            resolve(blob ? new File([blob], file.name, { type: "image/jpeg" }) : file);
+          },
+          "image/jpeg",
+          quality
+        );
+      };
+      img.src = url;
+    });
+  };
+
   const handleFile = async (file: File) => {
     setLoading(true);
     setError(null);
 
+    // Compress large images
+    const compressed = await compressImage(file);
+    const savings = ((1 - compressed.size / file.size) * 100).toFixed(0);
+    if (compressed.size < file.size) {
+      setMessages([{ role: "assistant", content: `📸 Gambar dikompres ${savings}% (${(file.size/1024).toFixed(0)}KB → ${(compressed.size/1024).toFixed(0)}KB). Mengekstrak...` }]);
+    }
+
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", compressed);
     formData.append("visitId", visitId);
 
     try {

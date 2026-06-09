@@ -79,9 +79,42 @@ export function PatientAIOverlay({ patientId, patientName }: { patientId: string
     }
   }
 
+  // Compress image client-side
+  function compressImage(file: File, maxWidth = 1200, quality = 0.7): Promise<File> {
+    return new Promise((resolve) => {
+      if (file.size < 200 * 1024) { resolve(file); return; }
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let w = img.width, h = img.height;
+        if (w > maxWidth) { h = (maxWidth / w) * h; w = maxWidth; }
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
+        canvas.toBlob(
+          (blob) => {
+            URL.revokeObjectURL(url);
+            resolve(blob ? new File([blob], file.name, { type: "image/jpeg" }) : file);
+          },
+          "image/jpeg",
+          quality
+        );
+      };
+      img.src = url;
+    });
+  }
+
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file || loading) return;
+
+    // Compress before processing
+    const compressed = await compressImage(file);
+    const savings = ((1 - compressed.size / file.size) * 100).toFixed(0);
+    const sizeInfo = compressed.size < file.size
+      ? ` (dikompres ${savings}%)`
+      : "";
 
     // Read file as base64
     const reader = new FileReader();
@@ -91,7 +124,7 @@ export function PatientAIOverlay({ patientId, patientName }: { patientId: string
       // Add image message
       setMessages((prev) => [
         ...prev,
-        { role: "user", content: `📷 Screenshot lab: ${file.name}`, image: base64 },
+        { role: "user", content: `📷 Screenshot lab: ${file.name}${sizeInfo}`, image: base64 },
       ]);
       setLoading(true);
       setPreview(null);
@@ -102,7 +135,7 @@ export function PatientAIOverlay({ patientId, patientName }: { patientId: string
           method: "POST",
           body: (() => {
             const fd = new FormData();
-            fd.append("file", file);
+            fd.append("file", compressed);
             fd.append("visitId", "");
             return fd;
           })(),
