@@ -153,7 +153,7 @@ export function PatientAIOverlay({ patientId, patientName }: { patientId: string
                 subjektif: "",
                 objektif: `Lab (${extracted.length} parameter):\n${extracted.map((i: LabResult) => `${i.testName}: ${i.result} ${i.unit || ""}`).join("\n")}`,
                 pemeriksaan_penunjang: "",
-                terai: "",
+                terapi: "",
               },
               diagnosisPrimary: null,
               diagnosisSecondary: null,
