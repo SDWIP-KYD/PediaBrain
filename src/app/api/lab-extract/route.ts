@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { patientLabResults, patientVisits } from "@/lib/db/schema";
+import { patientLabResults } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
 // POST: Upload image → extract lab data via AI vision → save to DB
@@ -9,7 +9,6 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
     const file = formData.get("file") as File;
     const visitId = formData.get("visitId") as string;
-    const patientId = formData.get("patientId") as string;
 
     if (!file) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
@@ -88,7 +87,6 @@ Extract EVERY visible parameter. ONLY return the JSON array, nothing else.`;
         try {
           await db.insert(patientLabResults).values({
             visitId,
-            patientId: patientId || "",
             testName: item.testName || "Unknown",
             result: item.result || "",
             unit: item.unit || "",
@@ -102,8 +100,6 @@ Extract EVERY visible parameter. ONLY return the JSON array, nothing else.`;
                 : item.flag === "normal"
                   ? "normal"
                   : null,
-            createdAt: new Date(),
-            updatedAt: new Date(),
           });
         } catch (dbErr) {
           console.error("Failed to save lab result:", dbErr);
