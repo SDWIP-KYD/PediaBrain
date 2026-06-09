@@ -41,7 +41,8 @@ Rules:
 
     const apiKey = process.env.AI_API_KEY;
     const apiUrl = process.env.AI_API_URL || "https://api.minimax.io/anthropic";
-    const model = process.env.AI_MODEL || "MiniMax-Text-01";
+    // Use VL-01 for vision tasks (Text-01 does NOT support image input!)
+    const model = "MiniMax-VL-01";
 
     if (!apiKey) {
       return NextResponse.json(
