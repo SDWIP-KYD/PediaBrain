@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Upload, Camera, X, Check, Loader2, AlertCircle, MessageSquare, Send, Plus, Trash2 } from "lucide-react";
+import { Upload, Camera, X, Check, Loader2, AlertCircle, MessageSquare, Send, Plus, Trash2, Paperclip } from "lucide-react";
 
 interface LabResult {
   testName: string;
@@ -74,6 +74,7 @@ export function LabExtractModal({ visitId, patientName, trigger, onSave }: LabEx
           `${r.testName}: ${r.result} ${r.unit}${r.referenceRange ? ` (ref: ${r.referenceRange})` : ""} ${r.flag !== "normal" ? `[${r.flag?.toUpperCase()}]` : ""}`
         ).join("\n");
         await sendAutoSummary(summary, data.extracted);
+        setTab("upload"); // Switch to upload tab to show preview table
       } else {
         setLabResults([emptyRow()]);
         setMessages([{ role: "assistant", content: "Saya tidak bisa mendeteksi parameter lab dari gambar ini. Silakan input manual atau coba foto yang lebih jelas.\n\nAtau ketik langsung hasil lab di chat, contoh:\nHb 10.5, Leukosit 15000, Trombosit 200000" }]);
@@ -341,7 +342,6 @@ Jawab dalam Bahasa Indonesia yang natural dan profesional. Jika ada data lab, be
                 ref={fileRef}
                 type="file"
                 accept="image/*"
-                capture="environment"
                 className="hidden"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
@@ -413,6 +413,15 @@ Jawab dalam Bahasa Indonesia yang natural dan profesional. Jika ada data lab, be
 
               {/* Chat input */}
               <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0"
+                  onClick={() => fileRef.current?.click()}
+                  title="Upload foto lab"
+                >
+                  <Paperclip className="h-4 w-4" />
+                </Button>
                 <Input
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
