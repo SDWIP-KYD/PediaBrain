@@ -1,6 +1,70 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// POST: Upload image → extract lab data via AI vision (direct call, no internal HTTP)
+// Direct AI vision API call — no internal HTTP to avoid auth middleware issues
+async function callVisionAPI(imageBase64: string, prompt: string): Promise<string> {
+  const apiKey = process.env.AI_API_KEY;
+  const apiUrl = process.env.AI_API_URL || "https://api.minimax.io/anthropic";
+
+  if (!apiKey) {
+    throw new Error("AI_API_KEY not configured in Vercel env vars");
+  }
+
+  // Try models in order: VL-01 (vision), M3 (multimodal), M2.7 (multimodal)
+  const models = ["MiniMax-VL-01", "MiniMax-M3", "minimax-m3"];
+  let lastError = "";
+
+  for (const model of models) {
+    try {
+      const res = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+        },
+        body: JSON.stringify({
+          model,
+          max_tokens: 4000,
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "image_url",
+                  image_url: { url: imageBase64 },
+                },
+                {
+                  type: "text",
+                  text: prompt,
+                },
+              ],
+            },
+          ],
+        }),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        lastError = `${model}: ${res.status} - ${errText.slice(0, 100)}`;
+        console.error("Vision API failed:", lastError);
+        continue; // Try next model
+      }
+
+      const data = await res.json();
+      const content =
+        data.content?.[0]?.text ||
+        data.choices?.[0]?.message?.content ||
+        "";
+
+      if (content) return content;
+    } catch (e) {
+      lastError = `${model}: ${e instanceof Error ? e.message : "unknown"}`;
+      console.error("Vision API error:", lastError);
+    }
+  }
+
+  throw new Error(`All vision models failed. Last error: ${lastError}`);
+}
+
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
@@ -39,64 +103,12 @@ Rules:
 - Do NOT include any text outside the JSON array
 - If you cannot read the image, return an empty array []`;
 
-    const apiKey = process.env.AI_API_KEY;
-    const apiUrl = process.env.AI_API_URL || "https://api.minimax.io/anthropic";
-    // Use VL-01 for vision tasks (Text-01 does NOT support image input!)
-    const model = "MiniMax-VL-01";
+    // Call vision API with fallback models
+    const content = await callVisionAPI(dataUrl, visionPrompt);
 
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: "AI API key not configured" },
-        { status: 500 }
-      );
-    }
-
-    // Direct call to AI API — no internal HTTP
-    const aiRes = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens: 4000,
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "image_url",
-                image_url: { url: dataUrl },
-              },
-              {
-                type: "text",
-                text: visionPrompt,
-              },
-            ],
-          },
-        ],
-      }),
-    });
-
-    if (!aiRes.ok) {
-      const errText = await aiRes.text();
-      console.error("Vision API error:", aiRes.status, errText);
-      return NextResponse.json(
-        { error: `Vision API failed: ${aiRes.status}` },
-        { status: 500 }
-      );
-    }
-
-    const aiData = await aiRes.json();
-
-    // Parse response — try multiple response formats
+    // Parse response
     let extractedData: unknown[] = [];
     try {
-      const content =
-        aiData.content?.[0]?.text ||
-        aiData.choices?.[0]?.message?.content ||
-        "";
       const jsonMatch = content.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
         extractedData = JSON.parse(jsonMatch[0]);
@@ -117,7 +129,10 @@ Rules:
   } catch (error) {
     console.error("Lab extract error:", error);
     return NextResponse.json(
-      { error: "Failed to process image" },
+      {
+        error: "Failed to process image",
+        detail: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }

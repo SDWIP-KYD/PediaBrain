@@ -63,7 +63,10 @@ export function LabExtractModal({ visitId, patientName, trigger, onSave }: LabEx
 
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.error || "Upload failed");
+      if (!res.ok) {
+        const detail = data.detail || data.error || "Upload failed";
+        throw new Error(detail);
+      }
 
       setImageUrl(data.imageUrl);
 
@@ -81,8 +84,9 @@ export function LabExtractModal({ visitId, patientName, trigger, onSave }: LabEx
         setTab("chat");
       }
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Gagal memproses gambar");
-      setMessages([{ role: "assistant", content: "Upload gagal. Silakan input manual atau ketik hasil lab di chat." }]);
+      const msg = e instanceof Error ? e.message : "Gagal memproses gambar";
+      setError(msg);
+      setMessages([{ role: "assistant", content: `Upload gagal: ${msg}\n\nSilakan input manual atau ketik hasil lab di chat.` }]);
       setTab("chat");
     } finally {
       setLoading(false);
