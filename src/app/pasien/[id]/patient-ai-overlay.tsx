@@ -98,7 +98,7 @@ export function PatientAIOverlay({ patientId, patientName }: { patientId: string
 
       try {
         // Extract lab data via vision API
-        const extractRes = await fetch("/api/lab-extract/route", {
+        const extractRes = await fetch("/api/lab-extract", {
           method: "POST",
           body: (() => {
             const fd = new FormData();
