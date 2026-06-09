@@ -109,7 +109,8 @@ export function PatientAIOverlay({ patientId, patientName }: { patientId: string
         });
 
         if (!extractRes.ok) {
-          throw new Error("Gagal mengekstrak data dari gambar");
+          const errData = await extractRes.json().catch(() => ({}));
+          throw new Error(`Gagal mengekstrak data dari gambar: ${errData.error || extractRes.statusText || "Server error"}`);
         }
 
         const extractData = await extractRes.json();
