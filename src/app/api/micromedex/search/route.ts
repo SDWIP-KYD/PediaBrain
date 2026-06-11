@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Pool } from 'pg';
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
-});
-
 function calcScore(drug: any): number {
   const fields: Record<string, number> = {
     name: 1, drug_class: 1, uses_summary: 2, dosing_summary: 2, dosing_raw: 2,
@@ -21,6 +16,21 @@ function calcScore(drug: any): number {
   return Math.round((score / max) * 1000) / 10;
 }
 
+// Lazy pool — recreate per cold start to avoid stale connections in serverless
+let _pool: Pool | null = null;
+function getPool() {
+  if (!_pool) {
+    _pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+      max: 2,
+      idleTimeoutMillis: 5000,
+    });
+    _pool.on('error', () => { _pool = null; }); // auto-recreate on error
+  }
+  return _pool;
+}
+
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get('q') || '';
   const limit = Math.min(parseInt(req.nextUrl.searchParams.get('limit') || '20'), 50);
@@ -30,6 +40,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    const pool = getPool();
     const result = await pool.query(
       `SELECT id, name, drug_class, is_pediatric_approved, neonatal_safe, is_discontinued, quality_score,
               substr(uses_summary, 1, 150) as uses_preview

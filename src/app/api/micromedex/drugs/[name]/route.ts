@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Pool } from 'pg';
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
-});
-
 function calcScore(drug: any): number {
   const fields: Record<string, number> = {
     name: 1, drug_class: 1, uses_summary: 2, dosing_summary: 2, dosing_raw: 2,
@@ -25,9 +20,24 @@ function formatText(text: string | null): string {
   return text.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean).slice(0, 10).map(p => `• ${p.slice(0, 500)}`).join('\n');
 }
 
+let _pool: Pool | null = null;
+function getPool() {
+  if (!_pool) {
+    _pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+      max: 2,
+      idleTimeoutMillis: 5000,
+    });
+    _pool.on('error', () => { _pool = null; });
+  }
+  return _pool;
+}
+
 export async function GET(req: NextRequest, { params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;
   const decoded = decodeURIComponent(name);
+  const pool = getPool();
 
   try {
     const drugRes = await pool.query(

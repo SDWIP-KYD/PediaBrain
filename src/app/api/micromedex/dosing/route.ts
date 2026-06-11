@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Pool } from 'pg';
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
-});
+let _pool: Pool | null = null;
+function getPool() {
+  if (!_pool) {
+    _pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+      max: 2,
+      idleTimeoutMillis: 5000,
+    });
+    _pool.on('error', () => { _pool = null; });
+  }
+  return _pool;
+}
 
 export async function POST(req: NextRequest) {
+  const pool = getPool();
   try {
     const body = await req.json();
     const { drug_name, weight_kg, age_months, route = 'PO', indication } = body;
