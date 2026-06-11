@@ -64,12 +64,21 @@ const categories = [
     count: 13,
   },
   {
+    id: "micromedex",
+    title: "Micromedex Reference",
+    subtitle: "953+ pediatric drug monographs — dosing, interactions, PK, neonatal safety",
+    icon: "📚",
+    href: "/tools/micromedex",
+    color: "pink",
+    count: 953,
+  },
+  {
     id: "referensi-obat",
-    title: "Referensi Obat",
+    title: "Quick Drug Calc",
     subtitle: "50 obat pediatric + auto-dose calculator",
     icon: "💊",
     href: "/tools/referensi-obat",
-    color: "pink",
+    color: "purple",
     count: 50,
   },
   {

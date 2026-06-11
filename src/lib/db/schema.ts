@@ -112,3 +112,40 @@ export const patientMedications = pgTable("patient_medications", {
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
+
+export const drugs = pgTable("drugs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name", { length: 255 }).notNull(),
+  drugClass: varchar("drug_class", { length: 255 }),
+  isPediatricApproved: boolean("is_pediatric_approved").default(false),
+  neonatalSafe: boolean("neonatal_safe").default(false),
+  qualityScore: varchar("quality_score", { length: 10 }),
+  usesSummary: text("uses_summary"),
+  dosingRaw: text("dosing_raw"),
+  contraindicationsRaw: text("contraindications_raw"),
+  interactionsRaw: text("interactions_raw"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const indications = pgTable("indications", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  drugId: uuid("drug_id").references(() => drugs.id, { onDelete: "cascade" }),
+  indication: text("indication"),
+  route: varchar("route", { length: 50 }),
+  dosePerKg: varchar("dose_per_kg", { length: 50 }),
+  doseUnit: varchar("dose_unit", { length: 50 }),
+  doseFrequency: varchar("dose_frequency", { length: 100 }),
+  maxSingleDose: varchar("max_single_dose", { length: 50 }),
+  maxDailyDose: varchar("max_daily_dose", { length: 50 }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const drugInteractions = pgTable("drug_interactions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  drugId: uuid("drug_id").references(() => drugs.id, { onDelete: "cascade" }),
+  interactingDrugName: varchar("interacting_drug_name", { length: 255 }).notNull(),
+  severity: varchar("severity", { length: 50 }),
+  mechanism: text("mechanism"),
+  clinicalEffect: text("clinical_effect"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});

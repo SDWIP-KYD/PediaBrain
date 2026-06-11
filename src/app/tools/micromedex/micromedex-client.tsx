@@ -3,10 +3,9 @@
 import { useEffect, useState } from "react";
 import { usePatient } from "../components/patient-context";
 import { cn } from "@/lib/utils";
-import { Search, FlaskConical, Crosshair, AlertTriangle, Droplets, Pill, Activity, ArrowLeft, ChevronDown, ChevronUp, BookOpen, Shield, Dna } from "lucide-react";
+import { Search, FlaskConical, AlertTriangle, Droplets, Pill, Activity, ArrowLeft, ChevronDown, ChevronUp, BookOpen, Shield } from "lucide-react";
 
 /* ── Types ─────────────────────────────────────────────────────────── */
-
 interface DrugSummary {
   id: number; name: string; drug_class: string; quality_score: number; uses_preview?: string;
   is_pediatric_approved: number; neonatal_safe: number; is_discontinued: number;
@@ -54,19 +53,58 @@ interface DrugDetail {
   disclaimer: string;
 }
 
-/* ── Config ────────────────────────────────────────────────────────── */
-const API_BASE = process.env.NEXT_PUBLIC_MICROMEDEX_API || "http://localhost:8000/api";
+interface DrugExport {
+  drugs: DrugDetail[];
+  indications: Indication[];
+  interactions: DrugInteraction[];
+  adjustments: DoseAdjustment[];
+}
 
-async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...init, headers: { "Content-Type": "application/json", ...init?.headers },
-  });
-  if (!res.ok) {
-    const body = await res.text();
-    try { throw new Error(JSON.parse(body).detail || `API ${res.status}`); }
-    catch { throw new Error(`API ${res.status}: ${body.slice(0, 200)}`); }
-  }
-  return res.json();
+/* ── Helpers ───────────────────────────────────────────────────────── */
+const MONITORING_FLAGS: Record<string, string> = {
+  Vancomycin: "AUC/MIC 400-600",
+  Gentamicin: "Peak/Trough levels",
+  Amikacin: "Peak/Trough levels",
+  Theophylline: "Serum levels 5-15 mcg/mL",
+  Phenytoin: "Free/total levels",
+  Lithium: "Serum levels",
+  Digoxin: "Levels 0.5-2 ng/mL",
+};
+
+function normalize(text: string) {
+  return (text || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+function buildDetail(drug: DrugDetail, indications: Indication[], interactions: DrugInteraction[], adjustments: DoseAdjustment[]) {
+  const d = { ...drug };
+  const ind = indications.filter(i => i.drug_id === drug.id);
+  const ix = interactions.filter(i => i.drug_id === drug.id);
+  const adj = adjustments.filter(a => a.drug_id === drug.id);
+
+  d.indications_structured = ind;
+  d.interactions_structured = ix;
+  d.dose_adjustments_structured = adj;
+  d.interactions_coverage = ix.length > 0 ? "partial" : "not available";
+  d.completeness_score = Math.round((
+    (d.name ? 1 : 0) + (d.drug_class ? 1 : 0) + (d.uses_summary ? 2 : 0) +
+    (d.dosing_raw ? 2 : 0) + (d.contraindications_raw ? 1 : 0) + (d.interactions_raw ? 1 : 0) +
+    ix.length * 0.5 + adj.length * 0.3
+  ) * 10);
+
+  d.clinical_context = {
+    kids_list_risk: ["antibiotic", "antifungal", "anticonvulsant", "antipsychotic"].includes(normalize(d.drug_class)),
+    interaction_count: ix.length,
+    neonatal_safe: !!d.neonatal_safe,
+    pediatric_approved: !!d.is_pediatric_approved,
+    has_adjustments: adj.length > 0,
+    contra_summary_length: (d.contraindications_raw || "").length,
+    requires_monitoring: MONITORING_FLAGS[d.name],
+  };
+
+  d.dosing_formatted = (d.dosing_raw || "").split(/\n\s*\n/).map(p => p.trim()).filter(Boolean).slice(0, 10).map(p => `• ${p.slice(0, 500)}`).join("\n");
+  d.uses_formatted = (d.uses_raw || "").split(/\n\s*\n/).map(p => p.trim()).filter(Boolean).slice(0, 10).map(p => `• ${p.slice(0, 500)}`).join("\n");
+  d.disclaimer = "⚠️ This is a reference tool. Always verify dosing with current clinical guidelines.";
+  return d;
 }
 
 /* ── Main Component ────────────────────────────────────────────────── */
@@ -79,6 +117,7 @@ export function MicromedexClient() {
   const [selected, setSelected] = useState<DrugDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [exportData, setExportData] = useState<DrugExport | null>(null);
   const [notFound, setNotFound] = useState<{ suggestions?: string[] } | null>(null);
 
   const [calcWeight, setCalcWeight] = useState(weightKg || 10);
@@ -95,65 +134,101 @@ export function MicromedexClient() {
 
   const toggleSection = (key: string) => setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
 
-  const [stats, setStats] = useState<any>(null);
-  useEffect(() => { apiFetch<any>("/stats").then(setStats).catch(() => {}); }, []);
+  useEffect(() => {
+    setLoading(true);
+    fetch("/drug-index.json")
+      .then(r => r.json())
+      .then((data: DrugExport) => {
+        setExportData(data);
+        setResults(data.drugs.slice(0, 20));
+      })
+      .catch((e: any) => setError(e.message || "Failed to load drug data"))
+      .finally(() => setLoading(false));
+  }, []);
 
   /* ── Search ── */
-  const doSearch = async () => {
-    if (!query.trim()) return;
-    setLoading(true); setError(""); setNotFound(null);
-    try {
-      const data = await apiFetch<{ results: DrugSummary[] }>(`/search?q=${encodeURIComponent(query)}&limit=30`);
-      setResults(data.results);
-    } catch (e: any) {
-      setError(e.message || "Search failed. Is the API server running?");
-      setResults([]);
+  const doSearch = () => {
+    if (!exportData) return;
+    const q = normalize(query.trim());
+    if (!q) { setResults(exportData.drugs.slice(0, 30)); return; }
+
+    const scored = exportData.drugs
+      .map(drug => {
+        const haystack = normalize(`${drug.name} ${drug.drug_class} ${drug.uses_summary} ${drug.dosing_summary}`);
+        const exact = haystack === q ? 100 : 0;
+        const starts = haystack.startsWith(q) ? 80 : 0;
+        const contains = haystack.includes(q) ? 50 : 0;
+        const fuzzy = q.split(/\s+/).filter(Boolean).reduce((acc, term) => acc + (haystack.includes(term) ? 10 : 0), 0);
+        return { drug, score: exact + starts + contains + fuzzy };
+      })
+      .filter(x => x.score > 0)
+      .sort((a, b) => b.score - a.score || a.drug.name.localeCompare(b.drug.name))
+      .slice(0, 30)
+      .map(x => x.drug);
+
+    setResults(scored);
+    if (scored.length === 0) {
+      const suggestions = exportData.drugs
+        .filter(drug => q.split(/\s+/).some(term => normalize(drug.name).includes(term)))
+        .slice(0, 3)
+        .map(d => d.name);
+      setNotFound({ suggestions });
     }
-    setLoading(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => { if (e.key === "Enter") doSearch(); };
 
   /* ── Load monograph ── */
-  const loadDrug = async (name: string) => {
-    setLoading(true); setError(""); setNotFound(null);
-    try {
-      const drug = await apiFetch<DrugDetail>(`/drugs/${encodeURIComponent(name)}`);
-      setSelected(drug);
-      setView("detail");
-    } catch (e: any) {
-      try {
-        const parsed = JSON.parse(e.message);
-        if (parsed.detail?.manual_review_flag) {
-          setNotFound(parsed.detail);
-        } else { setError(parsed.detail?.error || e.message); }
-      } catch { setError(e.message || "Failed to load drug data"); }
+  const loadDrug = (name: string) => {
+    if (!exportData) return;
+    const drug = exportData.drugs.find(d => normalize(d.name) === normalize(name))
+      || exportData.drugs.find(d => normalize(d.name).includes(normalize(name)));
+    if (!drug) {
+      setNotFound({ suggestions: exportData.drugs.slice(0, 3).map(d => d.name) });
+      return;
     }
-    setLoading(false);
+    setSelected(buildDetail(drug, exportData.indications, exportData.interactions, exportData.adjustments));
+    setView("detail");
   };
 
   /* ── Dosing calc ── */
-  const doCalc = async () => {
+  const doCalc = () => {
     if (!selected || !calcWeight || calcWeight <= 0) return;
     setCalcLoading(true); setCalcResult(null);
-    try {
-      const result = await apiFetch<any>("/dosing", {
-        method: "POST",
-        body: JSON.stringify({
-          drug_name: selected.name, weight_kg: calcWeight,
-          age_months: calcAge || null, route: calcRoute, indication: calcIndication || null,
-        }),
-      });
-      setCalcResult(result);
-    } catch (e: any) { setCalcResult({ error: e.message || "Calculation failed" }); }
+    const indication = selected.indications_structured
+      .filter(i => !calcRoute || !i.route || i.route === calcRoute)
+      .sort((a, b) => (b.dose_per_kg || 0) - (a.dose_per_kg || 0))[0];
+
+    let calculated = null;
+    let warnings: string[] = [];
+    if (indication?.dose_per_kg) {
+      calculated = (indication.dose_per_kg * calcWeight).toFixed(1);
+      if (indication.max_single_dose && calculated && parseFloat(calculated) > indication.max_single_dose) {
+        warnings.push(`⚠️ Calculated exceeds max single (${indication.max_single_dose} ${indication.dose_unit || 'mg'})`);
+        calculated = indication.max_single_dose.toFixed(1);
+      }
+    }
+
+    if (calcAge <= 1 && !selected.neonatal_safe) warnings.push(`⚠️ ${selected.name} — neonatal safety not confirmed`);
+    if (!selected.is_pediatric_approved) warnings.push(`⚠️ ${selected.name} — pediatric approval not established`);
+    if (selected.clinical_context?.kids_list_risk) warnings.push(`⚠️ ${selected.name} — KIDs List risk classification`);
+
+    setCalcResult({
+      calculated_dose: calculated ? `${calculated} ${indication?.dose_unit || 'mg'}` : null,
+      dose_per_kg: indication?.dose_per_kg ? `${indication.dose_per_kg} ${indication.dose_unit || 'mg'}/kg` : null,
+      frequency: indication?.dose_frequency,
+      max_single_dose: indication?.max_single_dose ? `${indication.max_single_dose} ${indication.dose_unit || 'mg'}` : null,
+      max_daily_dose: indication?.max_daily_dose ? `${indication.max_daily_dose} ${indication.dose_unit || 'mg'}/day` : null,
+      warnings: warnings.length ? warnings : ["ℹ️ No dosing data found"],
+      source_text: indication?.source_text,
+    });
     setCalcLoading(false);
   };
 
   const goBack = () => { setView("search"); setSelected(null); setCalcResult(null); setNotFound(null); };
 
   /* ── Classes ── */
-  const [classes, setClasses] = useState<{ class: string; count: number }[]>([]);
-  useEffect(() => { apiFetch<{ class: string; count: number }[]>("/classes").then(setClasses).catch(() => {}); }, []);
+  const classes = exportData ? Array.from(new Map(exportData.drugs.map(d => [d.drug_class, (exportData.drugs.filter(x => x.drug_class === d.drug_class).length)]))).map(([c, count]) => ({ class: c, count })) : [];
 
   /* ── Not Found View ── */
   if (view === "detail" && notFound) {
@@ -165,19 +240,8 @@ export function MicromedexClient() {
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-6 text-center space-y-3">
           <AlertTriangle className="h-10 w-10 text-amber-400 mx-auto" />
           <h2 className="text-lg font-semibold">Drug Not Found</h2>
-          <p className="text-sm text-muted-foreground">{notFound.error || "Not in Micromedex 2026 database"}</p>
-          {notFound.suggestions && notFound.suggestions.length > 0 && (
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">Did you mean:</p>
-              {notFound.suggestions.map((s, i) => (
-                <button key={i} onClick={() => { setQuery(s); loadDrug(s); }}
-                  className="block mx-auto text-sm text-neon hover:underline">{s}</button>
-              ))}
-            </div>
-          )}
-          {notFound.manual_review_flag && (
-            <p className="text-[10px] text-muted-foreground mt-2">🏷️ Flagged for manual review — consider adding to Micromedex import list</p>
-          )}
+          <p className="text-sm text-muted-foreground">Not in Micromedex 2026 database</p>
+          {notFound.suggestions?.map((s, i) => <button key={i} onClick={() => { setQuery(s); doSearch(); }} className="block mx-auto text-sm text-neon hover:underline">{s}</button>)}
         </div>
       </div>
     );
@@ -191,10 +255,7 @@ export function MicromedexClient() {
           <BookOpen className="h-5 w-5 text-neon" />
           <div>
             <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Micromedex Drug Reference</h1>
-            <p className="text-xs text-muted-foreground">
-              953 pediatric drug monographs — Micromedex 2026
-              {stats && <span className="ml-2 text-neon/60">({stats.pediatric_approved} pediatric, {stats.neonatal_safe} neonatal-safe)</span>}
-            </p>
+            <p className="text-xs text-muted-foreground">{exportData ? `${exportData.drugs.length} pediatric drug monographs` : "Loading..."}</p>
           </div>
         </div>
 
@@ -207,22 +268,15 @@ export function MicromedexClient() {
           </div>
           <button onClick={doSearch} disabled={loading || !query.trim()}
             className="rounded-xl px-5 py-3 bg-neon text-black text-sm font-semibold hover:opacity-85 transition-opacity disabled:opacity-40">
-            {loading ? "Searching..." : "Search"}
+            {loading ? "Loading..." : "Search"}
           </button>
         </div>
 
-        {error && (
-          <div className="rounded-xl border border-red-500/30 bg-red-500/5 p-3 text-xs text-red-400">
-            {error}
-            {error.includes("API server") && (
-              <p className="mt-1 text-muted-foreground">Start: <code className="px-1 py-0.5 rounded bg-muted text-[11px]">cd ~/projects/pedia-brain-drug-db/backend && python main.py</code></p>
-            )}
-          </div>
-        )}
+        {error && <div className="rounded-xl border border-red-500/30 bg-red-500/5 p-3 text-xs text-red-400">{error}</div>}
 
         {results.length > 0 && (
           <div className="space-y-2">
-            <p className="text-xs text-muted-foreground">{results.length} results for &ldquo;{query}&rdquo;</p>
+            <p className="text-xs text-muted-foreground">{results.length} results</p>
             <div className="grid gap-2">
               {results.map((drug) => (
                 <button key={drug.id} onClick={() => loadDrug(drug.name)}
@@ -231,18 +285,14 @@ export function MicromedexClient() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="text-sm font-semibold">{drug.name}</p>
-                        {drug.neonatal_safe === 1 && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-medium border border-emerald-500/20">Neonatal Safe</span>
-                        )}
-                        {drug.completeness_score !== undefined && (
-                          <CompletenessBadge score={drug.completeness_score} />
-                        )}
+                        {drug.neonatal_safe === 1 && <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-medium border border-emerald-500/20">Neonatal Safe</span>}
+                        <CompletenessBadge score={drug.completeness_score ?? drug.quality_score} />
                       </div>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border">{drug.drug_class}</span>
-                        <span className={cn("text-[10px] px-1.5 py-0.5 rounded border font-medium",
-                          drug.is_pediatric_approved ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-amber-500/10 border-amber-500/20 text-amber-400"
-                        )}>{drug.is_pediatric_approved ? "✓ Pediatric" : "⚠️ Off-label"}</span>
+                        <span className={cn("text-[10px] px-1.5 py-0.5 rounded border font-medium", drug.is_pediatric_approved ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-amber-500/10 border-amber-500/20 text-amber-400")}>
+                          {drug.is_pediatric_approved ? "✓ Pediatric" : "⚠️ Off-label"}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -257,7 +307,7 @@ export function MicromedexClient() {
             <p className="text-xs text-muted-foreground font-medium">Browse by Drug Class</p>
             <div className="flex flex-wrap gap-2">
               {classes.filter(c => c.count >= 10).slice(0, 20).map((c) => (
-                <button key={c.class} onClick={() => { setQuery(c.class); }}
+                <button key={c.class} onClick={() => { setQuery(c.class || ""); doSearch(); }}
                   className="rounded-lg border border-border bg-card px-3 py-1.5 text-[11px] text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
                   {c.class} <span className="text-neon/60">({c.count})</span>
                 </button>
@@ -276,7 +326,6 @@ export function MicromedexClient() {
   /* ── Render: Detail View ── */
   if (!selected) return null;
   const d = selected;
-  const score = d.completeness_score ?? d.quality_score;
 
   return (
     <div className="space-y-4">
@@ -284,31 +333,22 @@ export function MicromedexClient() {
         <ArrowLeft className="h-3.5 w-3.5" /> Back to search
       </button>
 
-      {/* Drug header */}
       <div className="rounded-xl border border-border bg-card p-5 space-y-3">
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-2xl font-bold">{d.name}</h1>
-              {d.neonatal_safe === 1 && (
-                <span className="text-xs px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-medium border border-emerald-500/30">Neonatal Safe</span>
-              )}
-              {d.is_discontinued === 1 && (
-                <span className="text-xs px-2 py-0.5 rounded bg-red-500/15 text-red-400 font-medium border border-red-500/30">Discontinued</span>
-              )}
-              <CompletenessBadge score={score} />
+              {d.neonatal_safe === 1 && <span className="text-xs px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-medium border border-emerald-500/30">Neonatal Safe</span>}
+              {d.is_discontinued === 1 && <span className="text-xs px-2 py-0.5 rounded bg-red-500/15 text-red-400 font-medium border border-red-500/30">Discontinued</span>}
+              <CompletenessBadge score={d.completeness_score ?? d.quality_score} />
             </div>
             <div className="flex items-center gap-2 mt-2 flex-wrap">
               <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border">{d.drug_class}</span>
-              <span className={cn("text-xs px-2 py-0.5 rounded border font-medium",
-                d.is_pediatric_approved ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-amber-500/10 border-amber-500/20 text-amber-400"
-              )}>{d.is_pediatric_approved ? "✓ Pediatric Approved" : "⚠️ Adult Drug"}</span>
-              {d.clinical_context?.kids_list_risk && (
-                <span className="text-xs px-2 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20">⚠️ KIDs List Risk</span>
-              )}
-              {d.clinical_context?.requires_monitoring && (
-                <span className="text-xs px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">🔬 {d.clinical_context.requires_monitoring}</span>
-              )}
+              <span className={cn("text-xs px-2 py-0.5 rounded border font-medium", d.is_pediatric_approved ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-amber-500/10 border-amber-500/20 text-amber-400")}>
+                {d.is_pediatric_approved ? "✓ Pediatric Approved" : "⚠️ Adult Drug"}
+              </span>
+              {d.clinical_context?.kids_list_risk && <span className="text-xs px-2 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20">⚠️ KIDs List Risk</span>}
+              {d.clinical_context?.requires_monitoring && <span className="text-xs px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">🔬 {d.clinical_context.requires_monitoring}</span>}
               <span className="text-xs text-muted-foreground">{d.indications_structured?.length || 0} indications</span>
               <span className="text-xs text-muted-foreground">{d.interactions_structured?.length || 0} interactions</span>
             </div>
@@ -316,7 +356,6 @@ export function MicromedexClient() {
         </div>
       </div>
 
-      {/* Two-column */}
       <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
         <div className="space-y-3">
           {d.clinical_context && d.clinical_context.interaction_count > 0 && (
@@ -343,8 +382,7 @@ export function MicromedexClient() {
           </SectionCard>
 
           <SectionCard icon={<Shield className="h-4 w-4" />} title="Contraindications & Precautions" sectionKey="contraindications" defaultOpen={false} openSections={openSections} onToggle={toggleSection}>
-            {d.contraindications_summary ? <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">{d.contraindications_summary}</p>
-              : <p className="text-sm text-muted-foreground italic">No specific contraindications data available.</p>}
+            {d.contraindications_summary ? <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">{d.contraindications_summary}</p> : <p className="text-sm text-muted-foreground italic">No specific contraindications data available.</p>}
           </SectionCard>
 
           <SectionCard icon={<AlertTriangle className="h-4 w-4" />} title="Drug Interactions" sectionKey="interactions" defaultOpen={false} openSections={openSections} onToggle={toggleSection}>
@@ -352,19 +390,14 @@ export function MicromedexClient() {
               <div className="space-y-2">
                 {d.interactions_structured.map((ix, i) => (
                   <div key={i} className="rounded-lg border border-border bg-muted/30 p-3">
-                    <div className="flex items-center gap-2">
-                      <SeverityBadge severity={ix.severity} />
-                      <span className="text-sm font-medium">{ix.interacting_drug_name}</span>
-                    </div>
+                    <div className="flex items-center gap-2"><SeverityBadge severity={ix.severity} /><span className="text-sm font-medium">{ix.interacting_drug_name}</span></div>
                     {ix.mechanism && <p className="text-xs text-muted-foreground mt-1">{ix.mechanism}</p>}
                     {ix.clinical_effect && <p className="text-xs text-muted-foreground/70 mt-0.5">{ix.clinical_effect}</p>}
                   </div>
                 ))}
               </div>
             ) : <p className="text-sm text-muted-foreground italic">No structured interaction data available.</p>}
-            <div className="mt-3 text-xs text-amber-400/80">
-              Coverage: {d.interactions_coverage === "full" ? "Known interactions indexed" : d.interactions_coverage === "partial" ? "Partial data" : "Not available"}
-            </div>
+            <div className="mt-3 text-xs text-amber-400/80">Coverage: {d.interactions_coverage}</div>
           </SectionCard>
 
           <SectionCard icon={<Droplets className="h-4 w-4" />} title="Dose Adjustments (Renal/Hepatic)" sectionKey="adjustments" defaultOpen={false} openSections={openSections} onToggle={toggleSection}>
@@ -372,13 +405,7 @@ export function MicromedexClient() {
               <div className="space-y-2">
                 {d.dose_adjustments_structured.map((adj, i) => (
                   <div key={i} className="rounded-lg border border-border bg-muted/30 p-3">
-                    <div className="flex items-center gap-2">
-                      <span className={cn("text-[10px] px-1.5 py-0.5 rounded font-medium",
-                        adj.adjustment_type === "renal" ? "bg-amber-500/15 text-amber-400 border border-amber-500/20" :
-                        adj.adjustment_type === "hepatic" ? "bg-purple-500/15 text-purple-400 border border-purple-500/20" :
-                        "bg-blue-500/15 text-blue-400 border border-blue-500/20"
-                      )}>{adj.adjustment_type}</span>
-                    </div>
+                    <div className="flex items-center gap-2"><span className={cn("text-[10px] px-1.5 py-0.5 rounded font-medium", adj.adjustment_type === "renal" ? "bg-amber-500/15 text-amber-400 border border-amber-500/20" : adj.adjustment_type === "hepatic" ? "bg-purple-500/15 text-purple-400 border border-purple-500/20" : "bg-blue-500/15 text-blue-400 border border-blue-500/20")}>{adj.adjustment_type}</span></div>
                     <p className="text-xs text-muted-foreground mt-1">{adj.criteria}</p>
                     <p className="text-xs text-muted-foreground/70 mt-0.5">{adj.adjustment}</p>
                   </div>
@@ -388,79 +415,34 @@ export function MicromedexClient() {
           </SectionCard>
 
           <SectionCard icon={<Activity className="h-4 w-4" />} title="Pharmacokinetics" sectionKey="pk" defaultOpen={false} openSections={openSections} onToggle={toggleSection}>
-            {d.pharmacokinetics_summary ? <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">{d.pharmacokinetics_summary}</p>
-              : <p className="text-sm text-muted-foreground italic">No pharmacokinetics data available.</p>}
+            {d.pharmacokinetics_summary ? <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">{d.pharmacokinetics_summary}</p> : <p className="text-sm text-muted-foreground italic">No pharmacokinetics data available.</p>}
           </SectionCard>
         </div>
 
-        {/* Sidebar: Calculator */}
         <div className="space-y-4">
           <div className="rounded-xl border border-border bg-card p-4 sticky top-4 space-y-3">
-            <h3 className="text-sm font-semibold flex items-center gap-2">
-              <FlaskConical className="h-4 w-4 text-neon" /> Dosing Calculator
-            </h3>
+            <h3 className="text-sm font-semibold flex items-center gap-2"><FlaskConical className="h-4 w-4 text-neon" /> Dosing Calculator</h3>
             <div className="space-y-3">
-              <div className="space-y-1">
-                <label className="text-[11px] text-muted-foreground font-medium">Weight (kg)</label>
-                <input type="number" value={calcWeight} onChange={(e) => setCalcWeight(parseFloat(e.target.value) || 0)}
-                  className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm font-mono" min={0.1} step={0.1} />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[11px] text-muted-foreground font-medium">Age (months)</label>
-                <input type="number" value={calcAge} onChange={(e) => setCalcAge(parseFloat(e.target.value) || 0)}
-                  className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm font-mono" min={0} max={240} />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[11px] text-muted-foreground font-medium">Route</label>
-                <select value={calcRoute} onChange={(e) => setCalcRoute(e.target.value)}
-                  className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm">
-                  <option value="PO">PO (Oral)</option><option value="IV">IV (Intravenous)</option>
-                  <option value="IM">IM (Intramuscular)</option><option value="SC">SC (Subcutaneous)</option>
-                  <option value="PR">PR (Rectal)</option><option value="TOP">TOP (Topical)</option>
-                  <option value="INH">INH (Inhalation)</option>
-                </select>
-              </div>
-              <div className="space-y-1">
-                <label className="text-[11px] text-muted-foreground font-medium">Indication (optional)</label>
-                <input type="text" value={calcIndication} onChange={(e) => setCalcIndication(e.target.value)}
-                  placeholder="e.g. otitis media" className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm" />
-              </div>
-              <button onClick={doCalc} disabled={calcLoading || !calcWeight}
-                className="w-full rounded-lg bg-neon text-black py-2.5 text-sm font-semibold hover:opacity-85 transition-opacity disabled:opacity-40">
-                {calcLoading ? "Calculating..." : "Calculate Dose"}
-              </button>
+              <div className="space-y-1"><label className="text-[11px] text-muted-foreground font-medium">Weight (kg)</label><input type="number" value={calcWeight} onChange={(e) => setCalcWeight(parseFloat(e.target.value) || 0)} className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm font-mono" min={0.1} step={0.1} /></div>
+              <div className="space-y-1"><label className="text-[11px] text-muted-foreground font-medium">Age (months)</label><input type="number" value={calcAge} onChange={(e) => setCalcAge(parseFloat(e.target.value) || 0)} className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm font-mono" min={0} max={240} /></div>
+              <div className="space-y-1"><label className="text-[11px] text-muted-foreground font-medium">Route</label><select value={calcRoute} onChange={(e) => setCalcRoute(e.target.value)} className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm"><option value="PO">PO (Oral)</option><option value="IV">IV (Intravenous)</option><option value="IM">IM (Intramuscular)</option><option value="SC">SC (Subcutaneous)</option><option value="PR">PR (Rectal)</option><option value="TOP">TOP (Topical)</option><option value="INH">INH (Inhalation)</option></select></div>
+              <div className="space-y-1"><label className="text-[11px] text-muted-foreground font-medium">Indication (optional)</label><input type="text" value={calcIndication} onChange={(e) => setCalcIndication(e.target.value)} placeholder="e.g. otitis media" className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm" /></div>
+              <button onClick={doCalc} disabled={calcLoading || !calcWeight} className="w-full rounded-lg bg-neon text-black py-2.5 text-sm font-semibold hover:opacity-85 transition-opacity disabled:opacity-40">{calcLoading ? "Calculating..." : "Calculate Dose"}</button>
             </div>
 
             {calcResult && (
-              <div className={cn("rounded-lg border p-3 space-y-2",
-                calcResult.error ? "border-red-500/20 bg-red-500/5" :
-                calcResult.calculated_dose ? "border-emerald-500/20 bg-emerald-500/5" :
-                "border-amber-500/20 bg-amber-500/5"
-              )}>
-                {calcResult.error ? (
-                  <p className="text-xs text-red-400">{calcResult.error}</p>
-                ) : calcResult.calculated_dose ? (
+              <div className={cn("rounded-lg border p-3 space-y-2", calcResult.calculated_dose ? "border-emerald-500/20 bg-emerald-500/5" : "border-amber-500/20 bg-amber-500/5")}>
+                {calcResult.calculated_dose ? (
                   <>
                     <div className="text-xl font-bold text-emerald-400">{calcResult.calculated_dose}</div>
                     {calcResult.dose_per_kg && <div className="text-xs text-muted-foreground">{calcResult.dose_per_kg}</div>}
                     {calcResult.frequency && <div className="text-xs text-muted-foreground">⏰ {calcResult.frequency}</div>}
                     {calcResult.max_single_dose && <div className="text-xs text-muted-foreground">⬆️ Max single: {calcResult.max_single_dose}</div>}
                     {calcResult.max_daily_dose && <div className="text-xs text-muted-foreground">📈 Max daily: {calcResult.max_daily_dose}</div>}
-                    {calcResult.warnings?.length > 0 && (
-                      <div className="text-xs text-amber-400 space-y-0.5">
-                        {calcResult.warnings.map((w: string, i: number) => <p key={i}>{w}</p>)}
-                      </div>
-                    )}
+                    {calcResult.warnings?.length > 0 && <div className="text-xs text-amber-400 space-y-0.5">{calcResult.warnings.map((w: string, i: number) => <p key={i}>{w}</p>)}</div>}
                   </>
-                ) : (
-                  <div className="text-xs text-muted-foreground italic">Structured dosing not available for this drug/route/indication.</div>
-                )}
-                {calcResult?.source_text && calcResult?.source_text !== "Raw text" && (
-                  <details className="mt-2">
-                    <summary className="text-[10px] text-muted-foreground cursor-pointer hover:text-foreground">Source text</summary>
-                    <p className="text-[10px] text-muted-foreground/70 mt-1 max-h-24 overflow-y-auto whitespace-pre-wrap">{calcResult.source_text}</p>
-                  </details>
-                )}
+                ) : <div className="text-xs text-muted-foreground italic">Structured dosing not available for this drug/route/indication.</div>}
+                {calcResult?.source_text && <details className="mt-2"><summary className="text-[10px] text-muted-foreground cursor-pointer hover:text-foreground">Source text</summary><p className="text-[10px] text-muted-foreground/70 mt-1 max-h-24 overflow-y-auto whitespace-pre-wrap">{calcResult.source_text}</p></details>}
               </div>
             )}
             <p className="text-[10px] text-amber-400/60">⚠️ Always verify with current clinical guidelines.</p>
@@ -471,22 +453,11 @@ export function MicromedexClient() {
   );
 }
 
-/* ── Sub-components ────────────────────────────────────────────────── */
-
 function CompletenessBadge({ score }: { score: number }) {
-  return (
-    <span className={cn("text-[10px] px-1.5 py-0.5 rounded border font-mono font-bold",
-      score >= 80 ? "bg-green-500/10 border-green-500/20 text-green-400" :
-      score >= 50 ? "bg-amber-500/10 border-amber-500/20 text-amber-400" :
-      "bg-red-500/10 border-red-500/20 text-red-400"
-    )}>Data: {score}%</span>
-  );
+  return <span className={cn("text-[10px] px-1.5 py-0.5 rounded border font-mono font-bold", score >= 80 ? "bg-green-500/10 border-green-500/20 text-green-400" : score >= 50 ? "bg-amber-500/10 border-amber-500/20 text-amber-400" : "bg-red-500/10 border-red-500/20 text-red-400")}>Data: {score}%</span>;
 }
 
-function SectionCard({ icon, title, sectionKey, defaultOpen, openSections, onToggle, children }: {
-  icon: React.ReactNode; title: string; sectionKey: string; defaultOpen: boolean;
-  openSections: Record<string, boolean>; onToggle: (key: string) => void; children: React.ReactNode;
-}) {
+function SectionCard({ icon, title, sectionKey, defaultOpen, openSections, onToggle, children }: { icon: React.ReactNode; title: string; sectionKey: string; defaultOpen: boolean; openSections: Record<string, boolean>; onToggle: (key: string) => void; children: React.ReactNode }) {
   const isOpen = openSections[sectionKey] ?? defaultOpen;
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
@@ -502,37 +473,12 @@ function SectionCard({ icon, title, sectionKey, defaultOpen, openSections, onTog
 function StructuredIndicationsTable({ data }: { data: Indication[] }) {
   if (!data || data.length === 0) return <p className="text-sm text-muted-foreground italic">No structured indication data.</p>;
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-xs">
-        <thead><tr className="border-b border-border">
-          <th className="text-left py-2 pr-3 text-muted-foreground font-medium">Indication</th>
-          <th className="text-left py-2 pr-3 text-muted-foreground font-medium">Route</th>
-          <th className="text-left py-2 pr-3 text-muted-foreground font-medium">Dose</th>
-          <th className="text-left py-2 pr-3 text-muted-foreground font-medium">Frequency</th>
-          <th className="text-left py-2 text-muted-foreground font-medium">Max</th>
-        </tr></thead>
-        <tbody>
-          {data.map((ind, i) => (
-            <tr key={i} className="border-b border-border/50 last:border-0">
-              <td className="py-2 pr-3 font-medium">{ind.indication || "General"}</td>
-              <td className="py-2 pr-3"><span className="px-1.5 py-0.5 rounded bg-muted">{ind.route || "—"}</span></td>
-              <td className="py-2 pr-3 font-mono">{ind.dose_per_kg ? `${ind.dose_per_kg} ${ind.dose_unit || 'mg'}/kg` : "—"}</td>
-              <td className="py-2 pr-3 font-mono">{ind.dose_frequency || "—"}</td>
-              <td className="py-2 font-mono">{ind.max_single_dose ? `${ind.max_single_dose} ${ind.dose_unit || 'mg'}` : "—"}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <div className="overflow-x-auto"><table className="w-full text-xs"><thead><tr className="border-b border-border"><th className="text-left py-2 pr-3 text-muted-foreground font-medium">Indication</th><th className="text-left py-2 pr-3 text-muted-foreground font-medium">Route</th><th className="text-left py-2 pr-3 text-muted-foreground font-medium">Dose</th><th className="text-left py-2 pr-3 text-muted-foreground font-medium">Frequency</th><th className="text-left py-2 text-muted-foreground font-medium">Max</th></tr></thead><tbody>{data.map((ind, i) => <tr key={i} className="border-b border-border/50 last:border-0"><td className="py-2 pr-3 font-medium">{ind.indication || "General"}</td><td className="py-2 pr-3"><span className="px-1.5 py-0.5 rounded bg-muted">{ind.route || "—"}</span></td><td className="py-2 pr-3 font-mono">{ind.dose_per_kg ? `${ind.dose_per_kg} ${ind.dose_unit || 'mg'}/kg` : "—"}</td><td className="py-2 pr-3 font-mono">{ind.dose_frequency || "—"}</td><td className="py-2 font-mono">{ind.max_single_dose ? `${ind.max_single_dose} ${ind.dose_unit || 'mg'}` : "—"}</td></tr>)}</tbody></table></div>
   );
 }
 
 function SeverityBadge({ severity }: { severity: string }) {
-  const c: Record<string, string> = {
-    contraindicated: "bg-red-500/15 border-red-500/30 text-red-400", severe: "bg-red-500/15 border-red-500/30 text-red-400",
-    high: "bg-orange-500/15 border-orange-500/30 text-orange-400", moderate: "bg-amber-500/15 border-amber-500/30 text-amber-400",
-    mild: "bg-yellow-500/10 border-yellow-500/20 text-yellow-400", unknown: "bg-muted text-muted-foreground border-border",
-  };
+  const c: Record<string, string> = { contraindicated: "bg-red-500/15 border-red-500/30 text-red-400", severe: "bg-red-500/15 border-red-500/30 text-red-400", high: "bg-orange-500/15 border-orange-500/30 text-orange-400", moderate: "bg-amber-500/15 border-amber-500/30 text-amber-400", mild: "bg-yellow-500/10 border-yellow-500/20 text-yellow-400", unknown: "bg-muted text-muted-foreground border-border" };
   const l: Record<string, string> = { contraindicated: "Contraindicated", high: "High", moderate: "Moderate", mild: "Mild", severe: "Severe" };
   return <span className={cn("text-[10px] px-1.5 py-0.5 rounded border font-medium", c[severity.toLowerCase()] || c.unknown)}>{l[severity.toLowerCase()] || severity}</span>;
 }
