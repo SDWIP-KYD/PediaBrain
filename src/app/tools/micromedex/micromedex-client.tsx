@@ -102,7 +102,23 @@ export function MicromedexClient() {
     setLoading(true); setError(""); setNotFound(null);
     try {
       const data = await apiFetch<{ results: DrugSummary[] }>(`/search?q=${encodeURIComponent(query)}&limit=30`);
-      setResults(data.results);
+      if (data.results.length === 0) {
+        // Trigger AI correction
+        const correction = await apiFetch<{ corrected: string | null; suggestions: DrugSummary[] }>("/ai-correct", {
+          method: "POST",
+          body: JSON.stringify({ query }),
+        });
+        if (correction.suggestions.length > 0) {
+          setResults(correction.suggestions);
+          if (correction.corrected) {
+             setNotFound({ suggestions: [`Did you mean "${correction.corrected}"? Showing results for it.`] });
+          }
+        } else {
+          setNotFound({ suggestions: ["Tidak ditemukan. Coba lagi dengan nama obat yang benar."] });
+        }
+      } else {
+        setResults(data.results);
+      }
     } catch (e: any) {
       setError(e.message || "Search failed");
       setResults([]);
@@ -201,6 +217,12 @@ export function MicromedexClient() {
         </div>
 
         {error && <div className="rounded-xl border border-red-500/30 bg-red-500/5 p-3 text-xs text-red-400">{error}</div>}
+
+                {notFound?.suggestions && (
+                  <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-3 text-xs text-blue-300">
+                    {notFound.suggestions.map((s, i) => <div key={i}>{s}</div>)}
+                  </div>
+                )}
 
         {results.length > 0 && (
           <div className="space-y-2">
