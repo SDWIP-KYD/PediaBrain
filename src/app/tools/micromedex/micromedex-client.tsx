@@ -1,33 +1,29 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePatient } from "../components/patient-context";
 import { cn } from "@/lib/utils";
 import { Search, FlaskConical, AlertTriangle, Droplets, Pill, Activity, ArrowLeft, ChevronDown, ChevronUp, BookOpen, Shield } from "lucide-react";
 
 /* ── Types ─────────────────────────────────────────────────────────── */
 interface DrugSummary {
-  id: number; name: string; drug_class: string; quality_score: number; uses_preview?: string;
-  is_pediatric_approved: number; neonatal_safe: number; is_discontinued: number;
+  id: string; name: string; drug_class: string; quality_score: string; uses_preview?: string;
+  is_pediatric_approved: boolean; neonatal_safe: boolean; is_discontinued: boolean;
   completeness_score?: number;
 }
 
 interface Indication {
-  id: number; drug_id: number; indication: string; route: string;
-  age_min_months: number | null; age_max_months: number | null;
-  weight_min_kg: number | null; weight_max_kg: number | null;
-  dose_per_kg: number | null; dose_unit: string; dose_frequency: string;
-  max_single_dose: number | null; max_daily_dose: number | null;
-  is_loading_dose: number; is_neonatal_dose: number; source_text: string | null;
+  id: string; drug_id: string; indication: string; route: string;
+  dose_per_kg: string | null; dose_unit: string; dose_frequency: string;
+  max_single_dose: string | null; max_daily_dose: string | null; source_text: string | null;
 }
 
 interface DrugInteraction {
-  id: number; drug_id: number; interacting_drug_name: string;
+  id: string; drug_id: string; interacting_drug_name: string;
   severity: string; mechanism: string; clinical_effect: string;
 }
 
 interface DoseAdjustment {
-  id: number; drug_id: number; adjustment_type: string;
+  id: string; drug_id: string; adjustment_type: string;
   criteria: string; adjustment: string; age_group: string; source_text: string;
 }
 
@@ -38,8 +34,8 @@ interface ClinicalContext {
 }
 
 interface DrugDetail {
-  id: number; name: string; drug_class: string; is_pediatric_approved: number;
-  neonatal_safe: number; is_discontinued: number; quality_score: number;
+  id: string; name: string; drug_class: string; is_pediatric_approved: boolean;
+  neonatal_safe: boolean; is_discontinued: boolean; quality_score: string;
   completeness_score?: number; clinical_context?: ClinicalContext;
   dosing_summary: string; uses_summary: string; contraindications_summary: string;
   interactions_summary: string; pharmacokinetics_summary: string;
@@ -53,75 +49,33 @@ interface DrugDetail {
   disclaimer: string;
 }
 
-interface DrugExport {
-  drugs: DrugDetail[];
-  indications: Indication[];
-  interactions: DrugInteraction[];
-  adjustments: DoseAdjustment[];
-}
+/* ── API ──────────────────────────────────────────────────────────── */
+const API_BASE = "/api/micromedex";
 
-/* ── Helpers ───────────────────────────────────────────────────────── */
-const MONITORING_FLAGS: Record<string, string> = {
-  Vancomycin: "AUC/MIC 400-600",
-  Gentamicin: "Peak/Trough levels",
-  Amikacin: "Peak/Trough levels",
-  Theophylline: "Serum levels 5-15 mcg/mL",
-  Phenytoin: "Free/total levels",
-  Lithium: "Serum levels",
-  Digoxin: "Levels 0.5-2 ng/mL",
-};
-
-function normalize(text: string) {
-  return (text || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-}
-
-function buildDetail(drug: DrugDetail, indications: Indication[], interactions: DrugInteraction[], adjustments: DoseAdjustment[]) {
-  const d = { ...drug };
-  const ind = indications.filter(i => i.drug_id === drug.id);
-  const ix = interactions.filter(i => i.drug_id === drug.id);
-  const adj = adjustments.filter(a => a.drug_id === drug.id);
-
-  d.indications_structured = ind;
-  d.interactions_structured = ix;
-  d.dose_adjustments_structured = adj;
-  d.interactions_coverage = ix.length > 0 ? "partial" : "not available";
-  d.completeness_score = Math.round((
-    (d.name ? 1 : 0) + (d.drug_class ? 1 : 0) + (d.uses_summary ? 2 : 0) +
-    (d.dosing_raw ? 2 : 0) + (d.contraindications_raw ? 1 : 0) + (d.interactions_raw ? 1 : 0) +
-    ix.length * 0.5 + adj.length * 0.3
-  ) * 10);
-
-  d.clinical_context = {
-    kids_list_risk: ["antibiotic", "antifungal", "anticonvulsant", "antipsychotic"].includes(normalize(d.drug_class)),
-    interaction_count: ix.length,
-    neonatal_safe: !!d.neonatal_safe,
-    pediatric_approved: !!d.is_pediatric_approved,
-    has_adjustments: adj.length > 0,
-    contra_summary_length: (d.contraindications_raw || "").length,
-    requires_monitoring: MONITORING_FLAGS[d.name],
-  };
-
-  d.dosing_formatted = (d.dosing_raw || "").split(/\n\s*\n/).map(p => p.trim()).filter(Boolean).slice(0, 10).map(p => `• ${p.slice(0, 500)}`).join("\n");
-  d.uses_formatted = (d.uses_raw || "").split(/\n\s*\n/).map(p => p.trim()).filter(Boolean).slice(0, 10).map(p => `• ${p.slice(0, 500)}`).join("\n");
-  d.disclaimer = "⚠️ This is a reference tool. Always verify dosing with current clinical guidelines.";
-  return d;
+async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...init, headers: { "Content-Type": "application/json", ...init?.headers },
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    try { throw new Error(JSON.parse(body).error || JSON.parse(body).detail || `API ${res.status}`); }
+    catch { throw new Error(`API ${res.status}: ${body.slice(0, 200)}`); }
+  }
+  return res.json();
 }
 
 /* ── Main Component ────────────────────────────────────────────────── */
 export function MicromedexClient() {
-  const { weightKg, ageMonths } = usePatient();
-
   const [view, setView] = useState<"search" | "detail">("search");
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<DrugSummary[]>([]);
   const [selected, setSelected] = useState<DrugDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [exportData, setExportData] = useState<DrugExport | null>(null);
   const [notFound, setNotFound] = useState<{ suggestions?: string[] } | null>(null);
 
-  const [calcWeight, setCalcWeight] = useState(weightKg || 10);
-  const [calcAge, setCalcAge] = useState(ageMonths || 24);
+  const [calcWeight, setCalcWeight] = useState(10);
+  const [calcAge, setCalcAge] = useState(24);
   const [calcRoute, setCalcRoute] = useState("PO");
   const [calcIndication, setCalcIndication] = useState("");
   const [calcResult, setCalcResult] = useState<any>(null);
@@ -136,99 +90,74 @@ export function MicromedexClient() {
 
   useEffect(() => {
     setLoading(true);
-    fetch("/drug-index.json")
-      .then(r => r.json())
-      .then((data: DrugExport) => {
-        setExportData(data);
-        setResults(data.drugs.slice(0, 20));
-      })
+    apiFetch<{ results: DrugSummary[] }>("/search?q=&limit=20")
+      .then(() => setResults([]))
       .catch((e: any) => setError(e.message || "Failed to load drug data"))
       .finally(() => setLoading(false));
   }, []);
 
   /* ── Search ── */
-  const doSearch = () => {
-    if (!exportData) return;
-    const q = normalize(query.trim());
-    if (!q) { setResults(exportData.drugs.slice(0, 30)); return; }
-
-    const scored = exportData.drugs
-      .map(drug => {
-        const haystack = normalize(`${drug.name} ${drug.drug_class} ${drug.uses_summary} ${drug.dosing_summary}`);
-        const exact = haystack === q ? 100 : 0;
-        const starts = haystack.startsWith(q) ? 80 : 0;
-        const contains = haystack.includes(q) ? 50 : 0;
-        const fuzzy = q.split(/\s+/).filter(Boolean).reduce((acc, term) => acc + (haystack.includes(term) ? 10 : 0), 0);
-        return { drug, score: exact + starts + contains + fuzzy };
-      })
-      .filter(x => x.score > 0)
-      .sort((a, b) => b.score - a.score || a.drug.name.localeCompare(b.drug.name))
-      .slice(0, 30)
-      .map(x => x.drug);
-
-    setResults(scored);
-    if (scored.length === 0) {
-      const suggestions = exportData.drugs
-        .filter(drug => q.split(/\s+/).some(term => normalize(drug.name).includes(term)))
-        .slice(0, 3)
-        .map(d => d.name);
-      setNotFound({ suggestions });
+  const doSearch = async () => {
+    if (!query.trim()) return;
+    setLoading(true); setError(""); setNotFound(null);
+    try {
+      const data = await apiFetch<{ results: DrugSummary[] }>(`/search?q=${encodeURIComponent(query)}&limit=30`);
+      setResults(data.results);
+    } catch (e: any) {
+      setError(e.message || "Search failed");
+      setResults([]);
     }
+    setLoading(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => { if (e.key === "Enter") doSearch(); };
 
   /* ── Load monograph ── */
-  const loadDrug = (name: string) => {
-    if (!exportData) return;
-    const drug = exportData.drugs.find(d => normalize(d.name) === normalize(name))
-      || exportData.drugs.find(d => normalize(d.name).includes(normalize(name)));
-    if (!drug) {
-      setNotFound({ suggestions: exportData.drugs.slice(0, 3).map(d => d.name) });
-      return;
+  const loadDrug = async (name: string) => {
+    setLoading(true); setError(""); setNotFound(null);
+    try {
+      const drug = await apiFetch<DrugDetail>(`/drugs/${encodeURIComponent(name)}`);
+      setSelected(drug);
+      setView("detail");
+    } catch (e: any) {
+      setNotFound({ suggestions: [] });
     }
-    setSelected(buildDetail(drug, exportData.indications, exportData.interactions, exportData.adjustments));
-    setView("detail");
+    setLoading(false);
   };
 
   /* ── Dosing calc ── */
-  const doCalc = () => {
+  const doCalc = async () => {
     if (!selected || !calcWeight || calcWeight <= 0) return;
     setCalcLoading(true); setCalcResult(null);
-    const indication = selected.indications_structured
-      .filter(i => !calcRoute || !i.route || i.route === calcRoute)
-      .sort((a, b) => (b.dose_per_kg || 0) - (a.dose_per_kg || 0))[0];
-
-    let calculated = null;
-    let warnings: string[] = [];
-    if (indication?.dose_per_kg) {
-      calculated = (indication.dose_per_kg * calcWeight).toFixed(1);
-      if (indication.max_single_dose && calculated && parseFloat(calculated) > indication.max_single_dose) {
-        warnings.push(`⚠️ Calculated exceeds max single (${indication.max_single_dose} ${indication.dose_unit || 'mg'})`);
-        calculated = indication.max_single_dose.toFixed(1);
-      }
-    }
-
-    if (calcAge <= 1 && !selected.neonatal_safe) warnings.push(`⚠️ ${selected.name} — neonatal safety not confirmed`);
-    if (!selected.is_pediatric_approved) warnings.push(`⚠️ ${selected.name} — pediatric approval not established`);
-    if (selected.clinical_context?.kids_list_risk) warnings.push(`⚠️ ${selected.name} — KIDs List risk classification`);
-
-    setCalcResult({
-      calculated_dose: calculated ? `${calculated} ${indication?.dose_unit || 'mg'}` : null,
-      dose_per_kg: indication?.dose_per_kg ? `${indication.dose_per_kg} ${indication.dose_unit || 'mg'}/kg` : null,
-      frequency: indication?.dose_frequency,
-      max_single_dose: indication?.max_single_dose ? `${indication.max_single_dose} ${indication.dose_unit || 'mg'}` : null,
-      max_daily_dose: indication?.max_daily_dose ? `${indication.max_daily_dose} ${indication.dose_unit || 'mg'}/day` : null,
-      warnings: warnings.length ? warnings : ["ℹ️ No dosing data found"],
-      source_text: indication?.source_text,
-    });
+    try {
+      const result = await apiFetch<any>("/dosing", {
+        method: "POST",
+        body: JSON.stringify({
+          drug_name: selected.name,
+          weight_kg: calcWeight,
+          age_months: calcAge || null,
+          route: calcRoute,
+          indication: calcIndication || null,
+        }),
+      });
+      setCalcResult(result);
+    } catch (e: any) { setCalcResult({ error: e.message || "Calculation failed" }); }
     setCalcLoading(false);
   };
 
   const goBack = () => { setView("search"); setSelected(null); setCalcResult(null); setNotFound(null); };
 
   /* ── Classes ── */
-  const classes = exportData ? Array.from(new Map(exportData.drugs.map(d => [d.drug_class, (exportData.drugs.filter(x => x.drug_class === d.drug_class).length)]))).map(([c, count]) => ({ class: c, count })) : [];
+  const [classes, setClasses] = useState<{ class: string; count: number }[]>([]);
+  useEffect(() => {
+    apiFetch<{ results: DrugSummary[] }>("/search?q=antibiotic&limit=50")
+      .then((data) => {
+        const counts = new Map<string, number>();
+        data.results.forEach((d) => counts.set(d.drug_class, (counts.get(d.drug_class) || 0) + 1));
+        setClasses(Array.from(counts.entries()).map(([c, count]) => ({ class: c, count })));
+      })
+      .catch(() => {});
+  }, []);
 
   /* ── Not Found View ── */
   if (view === "detail" && notFound) {
@@ -241,7 +170,6 @@ export function MicromedexClient() {
           <AlertTriangle className="h-10 w-10 text-amber-400 mx-auto" />
           <h2 className="text-lg font-semibold">Drug Not Found</h2>
           <p className="text-sm text-muted-foreground">Not in Micromedex 2026 database</p>
-          {notFound.suggestions?.map((s, i) => <button key={i} onClick={() => { setQuery(s); doSearch(); }} className="block mx-auto text-sm text-neon hover:underline">{s}</button>)}
         </div>
       </div>
     );
@@ -255,7 +183,7 @@ export function MicromedexClient() {
           <BookOpen className="h-5 w-5 text-neon" />
           <div>
             <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Micromedex Drug Reference</h1>
-            <p className="text-xs text-muted-foreground">{exportData ? `${exportData.drugs.length} pediatric drug monographs` : "Loading..."}</p>
+            <p className="text-xs text-muted-foreground">Pediatric drug monographs — Micromedex 2026</p>
           </div>
         </div>
 
@@ -268,7 +196,7 @@ export function MicromedexClient() {
           </div>
           <button onClick={doSearch} disabled={loading || !query.trim()}
             className="rounded-xl px-5 py-3 bg-neon text-black text-sm font-semibold hover:opacity-85 transition-opacity disabled:opacity-40">
-            {loading ? "Loading..." : "Search"}
+            {loading ? "Searching..." : "Search"}
           </button>
         </div>
 
@@ -285,8 +213,8 @@ export function MicromedexClient() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="text-sm font-semibold">{drug.name}</p>
-                        {drug.neonatal_safe === 1 && <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-medium border border-emerald-500/20">Neonatal Safe</span>}
-                        <CompletenessBadge score={drug.completeness_score ?? drug.quality_score} />
+                        {drug.neonatal_safe && <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-medium border border-emerald-500/20">Neonatal Safe</span>}
+                        <CompletenessBadge score={drug.completeness_score ?? Number(drug.quality_score)} />
                       </div>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border">{drug.drug_class}</span>
@@ -306,7 +234,7 @@ export function MicromedexClient() {
           <div className="space-y-2">
             <p className="text-xs text-muted-foreground font-medium">Browse by Drug Class</p>
             <div className="flex flex-wrap gap-2">
-              {classes.filter(c => c.count >= 10).slice(0, 20).map((c) => (
+              {classes.filter(c => c.count >= 5).slice(0, 20).map((c) => (
                 <button key={c.class} onClick={() => { setQuery(c.class || ""); doSearch(); }}
                   className="rounded-lg border border-border bg-card px-3 py-1.5 text-[11px] text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
                   {c.class} <span className="text-neon/60">({c.count})</span>
@@ -338,9 +266,9 @@ export function MicromedexClient() {
           <div>
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-2xl font-bold">{d.name}</h1>
-              {d.neonatal_safe === 1 && <span className="text-xs px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-medium border border-emerald-500/30">Neonatal Safe</span>}
-              {d.is_discontinued === 1 && <span className="text-xs px-2 py-0.5 rounded bg-red-500/15 text-red-400 font-medium border border-red-500/30">Discontinued</span>}
-              <CompletenessBadge score={d.completeness_score ?? d.quality_score} />
+              {d.neonatal_safe && <span className="text-xs px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-medium border border-emerald-500/30">Neonatal Safe</span>}
+              {d.is_discontinued && <span className="text-xs px-2 py-0.5 rounded bg-red-500/15 text-red-400 font-medium border border-red-500/30">Discontinued</span>}
+              <CompletenessBadge score={d.completeness_score ?? Number(d.quality_score)} />
             </div>
             <div className="flex items-center gap-2 mt-2 flex-wrap">
               <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border">{d.drug_class}</span>
@@ -431,8 +359,10 @@ export function MicromedexClient() {
             </div>
 
             {calcResult && (
-              <div className={cn("rounded-lg border p-3 space-y-2", calcResult.calculated_dose ? "border-emerald-500/20 bg-emerald-500/5" : "border-amber-500/20 bg-amber-500/5")}>
-                {calcResult.calculated_dose ? (
+              <div className={cn("rounded-lg border p-3 space-y-2", calcResult.error ? "border-red-500/20 bg-red-500/5" : calcResult.calculated_dose ? "border-emerald-500/20 bg-emerald-500/5" : "border-amber-500/20 bg-amber-500/5")}>
+                {calcResult.error ? (
+                  <p className="text-xs text-red-400">{calcResult.error}</p>
+                ) : calcResult.calculated_dose ? (
                   <>
                     <div className="text-xl font-bold text-emerald-400">{calcResult.calculated_dose}</div>
                     {calcResult.dose_per_kg && <div className="text-xs text-muted-foreground">{calcResult.dose_per_kg}</div>}
@@ -441,7 +371,9 @@ export function MicromedexClient() {
                     {calcResult.max_daily_dose && <div className="text-xs text-muted-foreground">📈 Max daily: {calcResult.max_daily_dose}</div>}
                     {calcResult.warnings?.length > 0 && <div className="text-xs text-amber-400 space-y-0.5">{calcResult.warnings.map((w: string, i: number) => <p key={i}>{w}</p>)}</div>}
                   </>
-                ) : <div className="text-xs text-muted-foreground italic">Structured dosing not available for this drug/route/indication.</div>}
+                ) : (
+                  <div className="text-xs text-muted-foreground italic">Structured dosing not available for this drug/route/indication.</div>
+                )}
                 {calcResult?.source_text && <details className="mt-2"><summary className="text-[10px] text-muted-foreground cursor-pointer hover:text-foreground">Source text</summary><p className="text-[10px] text-muted-foreground/70 mt-1 max-h-24 overflow-y-auto whitespace-pre-wrap">{calcResult.source_text}</p></details>}
               </div>
             )}

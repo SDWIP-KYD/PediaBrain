@@ -3,7 +3,6 @@ import {
   uuid,
   varchar,
   text,
-  jsonb,
   timestamp,
   date,
   boolean,
@@ -13,7 +12,7 @@ export const notes = pgTable("notes", {
   id: uuid("id").primaryKey().defaultRandom(),
   title: varchar("title", { length: 255 }).notNull(),
   content: text("content").notNull(),
-  tags: jsonb("tags").notNull().default([]),
+  tags: text("tags").array().notNull().default([]),
   isPinned: boolean("is_pinned").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -43,7 +42,7 @@ export const noteVersions = pgTable("note_versions", {
     .references(() => notes.id, { onDelete: "cascade" }),
   title: varchar("title", { length: 255 }).notNull(),
   content: text("content").notNull(),
-  tags: jsonb("tags").notNull().default([]),
+  tags: text("tags").array().notNull().default([]),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -81,7 +80,7 @@ export const patientVisits = pgTable("patient_visits", {
   diagnosisSecondary: text("diagnosis_secondary"),
   therapy: text("therapy"),
   notes: text("notes"),
-  sections: jsonb("sections"),
+  sections: text("sections").array(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -113,23 +112,30 @@ export const patientMedications = pgTable("patient_medications", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const drugs = pgTable("drugs", {
+export const micromedexDrugs = pgTable("micromedex_drugs", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name", { length: 255 }).notNull(),
   drugClass: varchar("drug_class", { length: 255 }),
   isPediatricApproved: boolean("is_pediatric_approved").default(false),
   neonatalSafe: boolean("neonatal_safe").default(false),
+  isDiscontinued: boolean("is_discontinued").default(false),
   qualityScore: varchar("quality_score", { length: 10 }),
   usesSummary: text("uses_summary"),
+  dosingSummary: text("dosing_summary"),
   dosingRaw: text("dosing_raw"),
+  usesRaw: text("uses_raw"),
+  contraindicationsSummary: text("contraindications_summary"),
   contraindicationsRaw: text("contraindications_raw"),
+  interactionsSummary: text("interactions_summary"),
   interactionsRaw: text("interactions_raw"),
+  pharmacokineticsSummary: text("pharmacokinetics_summary"),
+  pharmacokineticsRaw: text("pharmacokinetics_raw"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const indications = pgTable("indications", {
+export const micromedexIndications = pgTable("micromedex_indications", {
   id: uuid("id").primaryKey().defaultRandom(),
-  drugId: uuid("drug_id").references(() => drugs.id, { onDelete: "cascade" }),
+  drugId: uuid("drug_id").references(() => micromedexDrugs.id, { onDelete: "cascade" }),
   indication: text("indication"),
   route: varchar("route", { length: 50 }),
   dosePerKg: varchar("dose_per_kg", { length: 50 }),
@@ -137,15 +143,27 @@ export const indications = pgTable("indications", {
   doseFrequency: varchar("dose_frequency", { length: 100 }),
   maxSingleDose: varchar("max_single_dose", { length: 50 }),
   maxDailyDose: varchar("max_daily_dose", { length: 50 }),
+  sourceText: text("source_text"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const drugInteractions = pgTable("drug_interactions", {
+export const micromedexDrugInteractions = pgTable("micromedex_drug_interactions", {
   id: uuid("id").primaryKey().defaultRandom(),
-  drugId: uuid("drug_id").references(() => drugs.id, { onDelete: "cascade" }),
+  drugId: uuid("drug_id").references(() => micromedexDrugs.id, { onDelete: "cascade" }),
   interactingDrugName: varchar("interacting_drug_name", { length: 255 }).notNull(),
   severity: varchar("severity", { length: 50 }),
   mechanism: text("mechanism"),
   clinicalEffect: text("clinical_effect"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const micromedexDoseAdjustments = pgTable("micromedex_dose_adjustments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  drugId: uuid("drug_id").references(() => micromedexDrugs.id, { onDelete: "cascade" }),
+  adjustmentType: varchar("adjustment_type", { length: 50 }),
+  criteria: text("criteria"),
+  adjustment: text("adjustment"),
+  ageGroup: varchar("age_group", { length: 100 }),
+  sourceText: text("source_text"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
