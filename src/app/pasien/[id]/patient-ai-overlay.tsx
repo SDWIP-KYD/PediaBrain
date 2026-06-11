@@ -236,24 +236,7 @@ export function PatientAIOverlay({ patientId, patientName }: { patientId: string
       const now = new Date().toISOString().split("T")[0];
       const sections = preview.sections;
 
-      // Save lab results first if any
-      if (preview.labResults && preview.labResults.length > 0) {
-        for (const lab of preview.labResults) {
-          await fetch("/api/lab-extract/save", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              visitId: "", // will be filled after visit creation
-              testName: lab.testName,
-              result: lab.result,
-              unit: lab.unit || "",
-              flag: lab.flag || "normal",
-            }),
-          });
-        }
-      }
-
-      // Create visit
+      // Create visit with labs bundled (createVisit handles both)
       await createVisit({
         patientId,
         visitDate: now,
@@ -263,6 +246,12 @@ export function PatientAIOverlay({ patientId, patientName }: { patientId: string
         diagnosisSecondary: preview.diagnosisSecondary || undefined,
         therapy: sections.terapi || undefined,
         sections: sections as unknown as Record<string, string>,
+        labs: preview.labResults?.map((lab) => ({
+          testName: lab.testName,
+          result: lab.result,
+          unit: lab.unit || "",
+          flag: lab.flag || "normal",
+        })),
       });
 
       setMessages((prev) => [
