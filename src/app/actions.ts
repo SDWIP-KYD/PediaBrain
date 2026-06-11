@@ -16,6 +16,13 @@ async function requireAuth() {
   }
 }
 
+function sectionsToArray(sections?: Record<string, string> | null) {
+  if (!sections) return null;
+  return Object.entries(sections)
+    .map(([key, value]) => `${key}: ${value}`.trim())
+    .filter(Boolean);
+}
+
 export async function createNote(formData: FormData) {
   await requireAuth();
   const title = formData.get("title") as string;
@@ -373,7 +380,7 @@ export async function createVisit(data: {
     diagnosisSecondary: data.diagnosisSecondary || null,
     therapy: data.therapy || null,
     notes: data.notes || null,
-    sections: data.sections || null,
+    sections: sectionsToArray(data.sections),
   }).returning();
 
   if (visit && data.labs && data.labs.length > 0) {
@@ -434,7 +441,7 @@ export async function updateVisit(id: string, data: {
     diagnosisSecondary: data.diagnosisSecondary || null,
     therapy: data.therapy || null,
     notes: data.notes || null,
-    sections: data.sections || null,
+    sections: sectionsToArray(data.sections),
     updatedAt: new Date(),
   }).where(eq(patientVisits.id, id));
   revalidatePath("/pasien");
@@ -904,7 +911,7 @@ export async function createPatientWithVisit(data: {
     diagnosisSecondary: data.visit.diagnosisSecondary || null,
     therapy: data.visit.therapy || null,
     notes: data.visit.notes || null,
-    sections: data.visit.sections || null,
+    sections: sectionsToArray(data.visit.sections),
   }).returning();
 
   if (visit && data.labs && data.labs.length > 0) {
