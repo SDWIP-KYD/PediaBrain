@@ -147,8 +147,35 @@ async function callAI(
     body: JSON.stringify({ model, messages: msgs, temperature: 0.3, max_tokens: 2048 }),
   });
   if (!res.ok) throw new Error(`AI error ${res.status}`);
-  const data = await res.json();
-  return (data?.choices?.[0]?.message?.content ?? "").replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+
+  const contentType = res.headers.get("content-type") || "";
+  if (contentType.includes("text/event-stream") || contentType.includes("stream")) {
+    const { TextDecoder } = await import("util");
+    const decoder = new TextDecoder();
+    let full = "";
+    const reader = res.body!.getReader();
+    const regex = /^data:\s*/;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream: true });
+      for (const line of chunk.split("\n")) {
+        const trimmed = line.trim();
+        if (!trimmed || !trimmed.startsWith("data:")) continue;
+        const jsonStr = trimmed.replace(regex, "").trim();
+        if (jsonStr === "[DONE]" || jsonStr === "") continue;
+        try {
+          const obj = JSON.parse(jsonStr);
+          const delta = obj?.choices?.[0]?.delta?.content;
+          if (delta) full += delta;
+        } catch {}
+      }
+    }
+    return full.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+  } else {
+    const data = await res.json();
+    return (data?.choices?.[0]?.message?.content ?? "").replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+  }
 }
 
 export async function POST(req: NextRequest) {

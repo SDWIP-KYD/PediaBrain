@@ -8,8 +8,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No image provided" }, { status: 400 });
     }
 
-    // Use the configured AI provider
-    const apiUrl = process.env.AI_API_URL || "https://api.minimax.io/anthropic";
+    const apiUrl = process.env.AI_API_URL || "https://api.minimax.io/v1/chat/completions";
     const apiKey = process.env.AI_API_KEY;
 
     if (!apiKey) {
@@ -23,10 +22,10 @@ export async function POST(req: NextRequest) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": apiKey,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: process.env.AI_MODEL || "MiniMax-Text-01",
+        model: process.env.AI_MODEL || "MiniMax-M3",
         max_tokens: 4000,
         messages: [
           {

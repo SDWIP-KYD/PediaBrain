@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { TextDecoder } from "util";
 
 type ParsedPatient = {
   room: string;
@@ -50,8 +51,34 @@ async function callAI(baseUrl: string, apiKey: string, model: string, systemProm
     body: JSON.stringify({ model, messages: msgs, temperature, max_tokens: maxTokens }),
   });
   if (!res.ok) throw new Error(`AI error ${res.status}`);
-  const data = await res.json();
-  return (data?.choices?.[0]?.message?.content ?? "").replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+
+  const contentType = res.headers.get("content-type") || "";
+  if (contentType.includes("text/event-stream") || contentType.includes("stream")) {
+    const decoder = new TextDecoder();
+    let full = "";
+    const reader = res.body!.getReader();
+    const regex = /^data:\s*/;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream: true });
+      for (const line of chunk.split("\n")) {
+        const trimmed = line.trim();
+        if (!trimmed || !trimmed.startsWith("data:")) continue;
+        const jsonStr = trimmed.replace(regex, "").trim();
+        if (jsonStr === "[DONE]" || jsonStr === "") continue;
+        try {
+          const obj = JSON.parse(jsonStr);
+          const delta = obj?.choices?.[0]?.delta?.content;
+          if (delta) full += delta;
+        } catch {}
+      }
+    }
+    return full.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+  } else {
+    const data = await res.json();
+    return (data?.choices?.[0]?.message?.content ?? "").replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -161,11 +188,14 @@ Output HARUS JSON valid.`;
     const history = Array.isArray(body.history) ? body.history : [];
     const raw = await callAI(baseUrl, apiKey, model, systemPrompt, body.message, history, 4096, 0.1);
     let cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+    cleaned = cleaned.replace(/^[^\{]*/, "").replace(/[^\}]*$/, "").trim();
+    cleaned = cleaned.replace(/[\x00-\x1F\x7F-\x9F]/g, "");
     
     let parsed: { patients: ParsedPatient[] };
     try {
       parsed = JSON.parse(cleaned);
-    } catch {
+    } catch (e) {
+      console.error("DEBUG AI RAW:", cleaned);
       const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         parsed = JSON.parse(jsonMatch[0]);
