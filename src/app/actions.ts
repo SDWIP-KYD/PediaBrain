@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { verifySessionToken } from "@/lib/auth";
 import { notes, followUps, stickyNotes, noteVersions, patients, patientVisits, patientLabResults, patientMedications } from "@/lib/db/schema";
 import { eq, and, or, ilike, sql, asc, desc } from "drizzle-orm";
+import { toArray } from "@/lib/utils";
 
 async function requireAuth() {
   const secret = process.env.SESSION_SECRET;
@@ -226,7 +227,7 @@ export async function globalSearch(query: string) {
   ];
 
   return {
-    notes: noteResults.map((n) => ({ ...n, tags: n.tags as string[] })),
+    notes: noteResults.map((n) => ({ ...n, tags: toArray(n.tags) })),
     followUps: fuResults,
     patients: mergedPatients,
   };

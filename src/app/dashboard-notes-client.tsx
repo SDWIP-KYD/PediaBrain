@@ -8,6 +8,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { NotePopup } from "@/components/note-popup";
 import { NoteDialog } from "@/app/notes/note-dialog";
 import { DashboardMarkdown } from "./dashboard-markdown";
+import { toArray } from "@/lib/utils";
 
 interface NoteRow {
   id: string;
@@ -116,7 +117,7 @@ export function DashboardNotesClient({
                     </h3>
                   </div>
                   <div className="flex gap-1 mb-1.5 flex-wrap">
-                    {(note.tags as string[]).slice(0, 3).map((tag) => (
+                    {toArray(note.tags).slice(0, 3).map((tag) => (
                       <Badge key={tag} variant="secondary" className="text-xs">
                         {tag}
                       </Badge>

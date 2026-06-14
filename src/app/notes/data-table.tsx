@@ -12,6 +12,7 @@ import { Search, Pencil, Trash2, Plus, X, Pin, Download, ChevronLeft, ChevronRig
 import { deleteNote, togglePinNote } from "@/app/actions";
 import { NoteDialog } from "./note-dialog";
 import { MarkdownContent } from "@/components/markdown-content";
+import { toArray } from "@/lib/utils";
 
 interface NoteRow {
   id: string;
@@ -46,7 +47,7 @@ function NoteViewDialog({
               {note.isPinned && <Pin className="h-3.5 w-3.5 text-neon shrink-0" />}
               <DialogTitle className="font-semibold text-base truncate">{note.title}</DialogTitle>
               <div className="hidden sm:flex gap-1 shrink-0">
-                {(note.tags as string[]).slice(0, 3).map((tag) => (
+                {toArray(note.tags).slice(0, 3).map((tag) => (
                   <Badge key={tag} variant="secondary" className="text-[10px]">
                     {tag}
                   </Badge>
@@ -107,7 +108,7 @@ const buildColumns = (canEdit: boolean): ColumnDef<NoteRow>[] => [
     accessorKey: "tags",
     header: "Tags",
     cell: ({ row }) => {
-      const tags = row.getValue("tags") as string[];
+      const tags = toArray(row.getValue("tags"));
       return (
         <div className="hidden sm:flex flex-wrap gap-1">
           {tags.slice(0, 3).map((tag) => (
@@ -238,7 +239,7 @@ export function DataTable({
     globalFilterFn: (row, _columnId, filterValue: string) => {
       const search = filterValue.toLowerCase();
       const title = (row.getValue("title") as string).toLowerCase();
-      const tags = (row.getValue("tags") as string[]) || [];
+      const tags = toArray(row.getValue("tags"));
       const content = row.original.content.toLowerCase();
       return title.includes(search) || tags.some((t) => t.toLowerCase().includes(search)) || content.includes(search);
     },

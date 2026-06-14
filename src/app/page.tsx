@@ -24,6 +24,7 @@ import { CreateFollowUpDialogWrapper } from "./follow-ups/create-dialog-wrapper"
 import { DashboardNotesClient, DashboardPinned } from "./dashboard-notes-client";
 import { AIChatbox } from "@/components/ai-chatbox";
 import { DashboardJadwalDPJP } from "@/components/dashboard-jadwal-dpjp";
+import { toArray } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -111,7 +112,7 @@ export default async function DashboardPage() {
     id: n.id,
     title: n.title,
     content: n.content,
-    tags: n.tags as string[],
+    tags: toArray(n.tags),
     isPinned: n.isPinned,
     updatedAt: n.updatedAt.toISOString(),
   }));
@@ -120,7 +121,7 @@ export default async function DashboardPage() {
     id: n.id,
     title: n.title,
     content: n.content,
-    tags: n.tags as string[],
+    tags: toArray(n.tags),
     isPinned: n.isPinned,
     updatedAt: n.updatedAt.toISOString(),
   }));

@@ -4,6 +4,7 @@ import { verifySessionToken } from "@/lib/auth";
 import { notes } from "@/lib/db/schema";
 import { desc, eq, or, ilike, sql } from "drizzle-orm";
 import { DataTable } from "./data-table";
+import { toArray } from "@/lib/utils";
 
 const PAGE_SIZE_DEFAULT = 25;
 
@@ -63,7 +64,7 @@ export default async function NotesPage({
       id: r.id,
       title: r.title,
       content: r.content,
-      tags: r.tags as string[],
+      tags: toArray(r.tags),
       isPinned: r.isPinned,
       updatedAt: r.updatedAt.toISOString(),
     }));

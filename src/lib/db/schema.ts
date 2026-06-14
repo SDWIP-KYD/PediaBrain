@@ -6,13 +6,14 @@ import {
   timestamp,
   date,
   boolean,
+  jsonb,
 } from "drizzle-orm/pg-core";
 
 export const notes = pgTable("notes", {
   id: uuid("id").primaryKey().defaultRandom(),
   title: varchar("title", { length: 255 }).notNull(),
   content: text("content").notNull(),
-  tags: text("tags").array().notNull().default([]),
+  tags: jsonb("tags").$type<string[]>().notNull().default([]),
   isPinned: boolean("is_pinned").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -42,7 +43,7 @@ export const noteVersions = pgTable("note_versions", {
     .references(() => notes.id, { onDelete: "cascade" }),
   title: varchar("title", { length: 255 }).notNull(),
   content: text("content").notNull(),
-  tags: text("tags").array().notNull().default([]),
+  tags: jsonb("tags").$type<string[]>().notNull().default([]),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -80,7 +81,7 @@ export const patientVisits = pgTable("patient_visits", {
   diagnosisSecondary: text("diagnosis_secondary"),
   therapy: text("therapy"),
   notes: text("notes"),
-  sections: text("sections").array(),
+  sections: jsonb("sections").$type<string[]>(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

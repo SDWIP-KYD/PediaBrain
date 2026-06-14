@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Pin, Download, Pencil, X, ExternalLink } from "lucide-react";
 import { MarkdownContent } from "@/components/markdown-content";
+import { toArray } from "@/lib/utils";
 
 interface NoteRow {
   id: string;
@@ -53,7 +54,7 @@ export function NotePopup({
               {note.isPinned && <Pin className="h-3.5 w-3.5 text-neon shrink-0" />}
               <DialogTitle className="font-semibold text-base truncate">{note.title}</DialogTitle>
               <div className="hidden sm:flex gap-1 shrink-0">
-                {(note.tags as string[]).slice(0, 3).map((tag) => (
+                {toArray(note.tags).slice(0, 3).map((tag) => (
                   <Badge key={tag} variant="secondary" className="text-[10px]">
                     {tag}
                   </Badge>
