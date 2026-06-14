@@ -23,7 +23,7 @@ export function AIToolboxClient() {
   const [activeTool, setActiveTool] = useState<ToolId>("laporan");
 
   return (
-    <div className="space-y-4 sm:space-y-6 overflow-hidden">
+    <div className="space-y-4 sm:space-y-6">
       <div className="flex items-center gap-2">
         <Link href="/" className={buttonVariants({ variant: "ghost", size: "icon" })}>
           <ArrowLeft className="h-4 w-4" />
@@ -60,8 +60,8 @@ export function AIToolboxClient() {
         })}
       </div>
 
-      {/* Active tool */}
-      <div className="rounded-xl border border-border bg-card p-3 sm:p-4 overflow-hidden">
+      {/* Active tool — fixed height container for mobile */}
+      <div className="rounded-xl border border-border bg-card p-3 sm:p-4 min-h-[calc(100vh-200px)] flex flex-col">
         {activeTool === "laporan" && <LaporanTool />}
         {activeTool === "note" && <NoteTool />}
         {activeTool === "clinical" && <ClinicalTool />}

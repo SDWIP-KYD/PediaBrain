@@ -77,16 +77,16 @@ export function NoteTool() {
   }
 
   return (
-    <div className="flex gap-3 min-h-[400px]">
+    <div className="flex flex-col lg:flex-row gap-3 flex-1 h-full">
       <SessionList sessions={sessions} activeId={activeId} onSelect={() => {}} onNew={handleNew} onDelete={deleteSession} onRename={renameSession} />
-      <div className="flex-1 space-y-3 min-w-0">
+      <div className="flex-1 flex flex-col min-w-0">
         <div className="flex items-center gap-2 mb-2">
           <ClipboardList className="h-4 w-4 text-blue-400" />
           <h2 className="text-sm font-semibold">Notes</h2>
         </div>
         <p className="text-xs text-muted-foreground">Buat catatan medis interaktif. Auto-title & auto-tag.</p>
 
-        <div ref={scrollRef} className="max-h-[200px] overflow-y-auto space-y-2 p-2 rounded-lg bg-muted/10">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-2 p-2 rounded-lg bg-muted/10">
           {messages.length === 0 && <p className="text-xs text-muted-foreground text-center py-4">"Catatan: An. Budi 5 thn, demam 3 hari, bronkitis"</p>}
           {messages.map((m, i) => (
             <div key={i} className={m.role === "user" ? "text-right" : "text-left"}>

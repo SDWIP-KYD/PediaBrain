@@ -4,6 +4,7 @@ import { Sidebar } from "@/components/sidebar";
 import { HeaderNav, BottomNav } from "@/components/navbar";
 import { GlobalSearch } from "@/components/global-search";
 import { QuickCapture } from "@/components/quick-capture";
+import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
 import { Brain } from "lucide-react";
 import Link from "next/link";
 import "./globals.css";
@@ -67,6 +68,7 @@ export default function RootLayout({
           </main>
         </div>
         <QuickCapture />
+        <KeyboardShortcuts />
         <BottomNav />
       </body>
     </html>

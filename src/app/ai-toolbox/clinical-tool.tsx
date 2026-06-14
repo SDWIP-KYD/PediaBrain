@@ -39,16 +39,16 @@ export function ClinicalTool() {
   }
 
   return (
-    <div className="flex gap-3 min-h-[400px]">
+    <div className="flex flex-col lg:flex-row gap-3 flex-1 h-full">
       <SessionList sessions={sessions} activeId={activeId} onSelect={() => {}} onNew={createSession} onDelete={deleteSession} onRename={renameSession} />
-      <div className="flex-1 space-y-3 min-w-0">
+      <div className="flex-1 flex flex-col min-w-0">
         <div className="flex items-center gap-2 mb-2">
           <Stethoscope className="h-4 w-4 text-green-400" />
           <h2 className="text-sm font-semibold">Clinical Assistant</h2>
         </div>
         <p className="text-xs text-muted-foreground">Tanya seputar diagnosis, terapi, dosis, evidence-based medicine.</p>
 
-        <div ref={scrollRef} className="max-h-[300px] overflow-y-auto space-y-2 p-2 rounded-lg bg-muted/10">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-2 p-2 rounded-lg bg-muted/10">
           {messages.length === 0 && <p className="text-xs text-muted-foreground text-center py-4">"Bedanya bronkitis dan pneumonia pada anak?"</p>}
           {messages.map((m, i) => (
             <div key={i} className={m.role === "user" ? "text-right" : "text-left"}>
