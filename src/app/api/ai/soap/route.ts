@@ -144,7 +144,7 @@ async function callAI(
   const res = await fetch(`${baseUrl.replace(/\/$/, "")}/chat/completions`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({ model, messages: msgs, temperature: 0.3, max_tokens: 2048 }),
+    body: JSON.stringify({ model, messages: msgs, temperature: 0.3, max_tokens: 2048, stream: false }),
   });
   if (!res.ok) throw new Error(`AI error ${res.status}`);
 

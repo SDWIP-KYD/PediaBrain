@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         model: process.env.AI_MODEL || "MiniMax-M3",
         max_tokens: 4000,
+        stream: false,
         messages: [
           {
             role: "user",

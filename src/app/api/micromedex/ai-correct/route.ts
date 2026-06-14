@@ -40,6 +40,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         model: "gpt-5.4-mini",
         max_tokens: 150,
+        stream: false,
         temperature: 0,
         messages: [
           {

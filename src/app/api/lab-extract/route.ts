@@ -61,6 +61,7 @@ Rules:
       body: JSON.stringify({
         model: "gpt-5.4-mini",
         max_tokens: 4000,
+        stream: false,
         messages: [
           {
             role: "user",
