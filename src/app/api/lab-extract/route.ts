@@ -115,7 +115,7 @@ Rules:
 
     const apiKey = process.env.TIANYUAI_API_KEY;
     const apiUrl = process.env.TIANYUAI_BASE_URL;
-    const model = "gpt-5.4-mini";
+    const model = process.env.TIANYUAI_MODEL || "gpt-5.4-mini";
 
     if (!apiKey || !apiUrl) {
       return NextResponse.json(

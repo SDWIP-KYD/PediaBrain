@@ -129,13 +129,6 @@ export async function deleteFollowUp(id: string) {
   revalidatePath("/");
 }
 
-export async function saveStickyNote(formData: FormData) {
-  const content = formData.get("content") as string;
-  if (!content?.trim()) return;
-  await db.insert(stickyNotes).values({ content: content.trim() });
-  revalidatePath("/");
-}
-
 export async function createOrUpdateSticky(content: string) {
   if (!content?.trim()) return null;
   const existing = await db.select().from(stickyNotes).orderBy(desc(stickyNotes.updatedAt)).limit(1);
@@ -148,11 +141,6 @@ export async function createOrUpdateSticky(content: string) {
     revalidatePath("/");
     return inserted.id;
   }
-}
-
-export async function updateStickyNote(id: string, content: string) {
-  await db.update(stickyNotes).set({ content, updatedAt: new Date() }).where(eq(stickyNotes.id, id));
-  revalidatePath("/");
 }
 
 export async function deleteStickyNote(id: string) {
@@ -510,12 +498,6 @@ export async function updatePatientNotes(id: string, notes: string | null) {
 
 export async function dischargePatient(id: string) {
   await db.update(patients).set({ status: "pulang", room: null, bed: null, updatedAt: new Date() }).where(eq(patients.id, id));
-  revalidatePath("/pasien/kanban");
-  revalidatePath("/pasien");
-}
-
-export async function admitPatient(id: string) {
-  await db.update(patients).set({ status: "rawat_inap", updatedAt: new Date() }).where(eq(patients.id, id));
   revalidatePath("/pasien/kanban");
   revalidatePath("/pasien");
 }

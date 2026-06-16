@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const model = "gpt-5.4-mini";
+    const model = process.env.TIANYUAI_MODEL || "gpt-5.4-mini";
 
     const systemPrompt =
       "Anda adalah dokter spesialis anak (pediatrician) yang membantu menginterpretasikan hasil laboratorium dan memberikan analisis klinis. Jawab dalam Bahasa Indonesia yang jelas dan profesional.";

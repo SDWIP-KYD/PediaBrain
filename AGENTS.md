@@ -119,7 +119,7 @@ npx next build          # Build test
 
 ## 🛠️ Development Stack
 
-- **Frontend:** Next.js 15 (App Router), TypeScript, Tailwind CSS, Shadcn UI
+- **Frontend:** Next.js 16 (App Router), TypeScript, Tailwind CSS, Shadcn UI
 - **Backend:** Next.js API Routes
 - **Database:** Neon Postgres (PostgreSQL), Drizzle ORM
 - **Deployment:** Vercel
