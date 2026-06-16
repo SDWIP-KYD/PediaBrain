@@ -1,15 +1,46 @@
 import { NextRequest, NextResponse } from "next/server";
 import { TextDecoder } from "util";
 
+const SYSTEM_PROMPTS: Record<string, string> = {
+  note: `Anda adalah asisten dokter anak yang membantu membuat catatan medis.
+
+TUGAS: Buat catatan medis terstruktur dari input user dalam Bahasa Indonesia.
+
+Output HARUS berupa JSON (tanpa markdown, tanpa teks lain):
+{
+  "title": "judul catatan yang deskriptif",
+  "content": "isi catatan lengkap dan profesional dalam Bahasa Indonesia, gunakan format markdown jika diperlukan",
+  "tags": ["tag1", "tag2", "tag3"]
+}
+
+Jika user meminta revisi, update title/content/tags sesuai permintaan.`,
+  laporan: `Anda adalah asisten dokter anak yang mengekstrak data pasien dari laporan.
+
+TUGAS: Ekstrak data pasien dari teks laporan ke JSON.
+
+Output HARUS berupa JSON (tanpa markdown, tanpa teks lain):
+{
+  "patient": { "name": "...", "medical_record_no": "...", "birth_date": "YYYY-MM-DD", "sex": "L/P" },
+  "visit": { "visit_date": "YYYY-MM-DD", "anamnesis": "...", "physical_exam": "...", "diagnosis_primary": "...", "diagnosis_secondary": "...", "therapy": "..." },
+  "sections": { "subjektif": "...", "objektif": "...", "assesment": "...", "terapi": "..." }
+}`,
+  clinical: `Anda adalah dokter spesialis anak (pediatrician) yang membantu menjawab pertanyaan klinis. Jawab dalam Bahasa Indonesia yang jelas dan profesional.`,
+  general: `Anda adalah asisten medis yang membantu menjawab pertanyaan umum. Jawab dalam Bahasa Indonesia yang jelas dan profesional.`,
+};
+
+const DEFAULT_SYSTEM = `Anda adalah dokter spesialis anak (pediatrician) yang membantu menginterpretasikan hasil laboratorium dan memberikan analisis klinis. Jawab dalam Bahasa Indonesia yang jelas dan profesional.`;
+
 async function callAI(
   baseUrl: string,
   apiKey: string,
   model: string,
   systemPrompt: string,
   userMessage: string,
+  history: { role: string; content: string }[] = [],
 ): Promise<string> {
   const msgs = [
     { role: "system", content: systemPrompt },
+    ...history.filter((h) => h.role === "user" || h.role === "assistant"),
     { role: "user", content: userMessage },
   ];
 
@@ -66,9 +97,30 @@ async function callAI(
   }
 }
 
+function tryParseJSON(raw: string): unknown {
+  const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+  if (cleaned.startsWith("{") || cleaned.startsWith("[")) {
+    try {
+      return JSON.parse(cleaned);
+    } catch {
+      // fall through
+    }
+  }
+  const braceMatch = raw.match(/\{[\s\S]*\}/);
+  if (braceMatch) {
+    try {
+      return JSON.parse(braceMatch[0]);
+    } catch {
+      // not valid JSON
+    }
+  }
+  return null;
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { message } = await req.json();
+    const body = await req.json();
+    const { message, history = [], intent = "general" } = body;
 
     if (!message) {
       return NextResponse.json({ error: "No message" }, { status: 400 });
@@ -85,12 +137,19 @@ export async function POST(req: NextRequest) {
     }
 
     const model = process.env.TIANYUAI_MODEL || "gpt-5.4-mini";
+    const systemPrompt = SYSTEM_PROMPTS[intent] || DEFAULT_SYSTEM;
 
-    const systemPrompt =
-      "Anda adalah dokter spesialis anak (pediatrician) yang membantu menginterpretasikan hasil laboratorium dan memberikan analisis klinis. Jawab dalam Bahasa Indonesia yang jelas dan profesional.";
+    const raw = await callAI(apiUrl, apiKey, model, systemPrompt, message, history);
 
-    const raw = await callAI(apiUrl, apiKey, model, systemPrompt, message);
+    // For structured intents (note, laporan), try to parse JSON from AI response
+    if (intent === "note" || intent === "laporan") {
+      const parsed = tryParseJSON(raw);
+      if (parsed) {
+        return NextResponse.json({ data: parsed });
+      }
+    }
 
+    // Fallback: return raw reply
     return NextResponse.json({ reply: raw });
   } catch (error) {
     console.error("AI chat error:", error);

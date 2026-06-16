@@ -51,8 +51,11 @@ export function NoteTool() {
         const newDraft: NoteDraft = { title: d.data.title || draft?.title || "Catatan Medis", content: d.data.content || draft?.content || "", tags: d.data.tags || draft?.tags || [] };
         updateDraft(activeId, newDraft);
         updateMessages(activeId, [...newMsgs, { role: "ai", content: "Draft diperbarui. Review, lalu ketik perubahan atau klik Simpan." }]);
+      } else if (d.reply) {
+        // Fallback: treat raw reply as content
+        updateMessages(activeId, [...newMsgs, { role: "ai", content: d.reply }]);
       } else {
-        updateMessages(activeId, [...newMsgs, { role: "ai", content: `❌ ${d.error || "Gagal"}` }]);
+        updateMessages(activeId, [...newMsgs, { role: "ai", content: `❌ ${d.error || "Gagal mendapatkan respons"}` }]);
       }
     } catch (e) {
       updateMessages(activeId, [...newMsgs, { role: "ai", content: `❌ ${e instanceof Error ? e.message : "Error"}` }]);
