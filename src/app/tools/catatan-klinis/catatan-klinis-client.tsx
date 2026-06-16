@@ -93,11 +93,17 @@ export function CatatanKlinisClient() {
   const categories = useMemo(() => getAllCalculatorCategories(), []);
 
   const highlightText = (text: string, terms: string[]) => {
-    let result = text;
+    // Escape HTML entities first to prevent XSS
+    let result = text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
     terms.forEach((w) => {
       if (w.length < 2) return;
       const escaped = w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      result = result.replace(new RegExp(`(${escaped})`, "ig"), `<mark>$1</mark>`);
+      result = result.replace(new RegExp(`(${escaped})`, "ig"), "<mark>$1</mark>");
     });
     return result;
   };

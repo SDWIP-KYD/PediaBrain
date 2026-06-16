@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Pool } from 'pg';
 
-function calcScore(drug: any): number {
+function calcScore(drug: Record<string, unknown>): number {
   const fields: Record<string, number> = {
     name: 1, drug_class: 1, uses_summary: 2, dosing_summary: 2, dosing_raw: 2,
     contraindications_raw: 1, interactions_raw: 1, neonatal_safe: 0.5, is_pediatric_approved: 0.5,
@@ -88,7 +88,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ name
       uses_formatted: formatText(drug.uses_raw),
       disclaimer: '⚠️ This is a reference tool. Always verify dosing with current clinical guidelines.',
     });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : "Unknown error" }, { status: 500 });
   }
 }

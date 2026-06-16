@@ -8,26 +8,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No image provided" }, { status: 400 });
     }
 
-    const apiUrl = process.env.AI_API_URL || "https://api.minimax.io/v1/chat/completions";
+    const apiUrl = process.env.AI_BASE_URL;
     const apiKey = process.env.AI_API_KEY;
 
-    if (!apiKey) {
+    if (!apiKey || !apiUrl) {
       return NextResponse.json(
-        { error: "AI API key not configured" },
+        { error: "AI API key or base URL not configured" },
         { status: 500 }
       );
     }
 
-    const response = await fetch(apiUrl, {
+    const response = await fetch(`${apiUrl.replace(/\/$/, "")}/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: process.env.AI_MODEL || "MiniMax-M3",
+        model: process.env.AI_MODEL || "gemincombo",
         max_tokens: 4000,
-        stream: false,
+        stream: true,
         messages: [
           {
             role: "user",
@@ -55,14 +55,40 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const data = await response.json();
+    const contentType = response.headers.get("content-type") || "";
+    let rawContent = "";
+    if (contentType.includes("text/event-stream") || contentType.includes("stream")) {
+      const { TextDecoder } = await import("util");
+      const decoder = new TextDecoder();
+      let full = "";
+      const reader = response.body!.getReader();
+      const regex = /^data:\s*/;
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        for (const line of chunk.split("\n")) {
+          const trimmed = line.trim();
+          if (!trimmed || !trimmed.startsWith("data:")) continue;
+          const jsonStr = trimmed.replace(regex, "").trim();
+          if (jsonStr === "[DONE]" || jsonStr === "") continue;
+          try {
+            const obj = JSON.parse(jsonStr);
+            const delta = obj?.choices?.[0]?.delta?.content;
+            if (delta) full += delta;
+          } catch {}
+        }
+      }
+      rawContent = full.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+    } else {
+      const data = await response.json();
+      rawContent = data?.choices?.[0]?.message?.content ?? "";
+    }
 
     // Parse the response
-    let results = [];
+    let results: unknown[] = [];
     try {
-      const content = data.content?.[0]?.text || data.choices?.[0]?.message?.content || "";
-      // Try to find JSON array in the response
-      const jsonMatch = content.match(/\[[\s\S]*\]/);
+      const jsonMatch = rawContent.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
         results = JSON.parse(jsonMatch[0]);
       }
@@ -70,7 +96,7 @@ export async function POST(req: NextRequest) {
       console.error("Failed to parse vision response:", e);
     }
 
-    return NextResponse.json({ results, raw: data });
+    return NextResponse.json({ results, raw: rawContent });
   } catch (error) {
     console.error("Vision extract error:", error);
     return NextResponse.json(

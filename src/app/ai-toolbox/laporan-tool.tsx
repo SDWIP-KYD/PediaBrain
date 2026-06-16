@@ -9,7 +9,9 @@ import { useSessions, type ChatMessage } from "@/lib/use-sessions";
 import { SessionList } from "@/components/session-list";
 
 type Sections = Record<string, string>;
-type Data = { sections: Sections; patient: Record<string, string | null>; visit: Record<string, string | null>; labs?: any[]; medications?: any[] };
+type LabResult = Record<string, string>;
+type Medication = Record<string, string>;
+type Data = { sections: Sections; patient: Record<string, string | null>; visit: Record<string, string | null>; labs?: LabResult[]; medications?: Medication[] };
 
 export function LaporanTool() {
   const [input, setInput] = useState("");
@@ -62,7 +64,7 @@ export function LaporanTool() {
     try {
       const r = await createPatientWithVisit({
         patient: { name: preview.patient.name!, birthDate: preview.patient.birth_date || undefined, sex: preview.patient.sex || undefined, medicalRecordNo: preview.patient.medical_record_no || undefined },
-        visit: { visitDate: preview.visit.visit_date as string, anamnesis: preview.visit.anamnesis || undefined, physicalExam: preview.visit.physical_exam || undefined, diagnosisPrimary: preview.visit.diagnosis_primary || undefined, diagnosisSecondary: preview.visit.diagnosis_secondary || undefined, therapy: preview.visit.therapy || undefined, sections: preview.sections as any },
+        visit: { visitDate: preview.visit.visit_date as string, anamnesis: preview.visit.anamnesis || undefined, physicalExam: preview.visit.physical_exam || undefined, diagnosisPrimary: preview.visit.diagnosis_primary || undefined, diagnosisSecondary: preview.visit.diagnosis_secondary || undefined, therapy: preview.visit.therapy || undefined, sections: Array.isArray(preview.sections) ? preview.sections : [preview.sections as unknown as string] },
       });
       if (activeId) updateMessages(activeId, [...messages, { role: "ai", content: `✅ Pasien "${r.patient.name}" berhasil dibuat!` }]);
       setPreview(null);

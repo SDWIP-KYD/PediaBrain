@@ -198,7 +198,8 @@ Format output harus sesuai template SOAP standar.`;
         diagnosisPrimary: diagnosisPrimary || undefined,
         sections: visit,
       });
-      setSavedVisitId((result as any)?.id || "ok");
+      const visitId = result && typeof result === "object" && "id" in result ? (result as { id: string }).id : "ok";
+      setSavedVisitId(visitId);
       setMessages((prev) => [...prev, { role: "system", content: "✅ SOAP berhasil disimpan sebagai kunjungan baru." }]);
     } catch (e) {
       setMessages((prev) => [...prev, { role: "system", content: "❌ Gagal simpan: " + (e instanceof Error ? e.message : "Error") }]);

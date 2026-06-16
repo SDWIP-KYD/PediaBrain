@@ -49,6 +49,18 @@ interface DrugDetail {
   disclaimer: string;
 }
 
+/* ── Dosing Result ───────────────────────────────────────────────── */
+interface CalcResult {
+  error?: string;
+  calculated_dose?: string;
+  dose_per_kg?: string;
+  frequency?: string;
+  max_single_dose?: string;
+  max_daily_dose?: string;
+  warnings?: string[];
+  source_text?: string;
+}
+
 /* ── API ──────────────────────────────────────────────────────────── */
 const API_BASE = "/api/micromedex";
 
@@ -78,7 +90,7 @@ export function MicromedexClient() {
   const [calcAge, setCalcAge] = useState(24);
   const [calcRoute, setCalcRoute] = useState("PO");
   const [calcIndication, setCalcIndication] = useState("");
-  const [calcResult, setCalcResult] = useState<any>(null);
+  const [calcResult, setCalcResult] = useState<CalcResult | null>(null);
   const [calcLoading, setCalcLoading] = useState(false);
 
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
@@ -92,7 +104,7 @@ export function MicromedexClient() {
     setLoading(true);
     apiFetch<{ results: DrugSummary[] }>("/search?q=&limit=20")
       .then(() => setResults([]))
-      .catch((e: any) => setError(e.message || "Failed to load drug data"))
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : "Failed to load drug data"))
       .finally(() => setLoading(false));
   }, []);
 
@@ -119,8 +131,8 @@ export function MicromedexClient() {
       } else {
         setResults(data.results);
       }
-    } catch (e: any) {
-      setError(e.message || "Search failed");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Search failed");
       setResults([]);
     }
     setLoading(false);
@@ -135,7 +147,7 @@ export function MicromedexClient() {
       const drug = await apiFetch<DrugDetail>(`/drugs/${encodeURIComponent(name)}`);
       setSelected(drug);
       setView("detail");
-    } catch (e: any) {
+    } catch (e: unknown) {
       setNotFound({ suggestions: [] });
     }
     setLoading(false);
@@ -146,7 +158,7 @@ export function MicromedexClient() {
     if (!selected || !calcWeight || calcWeight <= 0) return;
     setCalcLoading(true); setCalcResult(null);
     try {
-      const result = await apiFetch<any>("/dosing", {
+      const result = await apiFetch<CalcResult>("/dosing", {
         method: "POST",
         body: JSON.stringify({
           drug_name: selected.name,
@@ -157,7 +169,7 @@ export function MicromedexClient() {
         }),
       });
       setCalcResult(result);
-    } catch (e: any) { setCalcResult({ error: e.message || "Calculation failed" }); }
+    } catch (e: unknown) { setCalcResult({ error: e instanceof Error ? e.message : "Calculation failed" }); }
     setCalcLoading(false);
   };
 

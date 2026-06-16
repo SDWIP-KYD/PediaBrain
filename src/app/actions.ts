@@ -626,7 +626,7 @@ export async function bulkSyncPatients(input: BulkSyncInput): Promise<BulkSyncRe
       });
     } else {
       const updated: string[] = [];
-      const updateData: Record<string, unknown> = { updatedAt: new Date() };
+      const updateData: Partial<typeof patients.$inferInsert> = { updatedAt: new Date() };
 
       if (found.room !== inp.room) {
         updated.push(`Ruangan: ${found.room || "-"} → ${inp.room}`);
@@ -650,7 +650,7 @@ export async function bulkSyncPatients(input: BulkSyncInput): Promise<BulkSyncRe
       }
 
       if (Object.keys(updateData).length > 1) {
-        await db.update(patients).set(updateData as any).where(eq(patients.id, found.id));
+        await db.update(patients).set(updateData).where(eq(patients.id, found.id));
         if (found.room !== inp.room || (found.bed || null) !== (inp.bed || null)) {
           changes.push({
             type: "moved",
@@ -784,7 +784,7 @@ export async function bulkEditPatients(input: BulkSyncInput): Promise<BulkSyncRe
       });
     } else {
       const updated: string[] = [];
-      const updateData: Record<string, unknown> = { updatedAt: new Date() };
+      const updateData: Partial<typeof patients.$inferInsert> = { updatedAt: new Date() };
 
       if (found.room !== inp.room) {
         updated.push(`Ruangan: ${found.room || "-"} → ${inp.room}`);
@@ -808,7 +808,7 @@ export async function bulkEditPatients(input: BulkSyncInput): Promise<BulkSyncRe
       }
 
       if (Object.keys(updateData).length > 1) {
-        await db.update(patients).set(updateData as any).where(eq(patients.id, found.id));
+        await db.update(patients).set(updateData).where(eq(patients.id, found.id));
         if (found.room !== inp.room || (found.bed || null) !== (inp.bed || null)) {
           changes.push({
             type: "moved",

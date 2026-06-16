@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Pool } from 'pg';
 
-function calcScore(drug: any): number {
+function calcScore(drug: Record<string, unknown>): number {
   const fields: Record<string, number> = {
     name: 1, drug_class: 1, uses_summary: 2, dosing_summary: 2, dosing_raw: 2,
     contraindications_raw: 1, interactions_raw: 1,
@@ -59,7 +59,7 @@ export async function GET(req: NextRequest) {
 
     const results = result.rows.map((r) => ({ ...r, completeness_score: calcScore(r) }));
     return NextResponse.json({ query: q, results, total: results.length });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message, results: [], total: 0 }, { status: 500 });
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : "Unknown error", results: [], total: 0 }, { status: 500 });
   }
 }

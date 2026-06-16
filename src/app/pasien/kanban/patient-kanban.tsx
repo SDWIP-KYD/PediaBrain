@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import {
   movePatientToRoom, getPatientsByRoom, updatePatientNotes, dischargePatient,
-  bulkSyncPatients, bulkEditPatients, undoBulkSync, type BulkSyncChange,
+  bulkSyncPatients, bulkEditPatients, undoBulkSync, type BulkSyncChange, type BulkSyncInput,
 } from "@/app/actions";
 import { cn } from "@/lib/utils";
 
@@ -731,7 +731,7 @@ function KanbanAIChat({ onClose, onSyncComplete }: {
   const [messages, setMessages] = useState<{ role: "user" | "assistant" | "system"; content: string }[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [parsedPatients, setParsedPatients] = useState<any[] | null>(null);
+  const [parsedPatients, setParsedPatients] = useState<BulkSyncInput["patients"] | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [lastDischargedIds, setLastDischargedIds] = useState<string[]>([]);
   const [undoing, setUndoing] = useState(false);

@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
       corrected: corrected !== query ? corrected : null,
       suggestions: result.rows,
     });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : "Unknown error" }, { status: 500 });
   }
 }
