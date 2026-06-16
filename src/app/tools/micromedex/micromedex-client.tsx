@@ -403,7 +403,7 @@ export function MicromedexClient() {
                     {calcResult.frequency && <div className="text-xs text-muted-foreground">⏰ {calcResult.frequency}</div>}
                     {calcResult.max_single_dose && <div className="text-xs text-muted-foreground">⬆️ Max single: {calcResult.max_single_dose}</div>}
                     {calcResult.max_daily_dose && <div className="text-xs text-muted-foreground">📈 Max daily: {calcResult.max_daily_dose}</div>}
-                    {calcResult.warnings?.length > 0 && <div className="text-xs text-amber-400 space-y-0.5">{calcResult.warnings.map((w: string, i: number) => <p key={i}>{w}</p>)}</div>}
+                    {(calcResult.warnings?.length ?? 0) > 0 && <div className="text-xs text-amber-400 space-y-0.5">{calcResult.warnings!.map((w: string, i: number) => <p key={i}>{w}</p>)}</div>}
                   </>
                 ) : (
                   <div className="text-xs text-muted-foreground italic">Structured dosing not available for this drug/route/indication.</div>
