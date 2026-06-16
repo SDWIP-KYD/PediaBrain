@@ -154,7 +154,7 @@ Jawab dalam bahasa Indonesia yang natural dan profesional.`;
         const data = await res.json();
         setMessages([
           { role: "assistant", content: `📊 **${extracted.length} parameter terdeteksi** dari gambar.\n\nBerikut hasil analisisnya:\n` },
-          { role: "assistant", content: data.response || "Gagal generate analisis." },
+          { role: "assistant", content: data.response || data.raw || "Gagal generate analisis." },
         ]);
       }
     } catch {
@@ -208,7 +208,7 @@ Jawab dalam Bahasa Indonesia yang natural dan profesional. Jika ada data lab, be
 
       if (res.ok) {
         const data = await res.json();
-        setMessages((prev) => [...prev, { role: "assistant", content: data.response || "Maaf, tidak bisa memproses." }]);
+        setMessages((prev) => [...prev, { role: "assistant", content: data.response || data.raw || "Maaf, tidak bisa memproses." }]);
       } else {
         setMessages((prev) => [...prev, { role: "assistant", content: "Maaf, terjadi kesalahan pada server." }]);
       }
