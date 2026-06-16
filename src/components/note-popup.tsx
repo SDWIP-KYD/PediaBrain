@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -109,14 +109,36 @@ export function NotePopup({
 export function useNoteFromUrl(notes: NoteRow[]) {
   const params = useSearchParams();
   const openId = params.get("open");
-  const [note, setNote] = useState<NoteRow | null>(null);
-  useEffect(() => {
-    if (openId) {
-      const found = notes.find((n) => n.id === openId);
-      setNote(found ?? null);
-    } else {
-      setNote(null);
-    }
+  const [fetchedNote, setFetchedNote] = useState<NoteRow | null>(null);
+
+  // Synchronous lookup — pure computation, no effect needed
+  const localNote = useMemo(() => {
+    if (!openId) return null;
+    return notes.find((n) => n.id === openId) ?? null;
   }, [openId, notes]);
-  return note;
+
+  // Async fallback: fetch individual note when local array hasn't loaded it yet
+  // setState only inside async callbacks (.then/.catch), never in effect body
+  useEffect(() => {
+    if (!openId || localNote || notes.length > 0) return;
+
+    const controller = new AbortController();
+    fetch(`/api/notes/${openId}`, { signal: controller.signal })
+      .then((r) => r.json())
+      .then((data) => {
+        if (!controller.signal.aborted) {
+          setFetchedNote(data && data.id ? data : null);
+        }
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setFetchedNote(null);
+      });
+    return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openId]);
+
+  // When openId is cleared, computed result is already null via useMemo
+  const note = openId ? (localNote ?? fetchedNote) : null;
+
+  return { note };
 }
