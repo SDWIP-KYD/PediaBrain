@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Calculator, ExternalLink } from "lucide-react";
 import { PatientPanel } from "./components/patient-panel";
+import { HolidaySegarCalc } from "./components/holiday-segar-calc";
 
 const legacyTools = [
   { title: "Neonatologi (HTML)", file: "/tools/neonatologi-calculator.html" },
@@ -137,6 +138,8 @@ export function ToolsClient() {
       </div>
 
       <PatientPanel />
+
+      <HolidaySegarCalc />
 
       {/* Category grid */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
