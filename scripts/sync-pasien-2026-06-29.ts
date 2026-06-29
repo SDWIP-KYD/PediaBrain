@@ -93,13 +93,16 @@ async function main() {
   const daftarPasien: PasienInput[] = [
     // ═══ DAHLIA — DPJP dr. Jusli ═══
     { name: "Ana Sri Lestari",       room: "DAHLIA", bed: "K.8",  medicalRecordNo: "312390", birthDate: "24-03-2012", diagnosis: "Appendicitis Akut, dyspepsia, faringitis akut, peningkatan enzim transaminase", dpjp: dpjpJusli },
-    { name: "A. Muh. Kahfi",         room: "DAHLIA", bed: "K.5",  medicalRecordNo: "312570", birthDate: "26-11-2016", diagnosis: "Diare",                                                                dpjp: dpjpJusli },
-    { name: "Raisa Aprilia Pertiwi",  room: "DAHLIA", bed: "K.7",  medicalRecordNo: "208271", birthDate: "04-04-2013", diagnosis: "Dyspepsia, hematokezia, melena",                                        dpjp: dpjpJusli },
+    { name: "A. Muh. Kahfi",         room: "DAHLIA", bed: "K.5",  medicalRecordNo: "312570", birthDate: "26-11-2016", diagnosis: "Diare",                                                                  dpjp: dpjpJusli },
+    { name: "Raisa Aprilia Pertiwi", room: "DAHLIA", bed: "K.7",  medicalRecordNo: "208271", birthDate: "04-04-2013", diagnosis: "Dyspepsia, hematokezia, melena",                                        dpjp: dpjpJusli },
     { name: "Muh. Musyakir Adnan",   room: "DAHLIA", bed: "K.8",  medicalRecordNo: "285138", birthDate: "12-07-2022", diagnosis: "Obs. Febris",                                                           dpjp: dpjpJusli },
     { name: "Kahisah Safwana",       room: "DAHLIA", bed: "K.12", medicalRecordNo: "312568", birthDate: "03-08-2022", diagnosis: "Dyspneu",                                                                dpjp: dpjpJusli },
 
     // ═══ DAHLIA — DPJP Prof. Syarifuddin ═══
+    { name: "Aidan Pradipta",        room: "DAHLIA", bed: "K.1",  medicalRecordNo: "312572", birthDate: "25-05-2022", diagnosis: "Diare",                                                                  dpjp: dpjpSyarif },
     { name: "Muh. Alfatih Arfa",     room: "DAHLIA", bed: "K.3",  medicalRecordNo: "312463", birthDate: "29-12-2025", diagnosis: "Faringitis akut, diare akut, obs febris",                              dpjp: dpjpSyarif },
+    { name: "Muh. Rayyan",           room: "DAHLIA", bed: "K.4",  medicalRecordNo: "312531", birthDate: "10-03-2023", diagnosis: "Dyspneu",                                                                dpjp: dpjpSyarif },
+    { name: "Isnaini",               room: "DAHLIA", bed: "K.6",  medicalRecordNo: "312547", birthDate: "04-05-2009", diagnosis: "Dyspepsia",                                                              dpjp: dpjpSyarif },
 
     // ═══ PICU — dr. Aizah ═══
     { name: "Nael Rafino",           room: "PICU",   bed: null,   medicalRecordNo: "312160", birthDate: "29-11-2025", diagnosis: "ARDS, CAP, PJB Asianotik, Stunting, Gizi Buruk tipe marasmus",         dpjp: dpjpAizah },
@@ -112,7 +115,7 @@ async function main() {
 
     // ═══ ANGGREK — DPJP Prof. Syarifuddin ═══
     { name: "St Aira Sahratul",      room: "ANGGREK", bed: "K.3", medicalRecordNo: "312538", birthDate: "17-08-2008", diagnosis: "GEA",                                                                  dpjp: dpjpSyarif },
-    { name: "Alfina",                room: "ANGGREK", bed: "K.3", medicalRecordNo: "312588", birthDate: "28-05-2011", diagnosis: "Kolik abdomen, dispepsia, hemoroid interna grade, intake tidak terjamin", dpjp: dpjpSyarif },
+    { name: "Alfina",                room: "ANGGREK", bed: "K.3", medicalRecordNo: "312588", birthDate: "28-05-2011", diagnosis: "Kolik abdomen, dispesia, hemoroid interna grade, intake tidak terjamin", dpjp: dpjpSyarif },
 
     // ═══ MELATI — DPJP dr. Jusli ═══
     { name: "Muhammad Aulian",       room: "MELATI", bed: "K.1",  medicalRecordNo: "259084", birthDate: "15-02-2019", diagnosis: "Thyfoid fever, faringitis akut",                                      dpjp: dpjpJusli },
@@ -124,7 +127,6 @@ async function main() {
     { name: "Faridah",               room: "MELATI", bed: "K.1",  medicalRecordNo: "290388", birthDate: "03-11-2014", diagnosis: "Thyfoid fever, faringitis akut, intake tidak terjamin",                 dpjp: dpjpSyarif },
     { name: "Muhammad Rasyad",       room: "MELATI", bed: "K.15", medicalRecordNo: "290990", birthDate: "26-07-2021", diagnosis: "Diare akut, intake tidak terjamin",                                    dpjp: dpjpSyarif },
     { name: "Azzahra",               room: "MELATI", bed: "K.19", medicalRecordNo: "312519", birthDate: "15-06-2017", diagnosis: "Faringitis akut, vomiting, intake tidak terjamin",                     dpjp: dpjpSyarif },
-    { name: "Muhammad Rayyan",       room: "MELATI", bed: "K.23", medicalRecordNo: "312531", birthDate: "10-03-2023", diagnosis: "CAP, delayed immunization, gizi kurang",                                dpjp: dpjpSyarif },
     { name: "Samsabila",             room: "MELATI", bed: "K.5",  medicalRecordNo: "312583", birthDate: "29-10-2009", diagnosis: "Faringitis Akut, Dispepsia, Intake Tidak Terjamin",                    dpjp: dpjpSyarif },
 
     // ═══ SERUNI — DPJP dr. Jusli ═══
