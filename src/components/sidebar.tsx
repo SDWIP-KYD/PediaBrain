@@ -14,11 +14,13 @@ import {
   Stethoscope,
   ClipboardList,
   CalendarDays,
+  Beaker,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 
 const quickLinks = [
+  { href: "/lab", label: "Lab Browser", icon: Beaker },
   { href: "/pasien", label: "Tambah Pasien", icon: UserPlus },
   { href: "/soap", label: "SOAP Creator", icon: ClipboardList },
   { href: "/jadwal-dpjp", label: "Jadwal DPJP", icon: CalendarDays },
