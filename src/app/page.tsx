@@ -1,7 +1,4 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { verifySessionToken } from "@/lib/auth";
 import { notes, followUps, stickyNotes } from "@/lib/db/schema";
 import { desc, eq, and, sql } from "drizzle-orm";
 import {
@@ -28,18 +25,7 @@ import { toArray } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-async function isLoggedIn() {
-  const secret = process.env.SESSION_SECRET;
-  if (!secret) return false;
-  const token = (await cookies()).get("session")?.value;
-  return token ? verifySessionToken(token, secret).valid : false;
-}
-
 export default async function DashboardPage() {
-  if (!(await isLoggedIn())) {
-    redirect("/notes");
-  }
-
   let todayFollowUps: (typeof followUps.$inferSelect)[] = [];
   let allFollowUps: (typeof followUps.$inferSelect)[] = [];
   let pinnedNotes: (typeof notes.$inferSelect)[] = [];
