@@ -1,74 +1,88 @@
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
-import {
-  patients,
-  patientVisits,
-  patientLabResults,
-  patientMedications,
-  stickyNotes,
-  notes,
-  noteVersions,
-  followUps,
-  micromedexDrugs,
-  micromedexIndications,
-  micromedexDrugInteractions,
-  micromedexDoseAdjustments,
-} from "@/lib/db/schema";
 import { sql } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
+const TEMP_TOKEN = "reset-9f3a2b7c-pediabrain-2026-temp";
+
+// tables to DELETE (RS lama)
+const DELETE_TABLES = [
+  "patient_medications",
+  "patient_lab_results",
+  "patient_visits",
+  "patients",
+  "sticky_notes",
+];
+
+// tables to KEEP + verify after
+const KEEP_TABLES = [
+  "notes",
+  "note_versions",
+  "follow_ups",
+  "micromedex_drugs",
+  "micromedex_indications",
+  "micromedex_drug_interactions",
+  "micromedex_dose_adjustments",
+];
+
+async function countTable(name: string): Promise<number> {
+  const r = await db.execute(sql`SELECT count(*)::int AS c FROM ${sql.identifier(name)}`);
+  // drizzle execute returns rows array
+  const rows = (r as any).rows ?? (Array.isArray(r) ? r : []);
+  return Number(rows[0]?.c ?? 0);
+}
+
 export async function POST(request: NextRequest) {
-  // Token check
   const token = request.headers.get("x-admin-token");
-  if (token !== "reset-9f3a2b7c-pediabrain-2026-temp") {
+  if (token !== TEMP_TOKEN) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    // 1) Pre-delete counts
+    // 1) BEFORE counts
     const before: Record<string, number> = {};
-    for (const t of [patients, patientVisits, patientLabResults, patientMedications, stickyNotes, notes, noteVersions]) {
-      const r = await db.select({ c: sql<number>`count(*)` }).from(t);
-      before[t._.name] = Number(r[0]?.c || 0);
+    for (const t of [...DELETE_TABLES, ...KEEP_TABLES]) {
+      before[t] = await countTable(t);
     }
 
-    // 2) Backup (just sample titles + structure, not full data)
-    const notesSnapshot = await db.select({ title: notes.title, isPinned: notes.isPinned }).from(notes);
+    // 2) Backup notes (title + pinned only)
+    const notesSnap = await db.execute(
+      sql`SELECT title, is_pinned FROM notes ORDER BY created_at`
+    );
+    const notesRows = (notesSnap as any).rows ?? [];
+    const notesTitles = notesRows.map((n: any) => ({
+      title: n.title,
+      pinned: n.is_pinned,
+    }));
 
-    // 3) TRUNCATE with CASCADE
+    // 3) TRUNCATE delete tables (CASCADE)
     await db.execute(sql`
-      TRUNCATE TABLE
-        "patient_medications",
-        "patient_lab_results",
-        "patient_visits",
-        "patients",
-        "sticky_notes"
+      TRUNCATE TABLE ${sql.identifier("patient_medications")},
+                     ${sql.identifier("patient_lab_results")},
+                     ${sql.identifier("patient_visits")},
+                     ${sql.identifier("patients")},
+                     ${sql.identifier("sticky_notes")}
       CASCADE
     `);
 
-    // 4) Post-delete verification
+    // 4) AFTER counts
     const after: Record<string, number> = {};
-    for (const t of [
-      patients, patientVisits, patientLabResults, patientMedications, stickyNotes,
-      notes, noteVersions, followUps,
-      micromedexDrugs, micromedexIndications, micromedexDrugInteractions, micromedexDoseAdjustments,
-    ]) {
-      const r = await db.select({ c: sql<number>`count(*)` }).from(t);
-      after[t._.name] = Number(r[0]?.c || 0);
+    for (const t of [...DELETE_TABLES, ...KEEP_TABLES]) {
+      after[t] = await countTable(t);
     }
 
     return NextResponse.json({
       success: true,
       before,
       after,
-      notesSurvived: notesSnapshot.length,
-      notesTitles: notesSnapshot.map((n) => ({ title: n.title, pinned: n.isPinned })),
+      notesSurvived: notesTitles.length,
+      notesTitles,
     });
-  } catch (e) {
+  } catch (e: any) {
     return NextResponse.json(
-      { error: e instanceof Error ? e.message : "Unknown error" },
+      { error: e?.message ?? "Unknown error", stack: e?.stack?.split("\n").slice(0, 3) },
       { status: 500 }
     );
   }
