@@ -134,6 +134,32 @@ export function PatientDetailClient({
         <DeletePatientButton id={patient.id} name={patient.name} />
       </div>
 
+      {/* External data links (SIMRS live + Hema lookup) */}
+      {patient.medicalRecordNo && (
+        <div className="flex flex-wrap gap-2">
+          <a
+            href={`https://sirs.kay.web.id/testing?norm=${encodeURIComponent(patient.medicalRecordNo)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={buttonVariants({ variant: "outline", size: "sm", className: "gap-1.5 text-xs border-red-500/40 text-red-300 hover:bg-red-500/10 hover:text-red-200" })}
+          >
+            <Activity className="h-3.5 w-3.5" />
+            SIMRS Live
+            <ExternalLink className="h-3 w-3 opacity-60" />
+          </a>
+          <a
+            href={`https://hema.ark-kay.my.id/lookup.html?norm=${encodeURIComponent(patient.medicalRecordNo)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={buttonVariants({ variant: "outline", size: "sm", className: "gap-1.5 text-xs border-blue-500/40 text-blue-300 hover:bg-blue-500/10 hover:text-blue-200" })}
+          >
+            <TestTube className="h-3.5 w-3.5" />
+            Lab Lookup (Hema)
+            <ExternalLink className="h-3 w-3 opacity-60" />
+          </a>
+        </div>
+      )}
+
       {/* Top grid: Data Pasien + Latest Assessment */}
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>

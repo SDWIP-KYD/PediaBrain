@@ -317,6 +317,26 @@ export default function LabBrowserPage() {
                 <h2 className="text-base font-bold">{selectedPatient.name}</h2>
                 <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground mt-1">
                   <span>MR# {selectedPatient.medicalRecordNo}</span>
+                  {selectedPatient.medicalRecordNo && (
+                    <>
+                      <a
+                        href={`https://sirs.kay.web.id/testing?norm=${encodeURIComponent(selectedPatient.medicalRecordNo)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-red-400 hover:text-red-300 hover:underline inline-flex items-center gap-0.5"
+                      >
+                        SIMRS Live ↗
+                      </a>
+                      <a
+                        href={`https://hema.ark-kay.my.id/lookup.html?norm=${encodeURIComponent(selectedPatient.medicalRecordNo)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-400 hover:text-blue-300 hover:underline inline-flex items-center gap-0.5"
+                      >
+                        Lab Lookup ↗
+                      </a>
+                    </>
+                  )}
                   {selectedPatient.room && (
                     <span>
                       {selectedPatient.room}{selectedPatient.bed ? ` ${selectedPatient.bed}` : ""}
