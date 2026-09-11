@@ -1,121 +1,164 @@
 "use client";
 
-import { useState } from "react";
-import dynamic from "next/dynamic";
+import { useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, Activity, TestTube, ExternalLink, Loader2, AlertCircle } from "lucide-react";
-import type { APIResponse } from "./types";
-import { VisitCard } from "./components/visit-card";
-import { SpecialSection } from "./components/special-section";
+import {
+  Search, Activity, TestTube, ExternalLink, Loader2, AlertCircle,
+  ChevronsDownUp, ChevronsUpDown,
+} from "lucide-react";
+import type { APIResponse, PatientState } from "./types";
+import { PatientResultCard } from "./components/patient-result-card";
+import { parseMultiNorms, MAX_NORMS } from "@/lib/lab-utils";
 
-const LabTrendChart = dynamic(
-  () => import("@/components/lab-trend-chart").then((m) => m.LabTrendChart),
-  { ssr: false, loading: () => <div className="h-40 animate-pulse rounded-lg bg-muted/30" /> }
-);
+// how many SIMRS-hitting lookups run at once (tunnel protection)
+const CONCURRENCY = 6;
+const POLL_INTERVAL_MS = 2000;
+const POLL_MAX_TICKS = 90; // 3 min per patient
+
+type Patch = Partial<PatientState>;
 
 export default function LabLookupPage() {
-  const [mrNumber, setMrNumber] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<APIResponse | null>(null);
-  const [error, setError] = useState("");
-  const [fullLoading, setFullLoading] = useState(false);
-  const [fullNote, setFullNote] = useState("");
-  const [showAll, setShowAll] = useState(false);
+  const [mrInput, setMrInput] = useState("");
+  const [queries, setQueries] = useState<PatientState[]>([]);
+  const [overflow, setOverflow] = useState(false);
+  const [globalError, setGlobalError] = useState("");
+  const genRef = useRef(0);
 
-  async function fetchLabData() {
-    if (!mrNumber.trim()) {
-      setError("Masukkan nomor rekam medis");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-    setData(null);
-    setFullNote("");
-    setShowAll(false);
-
-    try {
-      // Phase 1: quick preview (3 visits, <3s)
-      const res = await fetch(`/api/hema-lookup?norm=${encodeURIComponent(mrNumber.trim())}`);
-      const result: APIResponse = await res.json();
-
-      if (result.success && result.name) {
-        setData(result);
-        setLoading(false);
-        // Phase 2: full history via background job
-        fetchFullData(mrNumber.trim());
-      } else {
-        setError(result.error || "Tidak dapat mengambil data pasien");
-        setLoading(false);
-      }
-    } catch {
-      setError("Tidak dapat terhubung ke server");
-      setLoading(false);
-    }
+  function patch(norm: string, p: Patch, gen?: number) {
+    if (gen !== undefined && genRef.current !== gen) return; // stale run
+    setQueries((prev) =>
+      prev.map((q) => (q.norm === norm ? { ...q, ...p } : q))
+    );
   }
 
-  async function fetchFullData(norm: string) {
-    setFullLoading(true);
+  async function pollFull(norm: string, jobId: string, gen: number) {
+    for (let i = 0; i < POLL_MAX_TICKS; i++) {
+      await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+      if (genRef.current !== gen) return;
+      try {
+        const res = await fetch(`/api/hema-lookup?job=${jobId}`);
+        const job = (await res.json()) as APIResponse & { result?: APIResponse };
+        if (job.status === "done" && job.result?.success) {
+          patch(norm, {
+            fullLoading: false,
+            data: job.result,
+            fullNote: `Lengkap: ${job.result.visits?.length ?? 0} kunjungan${
+              job.result.special ? " + penunjang khusus" : ""
+            }`,
+          }, gen);
+          return;
+        }
+        if (job.status === "error") {
+          patch(norm, {
+            fullLoading: false,
+            fullNote: "Data lengkap gagal dimuat — menampilkan preview.",
+          }, gen);
+          return;
+        }
+      } catch {
+        // transient poll failure — keep polling
+      }
+    }
+    patch(norm, {
+      fullLoading: false,
+      fullNote: "Full fetch masih berjalan di server — ulangi search untuk hasil lengkap.",
+    }, gen);
+  }
+
+  async function startFullJob(norm: string, gen: number, refresh = false) {
+    patch(norm, { fullLoading: true }, gen);
     try {
-      const startRes = await fetch(`/api/hema-lookup?norm=${norm}&full=1`);
-      const started = await startRes.json();
+      const res = await fetch(
+        `/api/hema-lookup?norm=${norm}&full=1${refresh ? "&refresh=1" : ""}`
+      );
+      const started = await res.json();
       if (!started.success || !started.job_id) {
-        setFullNote("Data lengkap tidak dapat dimuat — menampilkan 3 kunjungan terakhir.");
+        patch(norm, {
+          fullLoading: false,
+          fullNote: refresh ? "Refetch gagal dimulai." : undefined,
+        }, gen);
         return;
       }
+      await pollFull(norm, started.job_id, gen);
+    } catch {
+      patch(norm, { fullLoading: false }, gen);
+    }
+  }
 
-      // poll job status every 2s, max 3 min (cold full fetch ~40-90s)
-      for (let attempt = 0; attempt < 90; attempt++) {
-        await new Promise((r) => setTimeout(r, 2000));
-        const statusRes = await fetch(`/api/hema-lookup?job=${started.job_id}`);
-        const job = await statusRes.json();
+  async function runOne(norm: string, gen: number) {
+    if (genRef.current !== gen) return;
+    try {
+      const res = await fetch(`/api/hema-lookup?norm=${norm}`);
+      const d: APIResponse = await res.json();
+      if (genRef.current !== gen) return;
+      if (d.success && d.name) {
+        patch(norm, { loading: false, data: d }, gen);
+        if (d.is_partial) await startFullJob(norm, gen);
+      } else {
+        patch(norm, { loading: false, error: d.error || "Tidak ditemukan" }, gen);
+      }
+    } catch {
+      patch(norm, { loading: false, error: "Gagal terhubung ke server" }, gen);
+    }
+  }
 
-        if (job.status === "done" && job.result?.success) {
-          setData(job.result);
-          setFullNote(`Lengkap: ${job.result.visits?.length ?? 0} kunjungan${job.result.special ? " + penunjang khusus" : ""}`);
-          setFullLoading(false);
-          return;
-        }
-        if (job.status === "error" || job.success === false) {
-          setFullNote("Data lengkap gagal dimuat — menampilkan 3 kunjungan terakhir.");
-          setFullLoading(false);
-          return;
+  async function runWithQueue(norms: string[], gen: number) {
+    const queue = [...norms];
+    const workers = Array.from(
+      { length: Math.min(CONCURRENCY, norms.length) },
+      async () => {
+        while (queue.length) {
+          const n = queue.shift()!;
+          await runOne(n, gen);
         }
       }
-      setFullNote("Full fetch masih berjalan — refresh halaman lagi untuk data lengkap.");
-    } catch {
-      setFullNote("Gagal memuat data lengkap.");
-    } finally {
-      setFullLoading(false);
-    }
+    );
+    await Promise.all(workers);
   }
 
-  function openSIMRS() {
-    if (!mrNumber.trim()) {
-      alert("Masukkan nomor rekam medis terlebih dahulu");
+  function handleSearch() {
+    const { norms, overflow: of } = parseMultiNorms(mrInput);
+    setOverflow(of);
+    if (norms.length === 0) {
+      setGlobalError("Masukkan minimal satu nomor rekam medis (angka 3-8 digit)");
+      setQueries([]);
       return;
     }
-    const url = `https://sirs.kay.web.id/testing?norm=${encodeURIComponent(mrNumber.trim())}`;
-    window.open(url, "_blank", "noopener,noreferrer");
+    setGlobalError("");
+    const gen = ++genRef.current;
+    const init: PatientState[] = norms.map((n) => ({
+      norm: n,
+      loading: true,
+      fullLoading: false,
+      data: null,
+      error: null,
+      opened: false,
+    }));
+    setQueries(init);
+    runWithQueue(norms, gen);
   }
 
-  function openHemaLab() {
-    if (!mrNumber.trim()) {
-      alert("Masukkan nomor rekam medis terlebih dahulu");
-      return;
-    }
-    const url = `https://hema.ark-kay.my.id/lookup.html?norm=${encodeURIComponent(mrNumber.trim())}`;
-    window.open(url, "_blank", "noopener,noreferrer");
+  function handleRefetch(norm: string) {
+    const gen = genRef.current;
+    patch(norm, { error: null }, gen);
+    startFullJob(norm, gen, true);
   }
 
-  function handleKeyPress(e: React.KeyboardEvent) {
-    if (e.key === "Enter") {
-      fetchLabData();
-    }
+  function setAllOpened(opened: boolean) {
+    setQueries((prev) => prev.map((q) => ({ ...q, opened })));
   }
+
+  function openExternal(base: string) {
+    const first = queries[0]?.norm || parseMultiNorms(mrInput).norms[0];
+    if (!first) return;
+    window.open(`${base}${encodeURIComponent(first)}`, "_blank", "noopener,noreferrer");
+  }
+
+  const totalPatients = queries.length;
+  const loaded = queries.filter((q) => q.data).length;
 
   return (
     <div className="space-y-6">
@@ -127,189 +170,139 @@ export default function LabLookupPage() {
           </h1>
         </div>
         <p className="text-sm text-muted-foreground mt-1">
-          Cari hasil laboratorium dan data pasien berdasarkan nomor rekam medis
+          Cari hasil lab dari SIMRS — bisa banyak RM sekaligus, pisahkan dengan
+          &quot;;&quot;, koma, spasi, atau baris baru
         </p>
       </div>
 
-      <Card className="max-w-2xl">
-        <CardHeader>
+      <Card className="max-w-4xl">
+        <CardHeader className="pb-3">
           <CardTitle className="text-base">Pencarian Data Pasien</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="mr-input" className="text-sm font-medium">
-              Nomor Rekam Medis
-            </label>
-            <Input
-              id="mr-input"
-              type="text"
-              placeholder="Contoh: 1679157"
-              value={mrNumber}
-              onChange={(e) => setMrNumber(e.target.value)}
-              onKeyPress={handleKeyPress}
-              className="text-base"
-              autoFocus
-            />
+        <CardContent className="space-y-3">
+          <Textarea
+            placeholder={"Contoh:\n1679157 ; 1469712 , 917718\n1690930"}
+            value={mrInput}
+            onChange={(e) => setMrInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSearch();
+            }}
+            className="min-h-20 text-sm font-mono"
+            autoFocus
+          />
+          <div className="flex items-center gap-3">
+            <Button onClick={handleSearch} className="gap-2">
+              <Search className="h-4 w-4" />
+              Cari Data Lab
+            </Button>
             <p className="text-xs text-muted-foreground">
-              Tekan Enter untuk cari data lab
+              Ctrl+Enter juga jalan · maks {MAX_NORMS} RM
             </p>
           </div>
+          {overflow && (
+            <p className="text-xs text-orange-300">
+              ⚠ Lebih dari {MAX_NORMS} RM — hanya {MAX_NORMS} pertama dipakai.
+            </p>
+          )}
+          {globalError && (
+            <p className="flex items-center gap-1.5 text-xs text-destructive">
+              <AlertCircle className="h-3.5 w-3.5" /> {globalError}
+            </p>
+          )}
 
-          <Button
-            onClick={fetchLabData}
-            className="w-full"
-            disabled={loading}
-          >
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Mengambil data...
-              </>
-            ) : (
-              <>
-                <Search className="mr-2 h-4 w-4" />
-                Cari Data Lab
-              </>
-            )}
-          </Button>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Button
-              onClick={openSIMRS}
-              variant="outline"
-              size="sm"
-              className="gap-1.5 border-red-500/40 text-red-300 hover:bg-red-500/10"
-            >
-              <Activity className="h-4 w-4" />
-              SIMRS Live
-              <ExternalLink className="h-3 w-3" />
-            </Button>
-
-            <Button
-              onClick={openHemaLab}
-              variant="outline"
-              size="sm"
-              className="gap-1.5 border-blue-500/40 text-blue-300 hover:bg-blue-500/10"
-            >
-              <TestTube className="h-4 w-4" />
-              Hema Lab
-              <ExternalLink className="h-3 w-3" />
-            </Button>
-          </div>
+          {totalPatients > 0 && (
+            <div className="flex flex-wrap gap-2 pt-1">
+              <Button
+                variant="outline" size="sm"
+                className="gap-1.5 border-red-500/40 text-red-300 hover:bg-red-500/10"
+                onClick={() =>
+                  openExternal("https://sirs.kay.web.id/testing?norm=")
+                }
+              >
+                <Activity className="h-4 w-4" /> SIMRS Live (RM pertama)
+                <ExternalLink className="h-3 w-3" />
+              </Button>
+              <Button
+                variant="outline" size="sm"
+                className="gap-1.5 border-blue-500/40 text-blue-300 hover:bg-blue-500/10"
+                onClick={() =>
+                  openExternal("https://hema.ark-kay.my.id/lookup.html?norm=")
+                }
+              >
+                <TestTube className="h-4 w-4" /> Hema Lab
+                <ExternalLink className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {loading && (
-        <Card className="max-w-2xl">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-neon" />
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {error && (
-        <Card className="max-w-2xl border-destructive/50 bg-destructive/10">
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-              <div>
-                <p className="font-medium text-destructive">Error</p>
-                <p className="text-sm text-muted-foreground mt-1">{error}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {data?.success && data.name && (
-        <div className="space-y-4 max-w-4xl">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2 flex-wrap">
-                <Activity className="h-4 w-4 text-neon" />
-                {data.name}
-                {data.cached && (
-                  <Badge variant="secondary" className="text-xs">
-                    Cached
-                  </Badge>
-                )}
-                {fullLoading && (
-                  <Badge variant="outline" className="text-xs ml-auto flex items-center gap-1">
-                    <Loader2 className="h-3 w-3 animate-spin" /> memuat data lengkap...
-                  </Badge>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="outline" className="text-xs">
-                  RM: {data.norm}
-                </Badge>
-                <span className="text-xs text-muted-foreground">
-                  {data.visits?.length ?? 0} kunjungan ditampilkan
-                  {data.is_partial ? " (preview terbaru)" : ""}
-                </span>
-              </div>
-              {fullNote && (
-                <p className="text-xs text-muted-foreground">{fullNote}</p>
-              )}
-            </CardContent>
-          </Card>
-
-          {data.visits && data.visits.length > 0 && (
-            <LabTrendChart visits={data.visits} />
-          )}
-
-          {data.visits && data.visits.length > 0 && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <TestTube className="h-4 w-4 text-neon" />
-                  Hasil Laboratorium
-                  <Badge variant="secondary" className="text-xs ml-auto">
-                    {data.visits.length} kunjungan
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {(showAll ? data.visits : data.visits.slice(0, 20)).map(
-                  (visit, idx) => (
-                    <VisitCard key={idx} visit={visit} defaultOpen={idx < 3} />
-                  )
-                )}
-                {!showAll && data.visits.length > 20 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => setShowAll(true)}
-                  >
-                    Tampilkan semua ({data.visits.length} kunjungan)
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {data.special && <SpecialSection special={data.special} />}
+      {totalPatients > 0 && (
+        <div className="flex items-center gap-2 max-w-4xl">
+          <Badge variant="secondary" className="text-xs">
+            {loaded}/{totalPatients} pasien termuat
+          </Badge>
+          <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 ml-auto"
+            onClick={() => setAllOpened(true)}>
+            <ChevronsUpDown className="h-3.5 w-3.5" /> Expand all
+          </Button>
+          <Button variant="ghost" size="sm" className="h-7 text-xs gap-1"
+            onClick={() => setAllOpened(false)}>
+            <ChevronsDownUp className="h-3.5 w-3.5" /> Collapse all
+          </Button>
         </div>
       )}
 
-      <Card className="max-w-2xl">
+      <div className="space-y-3 max-w-4xl">
+        {queries.map((q, i) => (
+          <PatientResultCard
+            key={q.norm}
+            patient={q}
+            index={i}
+            onToggle={(norm) =>
+              setQueries((prev) =>
+                prev.map((p) =>
+                  p.norm === norm ? { ...p, opened: !p.opened } : p
+                )
+              )
+            }
+            onRefetch={handleRefetch}
+          />
+        ))}
+        {queries.length > 0 &&
+          queries.every((q) => q.loading) && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center py-4">
+              <Loader2 className="h-4 w-4 animate-spin text-neon" />
+              Mengambil data dari SIMRS...
+            </div>
+          )}
+      </div>
+
+      <Card className="max-w-4xl">
         <CardHeader>
-          <CardTitle className="text-sm">ℹ️ Informasi</CardTitle>
+          <CardTitle className="text-sm">ℹ️ Cara Pakai</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
           <p>
-            <strong className="text-foreground">Lab Lookup:</strong> Cari hasil laboratorium pasien langsung dari sistem SIMRS tanpa perlu buka tab baru.
+            <strong className="text-foreground">Multi-RM:</strong> paste daftar
+            RM dari WA/sensus (dipisah ; koma spasi atau baris baru) — semua
+            pasien dicari paralel, hasil per pasien bisa dibuka-tutup.
           </p>
           <p>
-            <strong className="text-foreground">SIMRS Live & Hema Lab:</strong> Link ke sistem eksternal untuk data lengkap jika diperlukan.
+            <strong className="text-foreground">Pencarian dua tahap:</strong>{" "}
+            pratinjau 3 kunjungan terbaru muncul dulu (&lt;3 dtk), riwayat
+            lengkap + penunjang khusus menyusul otomatis di background.
+          </p>
+          <p>
+            <strong className="text-foreground">Cari parameter:</strong> ketik
+            nama periksa (mis. &quot;hb&quot;, &quot;ureum&quot;) untuk memindai
+            parameter tsb di SEMUA kunjungan pasien tersebut — muncul sebagai
+            tabel trend tanggal.
           </p>
           <p className="text-xs pt-2 border-t border-border">
-            Data di-cache 5 menit untuk performa optimal.
+            Data di-cache server 6 jam; tombol &quot;Refetch&quot; memaksa
+            pengambilan ulang dari SIMRS. Nilai di luar range diberi penanda
+            ↓/↑ ringan — interpretasi klinis tetap sepenuhnya wewenang dokter.
           </p>
         </CardContent>
       </Card>

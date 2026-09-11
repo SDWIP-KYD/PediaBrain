@@ -4,8 +4,6 @@
 
 import type { LabVisit } from "@/app/lab-lookup/types";
 
-export type TrendPoint = { date: string; value: number };
-
 /** Parse "4.00 - 10.0" style ranges. Returns null when unparseable. */
 export function parseRange(normal: string): { min: number; max: number } | null {
   if (!normal) return null;
@@ -31,44 +29,65 @@ export function flagValue(
   return "normal";
 }
 
-/**
- * Extract chronological trend for one parameter across visits.
- * Matches param names case-insensitively, tolerates aliases.
- */
-export function extractTrend(
-  visits: LabVisit[],
-  names: string[]
-): TrendPoint[] {
-  const wanted = names.map((n) => n.toUpperCase());
-  const points: TrendPoint[] = [];
+export type SearchRow = {
+  tgl: string;
+  name: string;
+  hasil: string;
+  normal: string;
+  satuan: string;
+};
 
+/**
+ * Cross-visit parameter search (port of Hema lookup.html searchParams rule):
+ * substring match on parameter name, case-insensitive, newest first.
+ */
+export function searchParams(visits: LabVisit[], q: string): SearchRow[] {
+  const term = q.trim().toLowerCase();
+  if (!term) return [];
+  const rows: SearchRow[] = [];
   for (const v of visits) {
+    const tgl = v.tgl && v.tgl !== "?" ? v.tgl.slice(0, 16) : "Tanggal ?";
     for (const p of v.params) {
-      const pname = p.name.toUpperCase();
-      const hit = wanted.some(
-        (w) => pname === w || pname.startsWith(w + " ") || pname.startsWith(w + "(")
-      );
-      if (!hit) continue;
-      const value = parseFloat(String(p.hasil).replace(",", "."));
-      if (Number.isNaN(value)) continue;
-      const date = (v.tgl || "").slice(0, 10);
-      if (!date) continue;
-      points.push({ date, value });
-      break; // one value per visit
+      if (String(p.name || "").toLowerCase().includes(term)) {
+        rows.push({ tgl, name: p.name, hasil: p.hasil, normal: p.normal, satuan: p.satuan });
+      }
     }
   }
-
-  // chronological oldest → newest, dedupe same date (keep last)
-  points.sort((a, b) => a.date.localeCompare(b.date));
-  const byDate = new Map<string, number>();
-  for (const pt of points) byDate.set(pt.date, pt.value);
-  return Array.from(byDate.entries()).map(([date, value]) => ({ date, value }));
+  return rows.sort((a, b) => b.tgl.localeCompare(a.tgl));
 }
 
-/** Last N days filter for trend windows. */
-export function lastNDays(points: TrendPoint[], days: number): TrendPoint[] {
-  if (points.length === 0) return [];
-  const newest = new Date(points[points.length - 1].date).getTime();
-  const cutoff = newest - days * 24 * 60 * 60 * 1000;
-  return points.filter((p) => new Date(p.date).getTime() >= cutoff);
+/** Count params outside reference range in a set of visits. */
+export function countOutOfRange(visits: LabVisit[]): number {
+  let n = 0;
+  for (const v of visits)
+    for (const p of v.params) {
+      const f = flagValue(p.hasil, p.normal);
+      if (f === "low" || f === "high") n++;
+    }
+  return n;
+}
+
+export const MAX_NORMS = 100;
+
+export type ParsedNorms = { norms: string[]; overflow: boolean };
+
+/**
+ * Parse multi-RM input (Hema-compatible): split on ; , / newline whitespace,
+ * keep pure digits 3-8 chars, dedupe preserving order, cap at MAX_NORMS.
+ */
+export function parseMultiNorms(input: string): ParsedNorms {
+  const raw = input
+    .split(/[;,/\n\r\s]+/)
+    .map((s) => s.trim())
+    .filter((s) => /^\d{3,8}$/.test(s));
+  const seen = new Set<string>();
+  const norms: string[] = [];
+  for (const s of raw) {
+    if (!seen.has(s)) {
+      seen.add(s);
+      norms.push(s);
+    }
+  }
+  const overflow = norms.length > MAX_NORMS;
+  return { norms: overflow ? norms.slice(0, MAX_NORMS) : norms, overflow };
 }

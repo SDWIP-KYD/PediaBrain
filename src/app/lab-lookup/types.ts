@@ -46,3 +46,14 @@ export type APIResponse = {
   status?: string;
   result?: APIResponse;
 };
+
+/** Per-patient state within a (possibly multi-RM) search. */
+export type PatientState = {
+  norm: string;
+  loading: boolean; // quick fetch in flight
+  fullLoading: boolean; // background full job polling
+  data: APIResponse | null; // latest known (quick preview or full)
+  error: string | null; // localized failure, never blocks other patients
+  opened: boolean; // patient card expand state
+  fullNote?: string;
+};
