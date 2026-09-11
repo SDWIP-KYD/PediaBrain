@@ -103,7 +103,10 @@ export async function GET(request: NextRequest) {
       );
     }
     try {
-      const started = (await fetchJSON(`${HEMA_JOB_START_URL}/${norm}?special=1`)) as {
+      const refresh = searchParams.get('refresh') === '1';
+      const started = (await fetchJSON(
+        `${HEMA_JOB_START_URL}/${norm}?special=1${refresh ? '&refresh=1' : ''}`
+      )) as {
         success: boolean;
         job_id?: string;
         error?: string;
