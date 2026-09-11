@@ -67,8 +67,8 @@ export default function LabLookupPage() {
         return;
       }
 
-      // poll job status every 2s, max 60s
-      for (let attempt = 0; attempt < 30; attempt++) {
+      // poll job status every 2s, max 3 min (cold full fetch ~40-90s)
+      for (let attempt = 0; attempt < 90; attempt++) {
         await new Promise((r) => setTimeout(r, 2000));
         const statusRes = await fetch(`/api/hema-lookup?job=${started.job_id}`);
         const job = await statusRes.json();
