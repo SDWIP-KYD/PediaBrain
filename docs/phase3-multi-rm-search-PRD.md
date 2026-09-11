@@ -117,8 +117,8 @@ We flatten the tabs into stacked collapsible cards (Phase 2 VisitCard, kept).
 ### FR-1 Multi-RM input
 
 - Parse: split `/[;,/\n\r\s]+/`, keep `^\d{3,8}$`, dedupe preserving order
-- Cap: **max 10 NORMs** per query (guard SIMRS load + UX). Over cap →
-  warn + take first 10
+- Cap: **max 100 NORMs** per query. Over cap →
+  warn + take first 100
 - Enter key triggers search
 - Input stays visible during/after search (edit → new search)
 

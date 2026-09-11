@@ -210,7 +210,7 @@ Server hema-repo: **no changes needed.**
 
 | Risk                                           | Mitigation                                                                            |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------- |
-| 10 RM × SIMRS load = slow tunnel congestion    | cap 10, concurrency 4, 6h cache per NORM makes repeats free                           |
+| 100 RM × SIMRS load = slow tunnel congestion   | cap 100, concurrency 6, 6h cache per NORM makes repeats free                          |
 | Poller leak on abandoned searches              | gen token check at every await boundary (§2)                                          |
 | page.tsx refactor breaks working Phase-2 flows | branch + PR + CI + test matrix §3/T7; VisitCard/SpecialSection untouched              |
 | Search feels broken with only-preview loaded   | summary line says "di N kunjungan" — user sees scope; full upgrade re-renders same UI |
