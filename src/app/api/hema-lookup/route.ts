@@ -4,7 +4,7 @@ const HEMA_API_URL = 'https://hema.ark-kay.my.id/api/lookup';
 const HEMA_JOB_START_URL = 'https://hema.ark-kay.my.id/api/lookup-job/start';
 const HEMA_JOB_STATUS_URL = 'https://hema.ark-kay.my.id/api/lookup-job/status';
 
-async function fetchJSON(url: string, timeoutMs = 10000): Promise<unknown> {
+async function fetchJSON(url: string, timeoutMs = 25000): Promise<unknown> {
   const response = await fetch(url, {
     method: 'GET',
     headers: { 'User-Agent': 'PediaBrain/1.0' },
@@ -157,7 +157,7 @@ export async function GET(request: NextRequest) {
       headers: {
         'User-Agent': 'PediaBrain/1.0',
       },
-      signal: AbortSignal.timeout(10000), // 10s timeout
+      signal: AbortSignal.timeout(25000), // 25s: cold SIMRS lookups can take ~9s; headroom for fan-out bursts
     });
 
     if (!response.ok) {
@@ -181,7 +181,7 @@ export async function GET(request: NextRequest) {
   } catch (error: unknown) {
     if (error instanceof Error && error.name === 'AbortError') {
       return NextResponse.json(
-        { success: false, error: 'Request timeout (>10s)' },
+        { success: false, error: 'Request timeout (>25s)' },
         { status: 504 }
       );
     }
