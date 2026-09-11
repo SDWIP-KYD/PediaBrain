@@ -17,7 +17,6 @@ const navItems = [
   { href: "/notes", label: "Notes", icon: FileText },
   { href: "/pasien", label: "Pasien", icon: Users },
   { href: "/follow-ups", label: "Follow-up", icon: CalendarCheck },
-  { href: "/ai-toolbox", label: "AI", icon: Sparkles },
   { href: "/tools", label: "Tools", icon: Calculator },
 ];
 

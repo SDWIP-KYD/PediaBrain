@@ -9,7 +9,7 @@ const SHORTCUTS = [
   { key: "n", label: "Tambah Notes", href: "/notes", modifier: "alt" },
   { key: "j", label: "Jadwal DPJP", href: "/jadwal-dpjp", modifier: "alt" },
   { key: "f", label: "Follow-up", href: "/follow-ups", modifier: "alt" },
-  { key: "t", label: "AI Toolbox", href: "/ai-toolbox", modifier: "alt" },
+  { key: "l", label: "Lab Lookup", href: "/lab-lookup", modifier: "alt" },
   { key: "d", label: "Dashboard", href: "/", modifier: "alt" },
 ] as const;
 

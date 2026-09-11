@@ -7,7 +7,6 @@ import {
   PanelLeftOpen,
   Brain,
   UserPlus,
-  Sparkles,
   CalendarClock,
   Activity,
   LogOut,
@@ -15,16 +14,17 @@ import {
   ClipboardList,
   CalendarDays,
   Beaker,
+  Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 
 const quickLinks = [
+  { href: "/lab-lookup", label: "Lab Lookup", icon: Search },
   { href: "/lab", label: "Lab Browser", icon: Beaker },
   { href: "/pasien", label: "Tambah Pasien", icon: UserPlus },
   { href: "/soap", label: "SOAP Creator", icon: ClipboardList },
   { href: "/jadwal-dpjp", label: "Jadwal DPJP", icon: CalendarDays },
-  { href: "/ai-toolbox", label: "AI ToolBox", icon: Sparkles },
   { href: "/follow-ups", label: "Follow-up", icon: CalendarClock },
 ];
 
