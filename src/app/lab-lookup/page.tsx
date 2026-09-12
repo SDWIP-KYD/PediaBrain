@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ export default function LabLookupPage() {
   const [queries, setQueries] = useState<PatientState[]>([]);
   const [overflow, setOverflow] = useState(false);
   const [globalError, setGlobalError] = useState("");
+  const [existsMap, setExistsMap] = useState<Record<string, string>>({});
   const genRef = useRef(0);
 
   function patch(norm: string, p: Patch, gen?: number) {
@@ -157,6 +158,50 @@ export default function LabLookupPage() {
     window.open(`${base}${encodeURIComponent(first)}`, "_blank", "noopener,noreferrer");
   }
 
+  // Batch-check which norms already exist in "My Patients" when results load
+  useEffect(() => {
+    const loadedNorms = queries.filter((q) => q.data?.success).map((q) => q.norm);
+    if (loadedNorms.length === 0) return;
+
+    const fetchExists = async () => {
+      try {
+        const res = await fetch(
+          `/api/patients/exists?norms=${encodeURIComponent(loadedNorms.join(";"))}`,
+          { cache: "no-store" }
+        );
+        const data = await res.json();
+        const map: Record<string, string> = {};
+        for (const e of data.exists) map[e.norm] = e.id;
+        setExistsMap(map);
+      } catch {}
+    };
+    fetchExists();
+  }, [queries]);
+
+  // Clear exists map on new search
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (mrInput.trim() === "") setExistsMap({});
+  }, [mrInput]);
+
+  async function handleAddToMyPatients(norm: string): Promise<{ success: boolean; id?: string; error?: string }> {
+    try {
+      const res = await fetch("/api/patients/from-norm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ norm }),
+      });
+      const data = await res.json();
+      if (data.success && data.patient?.id) {
+        setExistsMap((prev) => ({ ...prev, [norm]: data.patient.id }));
+        return { success: true, id: data.patient.id };
+      }
+      return { success: false, error: data.error || "Gagal menambahkan pasien" };
+    } catch {
+      return { success: false, error: "Gagal terhubung ke server" };
+    }
+  }
+
   const totalPatients = queries.length;
   const loaded = queries.filter((q) => q.data).length;
 
@@ -267,6 +312,8 @@ export default function LabLookupPage() {
               )
             }
             onRefetch={handleRefetch}
+            existingPatientId={existsMap[q.norm] || null}
+            onAddToMyPatients={handleAddToMyPatients}
           />
         ))}
         {queries.length > 0 &&

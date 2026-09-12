@@ -1,0 +1,164 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import type { APIResponse, PatientState } from "@/app/lab-lookup/types";
+import { PatientResultCard } from "@/app/lab-lookup/components/patient-result-card";
+
+const POLL_INTERVAL_MS = 2000;
+const POLL_MAX_TICKS = 90; // 3 min per patient
+
+/**
+ * Reusable wrapper that drives a single PatientResultCard with live SIMRS data.
+ * Fetches quick preview + background full-fetch job, same logic as LabLookupPage.
+ */
+export function SimrsDataCard({
+  norm,
+  patientId,
+}: {
+  norm: string;
+  patientId: string;
+}) {
+  const [state, setState] = useState<PatientState>({
+    norm,
+    loading: true,
+    fullLoading: false,
+    data: null,
+    error: null,
+    opened: true,
+  });
+
+  const genRef = useRef(0);
+
+  async function runOne() {
+    const gen = genRef.current;
+    try {
+      const res = await fetch(`/api/hema-lookup?norm=${norm}`, {
+        signal: AbortSignal.timeout(25000),
+      });
+      const d: APIResponse = await res.json();
+      if (genRef.current !== gen) return;
+
+      if (d.success && d.name) {
+        setState({
+          norm,
+          loading: false,
+          fullLoading: false,
+          data: d,
+          error: null,
+          opened: true,
+          fullNote: undefined,
+        });
+        if (d.is_partial) {
+          startFullJob(d.job_id!, gen);
+        }
+      } else {
+        setState((prev) => ({
+          ...prev,
+          loading: false,
+          error: d.error || "Pasien tidak ditemukan di SIMRS",
+        }));
+      }
+    } catch {
+      if (genRef.current === gen) {
+        setState((prev) => ({ ...prev, loading: false, error: "Gagal terhubung ke server" }));
+      }
+    }
+  }
+
+  async function startFullJob(jobId: string, gen: number) {
+    setState((prev) => ({ ...prev, fullLoading: true }));
+
+    // If job_id wasn't returned, start a new one
+    if (!jobId) {
+      try {
+        const res = await fetch(
+          `/api/hema-lookup?norm=${norm}&full=1&refresh=1`,
+          { signal: AbortSignal.timeout(25000) }
+        );
+        const started: APIResponse & { job_id?: string } = await res.json();
+        if (!started.success || !started.job_id) {
+          setState((prev) => ({ ...prev, fullLoading: false }));
+          return;
+        }
+        jobId = started.job_id;
+      } catch {
+        setState((prev) => ({ ...prev, fullLoading: false }));
+        return;
+      }
+    }
+
+    // Poll for completion
+    for (let i = 0; i < POLL_MAX_TICKS; i++) {
+      if (genRef.current !== gen) return;
+      await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+      try {
+        const res = await fetch(`/api/hema-lookup?job=${jobId}`, {
+          signal: AbortSignal.timeout(15000),
+        });
+        const job: APIResponse & { status?: string; result?: APIResponse } =
+          await res.json();
+
+        if (job.status === "done" && job.result?.success) {
+          setState((prev) => ({
+            ...prev,
+            fullLoading: false,
+            data: job.result!,
+            fullNote: `Lengkap: ${job.result!.visits?.length ?? 0} kunjungan`,
+          }));
+          return;
+        }
+        if (job.status === "error") {
+          setState((prev) => ({
+            ...prev,
+            fullLoading: false,
+            fullNote: "Data lengkap gagal dimuat — menampilkan preview.",
+          }));
+          return;
+        }
+      } catch {
+        // keep polling
+      }
+    }
+    setState((prev) => ({
+      ...prev,
+      fullLoading: false,
+      fullNote: "Full fetch masih berjalan di server.",
+    }));
+  }
+
+  async function handleRefetch() {
+    genRef.current++;
+    setState({
+      norm,
+      loading: true,
+      fullLoading: false,
+      data: null,
+      error: null,
+      opened: true,
+    });
+    runOne();
+  }
+
+  async function handleAddToMyPatients(): Promise<{ success: boolean; id?: string; error?: string }> {
+    // Already in My Patients — just navigate to self
+    return { success: true, id: patientId };
+  }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    runOne();
+  }, []);
+
+  return (
+    <PatientResultCard
+      patient={state}
+      index={0}
+      onToggle={() => {
+        setState((prev) => ({ ...prev, opened: !prev.opened }));
+      }}
+      onRefetch={handleRefetch}
+      existingPatientId={patientId}
+      onAddToMyPatients={handleAddToMyPatients}
+    />
+  );
+}

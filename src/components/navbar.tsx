@@ -7,7 +7,6 @@ import {
   FileText,
   CalendarCheck,
   Users,
-  Sparkles,
   Calculator,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -15,7 +14,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/notes", label: "Notes", icon: FileText },
-  { href: "/pasien", label: "Pasien", icon: Users },
+  { href: "/pasien", label: "My Patients", icon: Users },
   { href: "/follow-ups", label: "Follow-up", icon: CalendarCheck },
   { href: "/tools", label: "Tools", icon: Calculator },
 ];

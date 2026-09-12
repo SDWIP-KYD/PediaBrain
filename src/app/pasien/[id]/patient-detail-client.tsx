@@ -7,13 +7,15 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   ArrowLeft, User, Phone, Calendar, FileText, Beaker, Pill,
-  ChevronDown, ExternalLink, Stethoscope, ClipboardList, Activity, TestTube, Syringe, Upload
+  ChevronDown, ExternalLink, Stethoscope, ClipboardList, Activity, TestTube, Syringe, Upload,
+  RefreshCw
 } from "lucide-react";
 import Link from "next/link";
 import { DeletePatientButton } from "./delete-button";
 import { DeleteVisitButton } from "./delete-visit-button";
 import { AddVisitDialogWrapper } from "./add-visit-dialog";
 import { PatientAIOverlay } from "./patient-ai-overlay";
+import { SimrsDataCard } from "./simrs-data-card";
 import { EditPatientDialog } from "./edit-patient-dialog";
 import { EditVisitDialog } from "./edit-visit-dialog";
 import { GrowthChartCard } from "@/components/growth-chart";
@@ -163,8 +165,34 @@ export function PatientDetailClient({
       {/* Top grid: Data Pasien + Latest Assessment */}
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
             <CardTitle className="text-sm font-medium">Data Pasien</CardTitle>
+            {patient.medicalRecordNo && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 text-xs gap-1"
+                title="Segarkan demografi dari SIMRS"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  try {
+                    const res = await fetch("/api/patients/from-norm", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ norm: patient.medicalRecordNo }),
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                      window.location.reload();
+                    }
+                  } catch (err) {
+                    console.error("refresh demografi error:", err);
+                  }
+                }}
+              >
+                <RefreshCw className="h-3 w-3" /> Segarkan dari SIMRS
+              </Button>
+            )}
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             {patient.parentName && <Row icon={User} label="Orang Tua" value={patient.parentName} />}
@@ -240,6 +268,35 @@ export function PatientDetailClient({
           </CardContent>
         </Card>
       </div>
+
+      {/* Data RS Live (SIMRS via Hema) */}
+      {patient.medicalRecordNo && (
+        <Card>
+          <CardHeader className="pb-3 flex flex-row items-center justify-between gap-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Activity className="h-3.5 w-3.5 text-neon" />
+              Data RS Live (SIMRS)
+            </CardTitle>
+            <a
+              href={`https://hema.ark-kay.my.id/lookup.html?norm=${encodeURIComponent(patient.medicalRecordNo)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={buttonVariants({
+                variant: "outline",
+                size: "sm",
+                className: "text-xs gap-1.5 border-blue-500/40 text-blue-300 hover:bg-blue-500/10",
+              })}
+            >
+              <TestTube className="h-3 w-3" />
+              Buka di Hema
+              <ExternalLink className="h-3 w-3 opacity-60" />
+            </a>
+          </CardHeader>
+          <CardContent className="pt-3">
+            <SimrsDataCard norm={patient.medicalRecordNo} patientId={patient.id} />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Growth Chart */}
       {patient.birthDate && patient.sex && (visits.some(v => v.weightKg || v.heightCm || v.headCircumferenceCm)) && (

@@ -12,11 +12,13 @@ import {
   Stethoscope,
   ClipboardList,
   Search,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 
 const quickLinks = [
+  { href: "/pasien", label: "My Patients", icon: Users },
   { href: "/lab-lookup", label: "Lab Lookup", icon: Search },
   { href: "/soap", label: "SOAP Creator", icon: ClipboardList },
   { href: "/follow-ups", label: "Follow-up", icon: CalendarClock },

@@ -9,7 +9,10 @@ import {
   AlertCircle,
   Search,
   X,
+  Plus,
+  Check,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,14 +30,39 @@ export function PatientResultCard({
   index,
   onToggle,
   onRefetch,
+  existingPatientId,
+  onAddToMyPatients,
 }: {
   patient: PatientState;
   index: number;
   onToggle: (norm: string) => void;
   onRefetch: (norm: string) => void;
+  existingPatientId: string | null;
+  onAddToMyPatients: (norm: string) => Promise<{ success: boolean; id?: string; error?: string }>;
 }) {
   const [paramQ, setParamQ] = useState("");
   const [showAll, setShowAll] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
+  const router = useRouter();
+
+  async function handleAdd(e: React.MouseEvent) {
+    e.stopPropagation();
+    setAdding(true);
+    setAddError(null);
+    const res = await onAddToMyPatients(patient.norm);
+    if (res.success) {
+      // alreadyAdded will be updated by parent via setQueries
+    } else {
+      setAddError(res.error || "Gagal menambahkan");
+    }
+    setAdding(false);
+  }
+
+  async function handleRetryAdd(e: React.MouseEvent) {
+    setAddError(null);
+    handleAdd(e);
+  }
 
   const visits = patient.data?.visits ?? [];
   const outOfRange = useMemo(() => countOutOfRange(visits), [visits]);
@@ -123,6 +151,50 @@ export function PatientResultCard({
         <Badge variant="secondary" className="text-[9px] shrink-0">
           terbaru
         </Badge>
+      )}
+
+      {/* Add to My Patients button */}
+      {!patient.loading && patient.data?.success && !patient.error && (
+        existingPatientId ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              router.push(`/pasien/${existingPatientId}`);
+            }}
+            className="shrink-0 flex items-center gap-1 px-2 py-0.5 rounded-md border border-green-500/30 bg-green-500/10 text-green-300 text-[10px] hover:bg-green-500/20 transition-colors"
+            title="Buka di My Patients"
+          >
+            <Check className="h-3 w-3" />
+            Di My Patients
+          </button>
+        ) : addError ? (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); handleRetryAdd(e); }}
+            className="shrink-0 flex items-center gap-1 px-2 py-0.5 rounded-md border border-destructive/30 bg-destructive/10 text-destructive text-[10px] hover:bg-destructive/20 transition-colors"
+          >
+            Gagal, coba lagi
+          </button>
+        ) : adding ? (
+          <button
+            type="button"
+            className="shrink-0 flex items-center gap-1 px-2 py-0.5 rounded-md border border-border bg-muted/50 text-muted-foreground text-[10px]"
+          >
+            <Loader2 className="h-3 w-3 animate-spin" />
+            Menambahkan…
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); handleAdd(e); }}
+            className="shrink-0 flex items-center gap-1 px-2 py-0.5 rounded-md border border-neon/30 bg-neon/10 text-neon text-[10px] hover:bg-neon/20 transition-colors"
+            title="Tambah ke My Patients"
+          >
+            <Plus className="h-3 w-3" />
+            Tambah
+          </button>
+        )
       )}
     </button>
   );
