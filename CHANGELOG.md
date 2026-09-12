@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.1] — 2026-09-13
+
+### Added
+
+- **Radiologi status lengkap** di Lab Lookup (port merge orderrad+hasilrad dari
+  SIMRS Web): badge terbaca / gambaran basah / menunggu / batal + 🔥 CITO
+- Link "🖼️ Buka Gambar" → PACS Oviyam untuk hasil terbaca & basah
+- Ringkasan header pasien: "Rad N · M basah"
+- State radiologi ikut pratinjau cepat (badge instan, tanpa nunggu full fetch)
+
+---
+
 ## [0.3.0] — 2026-09-12
 
 ### Changed
