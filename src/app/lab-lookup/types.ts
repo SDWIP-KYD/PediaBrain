@@ -12,6 +12,8 @@ export type LabVisit = {
   params: LabParam[];
 };
 
+export type RadState = "read" | "unread" | "menunggu" | "batal";
+
 export type SpecialItem = {
   tanggal?: string;
   klinis?: string;
@@ -19,6 +21,16 @@ export type SpecialItem = {
   kesimpulan?: string;
   hasil?: string;
   jenis?: string;
+  // radiologi state merge (PRD 2026-09-13)
+  state?: RadState;
+  accession?: string | null;
+  viewer_url?: string | null;
+  cito?: boolean;
+  nomor_order?: string | null;
+  indikasi?: string;
+  keterangan?: string;
+  jaringan?: string;
+  detail?: Record<string, string>;
 };
 
 export type SpecialResult = {

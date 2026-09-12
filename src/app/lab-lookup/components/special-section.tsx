@@ -1,10 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronRight, FileText } from "lucide-react";
+import { ChevronDown, ChevronRight, FileText, Image, Zap } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import type { SpecialItem, SpecialResult } from "@/app/lab-lookup/types";
+import type { RadState, SpecialItem, SpecialResult } from "@/app/lab-lookup/types";
+
+const RAD_STATE_UI: Record<RadState, { label: string; cls: string }> = {
+  read: { label: "terbaca", cls: "border-green-500/40 text-green-300" },
+  unread: { label: "gambaran basah", cls: "border-amber-500/40 text-amber-300" },
+  menunggu: { label: "menunggu", cls: "border-gray-500/40 text-gray-300" },
+  batal: { label: "batal", cls: "border-red-500/40 text-red-300" },
+};
 
 const MODULES: { key: keyof SpecialResult; label: string }[] = [
   { key: "pa", label: "Patologi Anatomi" },
@@ -45,22 +52,63 @@ function ModuleBlock({ label, items }: { label: string; items: SpecialItem[] }) 
       </button>
       {open && (
         <div className="divide-y divide-border/40">
-          {items.map((it, i) => (
-            <div key={i} className="px-3 py-2.5 space-y-1">
-              <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                <span className="font-mono">{it.tanggal || "-"}</span>
-                {it.jenis && <Badge variant="outline" className="text-[9px]">{it.jenis}</Badge>}
+          {items.map((it, i) => {
+            const st = it.state ? RAD_STATE_UI[it.state] : null;
+            const body = textOf(it);
+            return (
+              <div key={i} className="px-3 py-2.5 space-y-1">
+                <div className="flex items-center gap-2 text-[10px] text-muted-foreground flex-wrap">
+                  <span className="font-mono">{it.tanggal || "-"}</span>
+                  {it.jenis && (
+                    <Badge variant="outline" className="text-[9px]">{it.jenis}</Badge>
+                  )}
+                  {st && (
+                    <Badge variant="outline" className={`text-[9px] ${st.cls}`}>
+                      {st.label}
+                    </Badge>
+                  )}
+                  {it.cito && (
+                    <Badge variant="outline" className="text-[9px] border-red-500/50 text-red-300 gap-0.5">
+                      <Zap className="h-2.5 w-2.5" /> CITO
+                    </Badge>
+                  )}
+                  {it.viewer_url && (it.state === "read" || it.state === "unread") && (
+                    <a
+                      href={it.viewer_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-auto inline-flex items-center gap-1 text-[10px] text-blue-300 hover:underline shrink-0"
+                    >
+                      <Image className="h-3 w-3" /> Buka Gambar ↗
+                    </a>
+                  )}
+                </div>
+                {it.jaringan && it.jaringan !== it.jenis && (
+                  <p className="text-xs font-semibold text-foreground">{it.jaringan}</p>
+                )}
+                {(it.klinis || it.indikasi) && (
+                  <p className="text-[11px] text-muted-foreground">
+                    Indikasi: {it.klinis || it.indikasi}
+                  </p>
+                )}
+                {body ? (
+                  <p className="text-xs whitespace-pre-wrap leading-relaxed text-foreground">
+                    {body}
+                  </p>
+                ) : (
+                  <p className="text-xs italic text-muted-foreground/60">
+                    {it.state === "unread"
+                      ? "Gambar sudah ada di PACS — belum ada kesan dari radiolog."
+                      : it.state === "menunggu"
+                      ? "Order dibuat — pemeriksaan belum dikerjakan."
+                      : it.state === "batal"
+                      ? (it.keterangan || "Order dibatalkan.")
+                      : "-"}
+                  </p>
+                )}
               </div>
-              {it.klinis && (
-                <p className="text-[11px] text-muted-foreground">
-                  Indikasi: {it.klinis}
-                </p>
-              )}
-              <p className="text-xs whitespace-pre-wrap leading-relaxed text-foreground">
-                {textOf(it) || "-"}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
