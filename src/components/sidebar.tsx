@@ -6,14 +6,11 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Brain,
-  UserPlus,
   CalendarClock,
   Activity,
   LogOut,
   Stethoscope,
   ClipboardList,
-  CalendarDays,
-  Beaker,
   Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -21,10 +18,7 @@ import { useState, useEffect } from "react";
 
 const quickLinks = [
   { href: "/lab-lookup", label: "Lab Lookup", icon: Search },
-  { href: "/lab", label: "Lab Browser", icon: Beaker },
-  { href: "/pasien", label: "Tambah Pasien", icon: UserPlus },
   { href: "/soap", label: "SOAP Creator", icon: ClipboardList },
-  { href: "/jadwal-dpjp", label: "Jadwal DPJP", icon: CalendarDays },
   { href: "/follow-ups", label: "Follow-up", icon: CalendarClock },
 ];
 
