@@ -38,6 +38,14 @@ export function PatientResultCard({
 
   const visits = patient.data?.visits ?? [];
   const outOfRange = useMemo(() => countOutOfRange(visits), [visits]);
+  const radSummary = useMemo(() => {
+    const rad = patient.data?.special?.rad ?? [];
+    if (rad.length === 0) return null;
+    const unread = rad.filter(
+      (r) => r.state === "unread" || r.state === "menunggu"
+    ).length;
+    return { total: rad.length, unread };
+  }, [patient.data]);
   const searchRows = useMemo(
     () => (paramQ.trim() ? searchParams(visits, paramQ) : null),
     [paramQ, visits]
@@ -73,6 +81,19 @@ export function PatientResultCard({
               className="text-[9px] border-orange-500/40 text-orange-300"
             >
               {outOfRange} di luar range
+            </Badge>
+          )}
+          {radSummary && (
+            <Badge
+              variant="outline"
+              className={`text-[9px] ${
+                radSummary.unread > 0
+                  ? "border-amber-500/40 text-amber-300"
+                  : "border-green-500/40 text-green-300"
+              }`}
+            >
+              Rad {radSummary.total}
+              {radSummary.unread > 0 ? ` · ${radSummary.unread} basah` : " ✓"}
             </Badge>
           )}
         </div>
