@@ -173,8 +173,14 @@ export function PatientResultCard({
             type="button"
             onClick={(e) => { e.stopPropagation(); handleRetryAdd(e); }}
             className="shrink-0 flex items-center gap-1 px-2 py-0.5 rounded-md border border-destructive/30 bg-destructive/10 text-destructive text-[10px] hover:bg-destructive/20 transition-colors"
+            title={addError || "Gagal menambahkan pasien"}
           >
             Gagal, coba lagi
+            {addError && (
+              <span className="ml-1 opacity-70">
+                ({addError.split("(")[1]?.split(")")[0] || "error"})
+              </span>
+            )}
           </button>
         ) : adding ? (
           <button
