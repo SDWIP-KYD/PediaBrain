@@ -172,25 +172,13 @@ export function PatientDetailClient({
                 variant="ghost"
                 size="sm"
                 className="h-6 text-xs gap-1"
-                title="Segarkan demografi dari SIMRS"
+                title="Segarkan data live dari SIMRS"
                 onClick={async (e) => {
                   e.stopPropagation();
-                  try {
-                    const res = await fetch("/api/patients/from-norm", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ norm: patient.medicalRecordNo }),
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                      window.location.reload();
-                    }
-                  } catch (err) {
-                    console.error("refresh demografi error:", err);
-                  }
+                  window.location.reload();
                 }}
               >
-                <RefreshCw className="h-3 w-3" /> Segarkan dari SIMRS
+                <RefreshCw className="h-3 w-3" /> Segarkan
               </Button>
             )}
           </CardHeader>

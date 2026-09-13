@@ -184,17 +184,20 @@ export default function LabLookupPage() {
     if (mrInput.trim() === "") setExistsMap({});
   }, [mrInput]);
 
-  async function handleAddToMyPatients(norm: string): Promise<{ success: boolean; id?: string; error?: string }> {
+  async function handleAddToMyPatients(
+    norm: string,
+    labData?: APIResponse
+  ): Promise<{ success: boolean; id?: string; error?: string; savedVisits?: number }> {
     try {
       const res = await fetch("/api/patients/from-norm", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ norm }),
+        body: JSON.stringify({ norm, labData }),
       });
       const data = await res.json();
       if (data.success && data.patient?.id) {
         setExistsMap((prev) => ({ ...prev, [norm]: data.patient.id }));
-        return { success: true, id: data.patient.id };
+        return { success: true, id: data.patient.id, savedVisits: data.savedVisits };
       }
       return { success: false, error: data.error || "Gagal menambahkan pasien" };
     } catch {

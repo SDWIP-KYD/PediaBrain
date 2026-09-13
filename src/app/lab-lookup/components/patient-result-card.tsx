@@ -17,7 +17,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { PatientState } from "../types";
+import type { PatientState, APIResponse } from "../types";
 import { VisitCard } from "./visit-card";
 import { SpecialSection } from "./special-section";
 import { SearchResultsTable } from "./search-results";
@@ -38,7 +38,7 @@ export function PatientResultCard({
   onToggle: (norm: string) => void;
   onRefetch: (norm: string) => void;
   existingPatientId: string | null;
-  onAddToMyPatients: (norm: string) => Promise<{ success: boolean; id?: string; error?: string }>;
+  onAddToMyPatients: (norm: string, labData?: APIResponse) => Promise<{ success: boolean; id?: string; error?: string; savedVisits?: number }>;
 }) {
   const [paramQ, setParamQ] = useState("");
   const [showAll, setShowAll] = useState(false);
@@ -50,9 +50,9 @@ export function PatientResultCard({
     e.stopPropagation();
     setAdding(true);
     setAddError(null);
-    const res = await onAddToMyPatients(patient.norm);
+    const res = await onAddToMyPatients(patient.norm, patient.data ?? undefined);
     if (res.success) {
-      // alreadyAdded will be updated by parent via setQueries
+      // Parent (lab-lookup page) updates existsMap → card re-renders with existingPatientId
     } else {
       setAddError(res.error || "Gagal menambahkan");
     }

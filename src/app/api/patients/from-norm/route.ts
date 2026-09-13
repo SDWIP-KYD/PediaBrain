@@ -1,24 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import { patients } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { patients, patientVisits, patientLabResults } from '@/lib/db/schema';
+import { eq, and } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
-const HEMA_DEMOGRAFI_URL = 'https://hema.ark-kay.my.id/api/demografi';
+type LabParam = {
+  name: string;
+  hasil: string;
+  normal: string;
+  satuan: string;
+};
 
-type DemografiResponse = {
+type HemaVisit = {
+  tgl: string;
+  params: LabParam[];
+};
+
+type HemaResponse = {
   success: boolean;
   norm?: string;
   name?: string;
-  birthDate?: string | null;
-  sex?: string | null;
-  phone?: string | null;
-  address?: string | null;
-  dpjp?: string | null;
+  visits?: HemaVisit[];
+  special?: Record<string, unknown>;
+  is_partial?: boolean;
   error?: string;
+};
+
+type PostBody = {
+  norm: string;
+  labData?: HemaResponse;
 };
 
 function normalizeName(name: string): string {
@@ -31,8 +44,9 @@ function normalizeName(name: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json().catch(() => null);
+    const body = (await req.json().catch(() => null)) as PostBody | null;
     const norm = body?.norm;
+    const labData = body?.labData;
 
     if (!norm || !/^\d{3,8}$/.test(norm)) {
       return NextResponse.json(
@@ -41,43 +55,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Fetch demografi from Hema VPS
-    let demografi: DemografiResponse;
-    try {
-      const hemaRes = await fetch(`${HEMA_DEMOGRAFI_URL}/${norm}`, {
-        method: 'GET',
-        headers: { 'User-Agent': 'PediaBrain/1.0' },
-        cache: 'no-store',
-        signal: AbortSignal.timeout(20000),
-      });
-
-      if (!hemaRes.ok) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: `Gagal mengambil demografi dari SIMRS (${hemaRes.status})`,
-          },
-          { status: 502 }
-        );
-      }
-
-      demografi = (await hemaRes.json()) as DemografiResponse;
-    } catch (error) {
-      console.error('demografi fetch error:', error);
+    // Derive name from labData (from hema-lookup card) — no separate demografi fetch needed
+    const rawName = labData?.name || '';
+    if (!rawName) {
       return NextResponse.json(
-        { success: false, error: 'Gagal terhubung ke server Hema' },
-        { status: 502 }
-      );
-    }
-
-    if (!demografi.success || !demografi.name) {
-      return NextResponse.json(
-        { success: false, error: 'Pasien tidak ditemukan di SIMRS' },
+        { success: false, error: 'Nama pasien tidak tersedia dari data lab yang dikirim' },
         { status: 404 }
       );
     }
 
-    // Upsert: check if patient with this medical_record_no already exists
+    const name = normalizeName(rawName);
+
+    // Upsert patient identity
     const existing = await db
       .select({
         id: patients.id,
@@ -88,49 +77,116 @@ export async function POST(req: NextRequest) {
       .where(eq(patients.medicalRecordNo, norm))
       .limit(1);
 
-    const name = normalizeName(demografi.name);
-
     let patient;
     if (existing.length > 0) {
-      // Update demografi fields, preserve room/bed/status
       const [updated] = await db
         .update(patients)
         .set({
           name,
-          birthDate: demografi.birthDate || null,
-          sex: demografi.sex || null,
-          phone: demografi.phone || null,
-          address: demografi.address || null,
           updatedAt: new Date(),
         })
         .where(eq(patients.id, existing[0].id))
         .returning();
-
       patient = updated;
-      revalidatePath('/pasien');
-      revalidatePath(`/pasien/${patient.id}`);
     } else {
-      // Insert new
       const [inserted] = await db
         .insert(patients)
         .values({
           medicalRecordNo: norm,
           name,
-          birthDate: demografi.birthDate || null,
-          sex: demografi.sex || null,
-          phone: demografi.phone || null,
-          address: demografi.address || null,
           room: null,
           bed: null,
           status: 'rawat_inap',
         })
         .returning();
-
       patient = inserted;
-      revalidatePath('/pasien');
     }
 
-    return NextResponse.json({ success: true, patient });
+    // Persist lab visits + results if provided
+    let savedVisits = 0;
+    if (labData?.visits && labData.success) {
+      for (const visit of labData.visits) {
+        if (!visit.tgl) continue;
+
+        // Upsert visit by (patientId, visitDate)
+        const existingVisit = await db
+          .select({ id: patientVisits.id })
+          .from(patientVisits)
+          .where(
+            and(
+              eq(patientVisits.patientId, patient.id),
+              eq(patientVisits.visitDate, visit.tgl)
+            )
+          )
+          .limit(1);
+
+        let visitId: string;
+        if (existingVisit.length > 0) {
+          visitId = existingVisit[0].id;
+          await db
+            .update(patientVisits)
+            .set({
+              updatedAt: new Date(),
+              notes: `Lab hasil SIMRS — diperbarui ${new Date().toISOString().slice(0, 10)}`,
+            })
+            .where(eq(patientVisits.id, visitId));
+        } else {
+          const [inserted] = await db
+            .insert(patientVisits)
+            .values({
+              patientId: patient.id,
+              visitDate: visit.tgl,
+              notes: `Lab hasil SIMRS — diambil ${new Date().toISOString().slice(0, 10)}`,
+            })
+            .returning();
+          visitId = inserted.id;
+        }
+
+        // Upsert lab results by (visitId, testName)
+        for (const param of visit.params) {
+          if (!param.name || !param.hasil) continue;
+          const existingResult = await db
+            .select({ id: patientLabResults.id })
+            .from(patientLabResults)
+            .where(
+              and(
+                eq(patientLabResults.visitId, visitId),
+                eq(patientLabResults.testName, param.name)
+              )
+            )
+            .limit(1);
+
+          const resultData = {
+            visitId,
+            testName: param.name,
+            result: param.hasil,
+            unit: param.satuan || null,
+            referenceRange: param.normal || null,
+            flag: null,
+          };
+
+          if (existingResult.length > 0) {
+            await db
+              .update(patientLabResults)
+              .set(resultData)
+              .where(eq(patientLabResults.id, existingResult[0].id));
+          } else {
+            await db.insert(patientLabResults).values(resultData);
+          }
+        }
+
+        savedVisits++;
+      }
+    }
+
+    revalidatePath('/pasien');
+    revalidatePath(`/pasien/${patient.id}`);
+
+    return NextResponse.json({
+      success: true,
+      patient,
+      savedVisits,
+    });
   } catch (error) {
     console.error('from-norm error:', error);
     return NextResponse.json(
