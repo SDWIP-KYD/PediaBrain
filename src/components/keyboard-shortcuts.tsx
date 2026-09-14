@@ -7,7 +7,6 @@ import { Keyboard } from "lucide-react";
 const SHORTCUTS = [
   { key: "k", label: "Board Pasien", href: "/pasien", modifier: "alt" },
   { key: "n", label: "Tambah Notes", href: "/notes", modifier: "alt" },
-  // { key: "j", label: "Jadwal DPJP", href: "/jadwal-dpjp", modifier: "alt" }, // removed — feature cleaned up
   { key: "f", label: "Follow-up", href: "/follow-ups", modifier: "alt" },
   { key: "l", label: "Lab Lookup", href: "/lab-lookup", modifier: "alt" },
   { key: "d", label: "Dashboard", href: "/", modifier: "alt" },
