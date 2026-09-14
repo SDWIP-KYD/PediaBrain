@@ -3,75 +3,110 @@ import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
-const HEMA_CPPT_URL = "https://hema.ark-kay.my.id/api/cppt";
+const SIRS_BASE = "https://sirs.kay.web.id";
+
+export const LOGIN_URL = `${SIRS_BASE}/api/login`;
+export const CPPT_URL = `${SIRS_BASE}/api/cppt`;
+
+// In-memory cache of SIRS session cookies per DPJP index (per serverless instance).
+// SIRS session TTL is 8h; refresh earlier to be safe.
+const SESSION_TTL_MS = 6 * 60 * 60 * 1000;
+const sidCache = new Map<number, { sid: string; expires: number }>();
+
+async function getSirsSid(accountIndex: number): Promise<string | null> {
+  const cached = sidCache.get(accountIndex);
+  if (cached && cached.expires > Date.now()) return cached.sid;
+
+  try {
+    const res = await fetch(LOGIN_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode: "select", account_index: accountIndex }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(20000),
+    });
+    if (!res.ok) return null;
+
+    // undici exposes getSetCookie(); fall back to splitting the joined header
+    const raw: string[] =
+      typeof res.headers.getSetCookie === "function"
+        ? res.headers.getSetCookie()
+        : (res.headers.get("set-cookie") || "").split(/,(?=\s*sid=)/);
+    const sidCookie = raw.find((c) => c.trim().startsWith("sid="));
+    if (!sidCookie) return null;
+
+    const sid = sidCookie.trim().split(";")[0]; // "sid=<uuid>"
+    sidCache.set(accountIndex, { sid, expires: Date.now() + SESSION_TTL_MS });
+    return sid;
+  } catch {
+    return null;
+  }
+}
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ norm: string }> }
 ) {
   const { norm } = await params;
+  const dpjpIndex = parseInt(req.nextUrl.searchParams.get("dpjp") || "", 10);
 
   if (!norm || !/^\d{3,8}$/.test(norm)) {
     return NextResponse.json(
-      { success: false, error: "NORM (3-8 digit) wajib diisi" },
+      { ok: false, error: "NORM (3-8 digit) wajib diisi" },
+      { status: 400 }
+    );
+  }
+  if (Number.isNaN(dpjpIndex) || dpjpIndex < 0 || dpjpIndex > 99) {
+    return NextResponse.json(
+      { ok: false, error: "Pilih DPJP terlebih dahulu" },
       { status: 400 }
     );
   }
 
   try {
-    const res = await fetch(`${HEMA_CPPT_URL}/${norm}`, {
-      method: "GET",
-      headers: { "User-Agent": "PediaBrain/1.0" },
+    const sid = await getSirsSid(dpjpIndex);
+    if (!sid) {
+      return NextResponse.json(
+        { ok: false, error: "Gagal autentikasi ke SIRS untuk DPJP ini" },
+        { status: 502 }
+      );
+    }
+
+    const res = await fetch(`${CPPT_URL}?norm=${encodeURIComponent(norm)}`, {
+      headers: { Cookie: sid, "User-Agent": "PediaBrain/1.0" },
       cache: "no-store",
       signal: AbortSignal.timeout(25000),
     });
 
-    if (!res.ok) {
-      if (res.status === 404) {
-        return NextResponse.json(
-          { success: false, error: "Endpoint CPPT belum tersedia di server" },
-          { status: 404 }
-        );
-      }
+    if (res.status === 401) {
+      // Expired server-side — drop cache so the next attempt re-logins
+      sidCache.delete(dpjpIndex);
       return NextResponse.json(
-        { success: false, error: `Gagal mengambil CPPT (${res.status})` },
+        { ok: false, error: "Sesi SIRS berakhir — coba segarkan lagi" },
+        { status: 502 }
+      );
+    }
+    if (!res.ok) {
+      return NextResponse.json(
+        { ok: false, error: `SIRS menolak permintaan (${res.status})` },
         { status: 502 }
       );
     }
 
     const data = await res.json();
 
-    // Normalize: SIRS returns {ok, cppt:[]}, Hema VPS returns {success, visits:[]}
-    const rawVisits = data.visits || data.cppt || [];
-    const success = data.success ?? data.ok ?? false;
-
-    // Map SIRS fields to PediaBrain CpptSection schema:
-    //   penulis → dpjp, terapi+planning → plan
-    const visits = rawVisits.map((v: Record<string, unknown>) => ({
-      tanggal: (v.tanggal || v.TANGGAL || "") as string,
-      kunjungan: (v.kunjungan || v.KUNJUNGAN || "") as string,
-      dpjp: (v.dpjp || v.penulis || v.PENULIS || "") as string,
-      subjektif: (v.subjektif || v.SUBYEKTIF || "") as string,
-      objektif: (v.objektif || v.OBYEKTIF || "") as string,
-      assesment: (v.assesment || v.ASSESMENT || "") as string,
-      plan: (
-        String(v.terapi || "") + (v.planning ? "\n\n" + String(v.planning) : "") ||
-        (v.plan || v.PLAN || "")
-      ) as string,
-      vital: v.vital,
-    }));
-
+    // Pass through SIRS-native shape:
+    // { ok, total, cppt:[{tanggal,kunjungan,penulis,subjektif,objektif,assesment,terapi,planning}] }
     return NextResponse.json({
-      success: !!success,
+      ok: !!data.ok,
+      total: data.total ?? data.cppt?.length ?? 0,
+      cppt: data.cppt || [],
       error: data.error,
-      norm: norm,
-      name: data.name,
-      visits: visits,
     });
   } catch (error) {
     console.error("cppt fetch error:", error);
     return NextResponse.json(
-      { success: false, error: "Gagal terhubung ke server Hema" },
+      { ok: false, error: "Gagal terhubung ke SIRS" },
       { status: 502 }
     );
   }
