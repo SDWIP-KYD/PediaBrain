@@ -88,7 +88,6 @@ export function PatientDetailClient({
 
   const age = patient.birthDate ? calculateAge(patient.birthDate) : null;
   const latestVisit = visits[0] ?? null;
-  const latestSections = latestVisit?.sections as Record<string, string> | null;
 
   function openFullReport(v: Visit) {
     setPopupVisit(v);
@@ -178,9 +177,8 @@ export function PatientDetailClient({
         </div>
       )}
 
-      {/* Top grid: Data Pasien + Latest Assessment */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
+      {/* Data Pasien */}
+      <Card>
           <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
             <CardTitle className="text-sm font-medium">Data Pasien</CardTitle>
             {patient.medicalRecordNo && (
@@ -207,71 +205,7 @@ export function PatientDetailClient({
               <p className="text-muted-foreground text-sm">Belum ada data tambahan</p>
             )}
           </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Stethoscope className="h-3.5 w-3.5 text-neon" />
-              Assessment Terakhir
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {/* Action buttons */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <AddVisitDialogWrapper patientId={patient.id} />
-                <Button variant="outline" size="sm" className="h-7 text-xs gap-1">
-                  <ClipboardList className="h-3 w-3" /> SOAP Creator
-                </Button>
-                {latestVisit && (
-                  <LabExtractModal
-                    visitId={latestVisit.id}
-                    patientName={patient.name}
-                    onSave={() => window.location.reload()}
-                    trigger={
-                      <Button variant="outline" size="sm" className="h-7 text-xs gap-1">
-                        <Beaker className="h-3 w-3" /> Tambah Lab
-                      </Button>
-                    }
-                  />
-                )}
-              </div>
-
-              {latestVisit ? (
-                <>
-                  <div>
-                    <Badge variant="outline" className="text-xs font-mono">{latestVisit.visitDate}</Badge>
-                  </div>
-                  {latestVisit.diagnosisPrimary && (
-                    <div>
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">Diagnosis Utama</p>
-                      <p className="text-sm text-foreground break-words">{latestVisit.diagnosisPrimary}</p>
-                    </div>
-                  )}
-                  {latestVisit.diagnosisSecondary && (
-                    <div>
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">Diagnosis Lain</p>
-                      <p className="text-sm text-foreground break-words">{latestVisit.diagnosisSecondary}</p>
-                    </div>
-                  )}
-                  {latestSections?.diagnosa && (
-                    <div className="rounded-lg border border-neon/20 bg-neon/5 p-3">
-                      <p className="text-xs font-semibold text-neon mb-1">Diagnosa / Assessment</p>
-                      <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed break-words">{latestSections.diagnosa}</p>
-                    </div>
-                  )}
-                  {!latestVisit.diagnosisPrimary && !latestVisit.diagnosisSecondary && !latestSections?.diagnosa && (
-                    <p className="text-muted-foreground text-sm">Belum ada diagnosis</p>
-                  )}
-                </>
-              ) : (
-                <p className="text-muted-foreground text-sm">Belum ada kunjungan</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      </Card>
 
       {/* Data RS Live (SIMRS via Hema) */}
       {patient.medicalRecordNo && (
@@ -337,7 +271,24 @@ export function PatientDetailClient({
             <FileText className="h-3.5 w-3.5 text-neon" />
             Riwayat Kunjungan ({visits.length})
           </CardTitle>
-          <AddVisitDialogWrapper patientId={patient.id} compact />
+          <div className="flex items-center gap-2 flex-wrap">
+            <AddVisitDialogWrapper patientId={patient.id} compact />
+            <Button variant="outline" size="sm" className="h-7 text-xs gap-1">
+              <ClipboardList className="h-3 w-3" /> SOAP Creator
+            </Button>
+            {latestVisit && (
+              <LabExtractModal
+                visitId={latestVisit.id}
+                patientName={patient.name}
+                onSave={() => window.location.reload()}
+                trigger={
+                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1">
+                    <Beaker className="h-3 w-3" /> Tambah Lab
+                  </Button>
+                }
+              />
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {visits.length === 0 ? (

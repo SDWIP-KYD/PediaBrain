@@ -11,6 +11,8 @@ import {
   X,
   Plus,
   Check,
+  Beaker,
+  Sparkles,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,6 +26,7 @@ import { SearchResultsTable } from "./search-results";
 import { searchParams, countOutOfRange } from "@/lib/lab-utils";
 
 const VISIBLE_VISITS = 20;
+
 
 export function PatientResultCard({
   patient,
@@ -46,6 +49,8 @@ export function PatientResultCard({
 }) {
   const [paramQ, setParamQ] = useState("");
   const [showAll, setShowAll] = useState(false);
+  const [labOpen, setLabOpen] = useState(false);
+  const [specialOpen, setSpecialOpen] = useState(false);
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
   const router = useRouter();
@@ -67,6 +72,15 @@ export function PatientResultCard({
     setAddError(null);
     handleAdd(e);
   }
+
+  const specialCount = useMemo(() => {
+    const sp = patient.data?.special;
+    if (!sp) return 0;
+    return Object.values(sp).reduce<number>(
+      (n, arr) => n + (Array.isArray(arr) ? arr.length : 0),
+      0
+    );
+  }, [patient.data]);
 
   const visits = patient.data?.visits ?? [];
   const outOfRange = useMemo(() => countOutOfRange(visits), [visits]);
@@ -249,27 +263,73 @@ export function PatientResultCard({
               visitCount={visits.length}
             />
           ) : (
-            <div className="space-y-2">
-              {(showAll ? visits : visits.slice(0, VISIBLE_VISITS)).map(
-                (v, i) => (
-                  <VisitCard key={i} visit={v} defaultOpen={i < 3} />
-                )
+            <>
+              {/* Laboratorium — collapsible, default closed */}
+              {visits.length > 0 && (
+                <div className="rounded-lg border border-border overflow-hidden">
+                  <button
+                    onClick={() => setLabOpen((v) => !v)}
+                    className="w-full flex items-center gap-2 px-3 py-2.5 bg-muted/20 hover:bg-muted/40 text-left"
+                  >
+                    {labOpen ? (
+                      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                    ) : (
+                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+                    )}
+                    <Beaker className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="text-xs font-semibold">Laboratorium</span>
+                    <Badge variant="secondary" className="ml-auto text-[9px]">
+                      {visits.length} kunjungan
+                    </Badge>
+                  </button>
+                  {labOpen && (
+                    <div className="p-2 space-y-2 border-t border-border/40">
+                      {(showAll ? visits : visits.slice(0, VISIBLE_VISITS)).map(
+                        (v, i) => (
+                          <VisitCard key={i} visit={v} defaultOpen={false} />
+                        )
+                      )}
+                      {!showAll && visits.length > VISIBLE_VISITS && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => setShowAll(true)}
+                        >
+                          Tampilkan semua ({visits.length} kunjungan)
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
-              {!showAll && visits.length > VISIBLE_VISITS && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => setShowAll(true)}
-                >
-                  Tampilkan semua ({visits.length} kunjungan)
-                </Button>
-              )}
-            </div>
-          )}
 
-          {patient.data?.special && (
-            <SpecialSection special={patient.data.special} />
+              {/* Special — collapsible, default closed */}
+              {patient.data?.special && specialCount > 0 && (
+                <div className="rounded-lg border border-border overflow-hidden">
+                  <button
+                    onClick={() => setSpecialOpen((v) => !v)}
+                    className="w-full flex items-center gap-2 px-3 py-2.5 bg-muted/20 hover:bg-muted/40 text-left"
+                  >
+                    {specialOpen ? (
+                      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                    ) : (
+                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+                    )}
+                    <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="text-xs font-semibold">Special</span>
+                    <Badge variant="secondary" className="ml-auto text-[9px]">
+                      {specialCount} item
+                    </Badge>
+                  </button>
+                  {specialOpen && (
+                    <div className="p-2 border-t border-border/40">
+                      <SpecialSection special={patient.data.special} />
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
           )}
 
           <div className="flex justify-end">

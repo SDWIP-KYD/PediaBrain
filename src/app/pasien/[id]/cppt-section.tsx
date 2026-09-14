@@ -34,7 +34,18 @@ type CpptResponse = {
   error?: string;
   total?: number;
   cppt?: CpptVisit[];
+  source?: "db" | "sirs";
+  cachedAt?: string;
+  stale?: boolean;
+  staleError?: string;
 };
+
+// Indonesian credential heuristics: "dr.", "drg", "Sp.A", "(Dokter)" => dokter
+function isDokter(penulis: string): boolean {
+  return /(^|[,/(\s])dr(\.?g?\.|g\b)/i.test(penulis) ||
+    /\bdr\b\.?\s/i.test(penulis) ||
+    /(sp\.[a-z]|dokter|konsulen|perinatolog|neonatolog)/i.test(penulis);
+}
 
 type DpjpAccount = { i: number; label: string };
 
@@ -60,20 +71,23 @@ export function CpptSection({ norm }: { norm: string }) {
   const [accounts, setAccounts] = useState<DpjpAccount[]>([]);
   const [dpjp, setDpjp] = useState<number | null>(null);
   const [filterPenulis, setFilterPenulis] = useState<string>("all");
+  const [source, setSource] = useState<{ src?: string; cachedAt?: string; stale?: boolean }>({});
 
   const loadedRef = useRef(false);
 
   const fetchCppt = useCallback(
-    async (idx: number) => {
+    async (idx: number, refresh = false) => {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/cppt/${norm}?dpjp=${idx}`, {
-          cache: "no-store",
-        });
+        const res = await fetch(
+          `/api/cppt/${norm}?dpjp=${idx}${refresh ? "&refresh=1" : ""}`,
+          { cache: "no-store" }
+        );
         const json: CpptResponse = await res.json();
         if (json.ok) {
           setData(json.cppt || []);
+          setSource({ src: json.source, cachedAt: json.cachedAt, stale: json.stale });
         } else {
           setData(null);
           setError(json.error || "Tidak ada data CPPT");
@@ -152,9 +166,18 @@ export function CpptSection({ norm }: { norm: string }) {
     return [...counts.entries()].sort((a, b) => b[1] - a[1]);
   }, [data]);
 
+  const dokterCount = useMemo(
+    () => (data ?? []).filter((c) => isDokter(c.penulis)).length,
+    [data]
+  );
+  const nonDokterCount = (data?.length ?? 0) - dokterCount;
+
   const filtered = useMemo(() => {
     if (!data) return [];
     if (filterPenulis === "all") return data;
+    if (filterPenulis === "__dokter") return data.filter((c) => isDokter(c.penulis));
+    if (filterPenulis === "__nondokter")
+      return data.filter((c) => !isDokter(c.penulis));
     return data.filter((c) => c.penulis === filterPenulis);
   }, [data, filterPenulis]);
 
@@ -220,14 +243,22 @@ export function CpptSection({ norm }: { norm: string }) {
               variant="ghost"
               size="sm"
               className="h-7 text-xs gap-1 ml-auto"
-              onClick={() => dpjp !== null && fetchCppt(dpjp)}
+              onClick={() => dpjp !== null && fetchCppt(dpjp, true)}
               disabled={loading || dpjp === null}
-              title="Segarkan data CPPT dari SIMRS"
+              title="Muat ulang CPPT terbaru dari SIMRS (sekaligus menyimpan)"
             >
               <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
-              Segarkan
+              Reload
             </Button>
           </div>
+
+          {source.src === "db" && (
+            <p className="text-[10px] text-muted-foreground -mt-1">
+              Data tersimpan
+              {source.cachedAt ? ` (diperbarui ${source.cachedAt.slice(0, 16).replace("T", " ")})` : ""}
+              {source.stale ? " — SIMRS sedang tidak bisa dihubungi" : ""}. Tekan Reload untuk memperbarui.
+            </p>
+          )}
 
           {loading && !data && (
             <div className="flex items-center justify-center py-6">
@@ -270,6 +301,8 @@ export function CpptSection({ norm }: { norm: string }) {
                   <option value="all">
                     Semua ({data.length})
                   </option>
+                  <option value="__dokter">Dokter ({dokterCount})</option>
+                  <option value="__nondokter">Non-Dokter ({nonDokterCount})</option>
                   {penulisOptions.map(([p, n]) => (
                     <option key={p} value={p}>
                       {p} ({n})
@@ -360,14 +393,36 @@ function CpptVisitCard({ visit }: { visit: CpptVisit }) {
 }
 
 function SoapSection({ label, content }: { label: string; content: string }) {
+  const [open, setOpen] = useState(false);
+  const firstLine = content.split("\n").find((l) => l.trim()) ?? "";
+  const preview =
+    firstLine.length > 90 ? `${firstLine.slice(0, 90)}…` : firstLine;
   return (
-    <div>
-      <p className="text-[10px] font-bold text-neon uppercase tracking-wider">
-        {label}
-      </p>
-      <p className="text-xs text-foreground whitespace-pre-wrap leading-relaxed mt-0.5">
-        {content}
-      </p>
+    <div className="rounded-md border border-border/60 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center gap-1.5 px-2 py-1.5 bg-muted/20 hover:bg-muted/40 text-left transition-colors"
+      >
+        {open ? (
+          <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" />
+        ) : (
+          <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground" />
+        )}
+        <span className="text-[10px] font-bold text-neon uppercase tracking-wider shrink-0">
+          {label}
+        </span>
+        {!open && preview && (
+          <span className="text-[10px] text-muted-foreground truncate">
+            {preview}
+          </span>
+        )}
+      </button>
+      {open && (
+        <p className="text-xs text-foreground whitespace-pre-wrap leading-relaxed px-2 py-1.5">
+          {content}
+        </p>
+      )}
     </div>
   );
 }

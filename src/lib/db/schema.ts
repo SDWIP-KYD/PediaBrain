@@ -119,6 +119,24 @@ export const patientSpecialResults = pgTable("patient_special_results", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Cached CPPT notes fetched from SIRS (per patient). Read offline; updated via reload.
+export const patientCpptNotes = pgTable("patient_cppt_notes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  patientId: uuid("patient_id")
+    .notNull()
+    .references(() => patients.id, { onDelete: "cascade" }),
+  kunjungan: varchar("kunjungan", { length: 60 }),
+  tanggal: varchar("tanggal", { length: 40 }),
+  penulis: varchar("penulis", { length: 255 }),
+  subjektif: text("subjektif"),
+  objektif: text("objektif"),
+  assesment: text("assesment"),
+  terapi: text("terapi"),
+  planning: text("planning"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 export const patientMedications = pgTable("patient_medications", {
   id: uuid("id").primaryKey().defaultRandom(),
   visitId: uuid("visit_id")
