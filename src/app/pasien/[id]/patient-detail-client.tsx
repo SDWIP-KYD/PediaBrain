@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   ArrowLeft, User, Phone, Calendar, FileText, Beaker, Pill,
-  ChevronDown, ExternalLink, Stethoscope, ClipboardList, Activity, TestTube, Syringe, Upload,
-  RefreshCw
+  ChevronDown, ChevronRight, ExternalLink, Stethoscope, ClipboardList, Activity, TestTube, Syringe, Upload,
+  RefreshCw, ScanLine
 } from "lucide-react";
 import Link from "next/link";
 import { DeletePatientButton } from "./delete-button";
@@ -44,6 +44,20 @@ type LabResult = {
   unit: string | null; referenceRange: string | null; flag: string | null; createdAt: Date;
 };
 
+type SpecialResult = {
+  id: string;
+  jenis: string;
+  tanggal: string | null;
+  klinis: string | null;
+  kesan: string | null;
+  kesimpulan: string | null;
+  hasil: string | null;
+  accession: string | null;
+  viewerUrl: string | null;
+  state: string | null;
+  detail: Record<string, unknown> | null;
+};
+
 type Medication = {
   id: string; visitId: string; drugName: string; dose: string | null;
   frequency: string | null; duration: string | null; route: string | null;
@@ -61,10 +75,11 @@ const SECTION_META: Record<string, { label: string; icon: typeof FileText; color
 const SECTION_ORDER = ["identitas", "diagnosa", "subjektif", "objektif", "pemeriksaan_penunjang", "terapi"];
 
 export function PatientDetailClient({
-  patient, visits, labsByVisit, medsByVisit,
+  patient, visits, labsByVisit, medsByVisit, specials,
 }: {
   patient: Patient; visits: Visit[];
   labsByVisit: Record<string, LabResult[]>; medsByVisit: Record<string, Medication[]>;
+  specials?: SpecialResult[];
 }) {
   const [expandedVisit, setExpandedVisit] = useState<string | null>(null);
   const [popupVisit, setPopupVisit] = useState<Visit | null>(null);
@@ -285,6 +300,11 @@ export function PatientDetailClient({
             <SimrsDataCard norm={patient.medicalRecordNo} patientId={patient.id} />
           </CardContent>
         </Card>
+      )}
+
+      {/* Hasil Special tersimpan (PA/RAD/BMP/LCS/Imuno/IHC) */}
+      {specials && specials.length > 0 && (
+        <SavedSpecialCard specials={specials} />
       )}
 
       {/* CPPT History (SIMRS) */}
@@ -540,4 +560,105 @@ function calcAgeMonths(birthDate: string, referenceDate: string): number {
   const months = (ref.getFullYear() - birth.getFullYear()) * 12 + (ref.getMonth() - birth.getMonth());
   if (ref.getDate() < birth.getDate()) return months - 1;
   return Math.max(0, months);
+}
+
+const SPECIAL_JENIS_LABEL: Record<string, string> = {
+  pa: "Patologi Anatomi",
+  rad: "Radiologi",
+  bmp: "BMP",
+  lcs: "LCS",
+  immuno: "Imunologi",
+  ihc: "IHC",
+};
+
+function SavedSpecialCard({ specials }: { specials: SpecialResult[] }) {
+  const [open, setOpen] = useState(false);
+  const grouped = useMemo(() => {
+    const g = new Map<string, SpecialResult[]>();
+    for (const s of specials) {
+      if (!g.has(s.jenis)) g.set(s.jenis, []);
+      g.get(s.jenis)!.push(s);
+    }
+    return [...g.entries()];
+  }, [specials]);
+
+  return (
+    <Card className="py-0 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-accent/30 transition-colors"
+      >
+        {open ? (
+          <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+        ) : (
+          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+        )}
+        <span className="text-sm font-medium flex items-center gap-2 flex-1 min-w-0">
+          <ScanLine className="h-3.5 w-3.5 text-neon shrink-0" />
+          Hasil Special Tersimpan
+        </span>
+        <Badge variant="secondary" className="text-[9px] shrink-0">
+          {specials.length} item
+        </Badge>
+      </button>
+      {open && (
+        <CardContent className="pt-0 pb-4 space-y-3 border-t border-border/50">
+          {grouped.map(([jenis, items]) => (
+            <div key={jenis}>
+              <p className="text-xs font-semibold text-neon uppercase tracking-wider mt-3 mb-1">
+                {SPECIAL_JENIS_LABEL[jenis] ?? jenis} ({items.length})
+              </p>
+              <div className="space-y-2">
+                {items.map((s) => (
+                  <div key={s.id} className="rounded-lg border border-border bg-card/50 p-3 space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {s.tanggal && (
+                        <Badge variant="secondary" className="text-[10px] font-mono">
+                          {s.tanggal}
+                        </Badge>
+                      )}
+                      {s.state && (
+                        <Badge variant="outline" className="text-[9px]">
+                          {s.state}
+                        </Badge>
+                      )}
+                      {s.viewerUrl && (
+                        <a
+                          href={s.viewerUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[10px] text-neon hover:underline"
+                        >
+                          Buka PACS
+                        </a>
+                      )}
+                    </div>
+                    {s.klinis && (
+                      <p className="text-xs text-muted-foreground">
+                        <span className="font-semibold">Klinis:</span> {s.klinis}
+                      </p>
+                    )}
+                    {s.kesan && (
+                      <p className="text-xs text-foreground whitespace-pre-wrap">
+                        <span className="font-semibold">Kesan:</span> {s.kesan}
+                      </p>
+                    )}
+                    {s.kesimpulan && (
+                      <p className="text-xs text-foreground whitespace-pre-wrap">
+                        <span className="font-semibold">Kesimpulan:</span> {s.kesimpulan}
+                      </p>
+                    )}
+                    {s.hasil && !s.kesan && !s.kesimpulan && (
+                      <p className="text-xs text-foreground whitespace-pre-wrap">{s.hasil}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      )}
+    </Card>
+  );
 }

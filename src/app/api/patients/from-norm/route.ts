@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import { patients, patientVisits, patientLabResults } from '@/lib/db/schema';
+import { patients, patientVisits, patientLabResults, patientSpecialResults } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
@@ -19,12 +19,30 @@ type HemaVisit = {
   params: LabParam[];
 };
 
+type SpecialItem = {
+  tanggal?: string;
+  klinis?: string;
+  kesan?: string;
+  kesimpulan?: string;
+  hasil?: string;
+  jenis?: string;
+  state?: string;
+  accession?: string | null;
+  viewer_url?: string | null;
+  cito?: boolean;
+  nomor_order?: string | null;
+  indikasi?: string;
+  keterangan?: string;
+  jaringan?: string;
+  detail?: Record<string, string>;
+};
+
 type HemaResponse = {
   success: boolean;
   norm?: string;
   name?: string;
   visits?: HemaVisit[];
-  special?: Record<string, unknown>;
+  special?: Partial<Record<'pa' | 'rad' | 'bmp' | 'lcs' | 'immuno' | 'ihc', SpecialItem[]>>;
   is_partial?: boolean;
   error?: string;
 };
@@ -179,6 +197,47 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Persist special results (PA/RAD/BMP/LCS/Imuno/IHC) — snapshot replace
+    let savedSpecial = 0;
+    if (labData?.special) {
+      const byJenis = Object.entries(labData.special).filter(
+        (kv): kv is [string, SpecialItem[]] => Array.isArray(kv[1])
+      );
+      const hasItems = byJenis.some(([, items]) => items.length > 0);
+      if (hasItems) {
+        await db
+          .delete(patientSpecialResults)
+          .where(eq(patientSpecialResults.patientId, patient.id));
+        const rows = byJenis.flatMap(([jenis, items]) =>
+          items.map((it) => ({
+            patientId: patient.id,
+            jenis,
+            tanggal: it.tanggal || null,
+            klinis: it.klinis || null,
+            kesan: it.kesan || null,
+            kesimpulan: it.kesimpulan || null,
+            hasil: it.hasil || null,
+            accession: it.accession || null,
+            viewerUrl: it.viewer_url || null,
+            state: it.state || null,
+            detail: {
+              ...(it.detail ?? {}),
+              ...(it.jenis ? { jenis_asal: it.jenis } : {}),
+              ...(it.cito !== undefined ? { cito: it.cito } : {}),
+              ...(it.nomor_order ? { nomor_order: it.nomor_order } : {}),
+              ...(it.indikasi ? { indikasi: it.indikasi } : {}),
+              ...(it.keterangan ? { keterangan: it.keterangan } : {}),
+              ...(it.jaringan ? { jaringan: it.jaringan } : {}),
+            },
+          }))
+        );
+        if (rows.length > 0) {
+          await db.insert(patientSpecialResults).values(rows);
+          savedSpecial = rows.length;
+        }
+      }
+    }
+
     revalidatePath('/pasien');
     revalidatePath(`/pasien/${patient.id}`);
 
@@ -186,6 +245,7 @@ export async function POST(req: NextRequest) {
       success: true,
       patient,
       savedVisits,
+      savedSpecial,
     });
   } catch (error) {
     console.error('from-norm error:', error);

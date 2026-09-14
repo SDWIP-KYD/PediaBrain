@@ -99,6 +99,26 @@ export const patientLabResults = pgTable("patient_lab_results", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Special (non-panel) results from SIMRS: PA, radiologi, BMP, LCS, imuno, IHC.
+// One row per item; raw fields kept verbatim in `detail` for display.
+export const patientSpecialResults = pgTable("patient_special_results", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  patientId: uuid("patient_id")
+    .notNull()
+    .references(() => patients.id, { onDelete: "cascade" }),
+  jenis: varchar("jenis", { length: 20 }).notNull(), // pa | rad | bmp | lcs | immuno | ihc
+  tanggal: varchar("tanggal", { length: 40 }),
+  klinis: text("klinis"),
+  kesan: text("kesan"),
+  kesimpulan: text("kesimpulan"),
+  hasil: text("hasil"),
+  accession: varchar("accession", { length: 60 }),
+  viewerUrl: text("viewer_url"),
+  state: varchar("state", { length: 20 }),
+  detail: jsonb("detail").$type<Record<string, unknown> | null>(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const patientMedications = pgTable("patient_medications", {
   id: uuid("id").primaryKey().defaultRandom(),
   visitId: uuid("visit_id")

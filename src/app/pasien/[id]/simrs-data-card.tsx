@@ -139,9 +139,34 @@ export function SimrsDataCard({
     runOne();
   }
 
-  async function handleAddToMyPatients(): Promise<{ success: boolean; id?: string; error?: string }> {
-    // Already in My Patients — just navigate to self
-    return { success: true, id: patientId };
+  const [savedNote, setSavedNote] = useState<string | null>(null);
+
+  async function handleAddToMyPatients(
+    n: string,
+    labData?: APIResponse
+  ): Promise<{ success: boolean; id?: string; error?: string }> {
+    // Already in My Patients — persist/refresh this patient's lab snapshot instead
+    if (!labData?.success) {
+      return { success: false, error: 'Data lab belum termuat' };
+    }
+    try {
+      const res = await fetch('/api/patients/from-norm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ norm: n, labData }),
+        signal: AbortSignal.timeout(30000),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.success) {
+        return { success: false, error: json?.error || `Gagal (${res.status})` };
+      }
+      const visits = json.savedVisits ?? 0;
+      const special = json.savedSpecial ?? 0;
+      setSavedNote(`Tersimpan: ${visits} kunjungan lab${special ? ` + ${special} hasil special` : ''}`);
+      return { success: true, id: patientId };
+    } catch {
+      return { success: false, error: 'Gagal menyimpan ke database' };
+    }
   }
 
   useEffect(() => {
@@ -158,6 +183,8 @@ export function SimrsDataCard({
       }}
       onRefetch={handleRefetch}
       existingPatientId={patientId}
+      showSave
+      savedNote={savedNote}
       onAddToMyPatients={handleAddToMyPatients}
     />
   );

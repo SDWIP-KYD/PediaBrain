@@ -32,12 +32,16 @@ export function PatientResultCard({
   onRefetch,
   existingPatientId,
   onAddToMyPatients,
+  showSave,
+  savedNote,
 }: {
   patient: PatientState;
   index: number;
   onToggle: (norm: string) => void;
   onRefetch: (norm: string) => void;
   existingPatientId: string | null;
+  showSave?: boolean;
+  savedNote?: string | null;
   onAddToMyPatients: (norm: string, labData?: APIResponse) => Promise<{ success: boolean; id?: string; error?: string; savedVisits?: number }>;
 }) {
   const [paramQ, setParamQ] = useState("");
@@ -153,9 +157,9 @@ export function PatientResultCard({
         </Badge>
       )}
 
-      {/* Add to My Patients button */}
+      {/* Add / Save button */}
       {!patient.loading && patient.data?.success && !patient.error && (
-        existingPatientId ? (
+        (existingPatientId && !showSave) ? (
           <button
             type="button"
             onClick={(e) => {
@@ -191,10 +195,10 @@ export function PatientResultCard({
             type="button"
             onClick={(e) => { e.stopPropagation(); handleAdd(e); }}
             className="shrink-0 flex items-center gap-1 px-2 py-0.5 rounded-md border border-neon/30 bg-neon/10 text-neon text-[10px] hover:bg-neon/20 transition-colors"
-            title="Tambah ke My Patients"
+            title={showSave ? "Simpan hasil lab ke My Patients" : "Tambah ke My Patients"}
           >
             <Plus className="h-3 w-3" />
-            Tambah
+            {showSave ? "Simpan Lab" : "Tambah"}
           </button>
         )
       )}
@@ -204,6 +208,12 @@ export function PatientResultCard({
   return (
     <Card className="py-0 overflow-hidden">
       {header}
+
+      {savedNote && !patient.loading && (
+        <div className="px-3 py-1 text-[10px] text-green-400 bg-green-500/5 border-t border-border/40">
+          {savedNote}
+        </div>
+      )}
 
       {patient.opened && (
         <CardContent className="pt-1 pb-4 space-y-3 border-t border-border/50">

@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { patients, patientVisits, patientLabResults, patientMedications } from "@/lib/db/schema";
+import { patients, patientVisits, patientLabResults, patientMedications, patientSpecialResults } from "@/lib/db/schema";
 import { eq, desc, asc } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { PatientDetailClient } from "./patient-detail-client";
@@ -44,12 +44,31 @@ export default async function PatientDetailPage({
     sections: (v.sections as Record<string, string> | null) ?? null,
   }));
 
+  const specialRows = await db
+    .select()
+    .from(patientSpecialResults)
+    .where(eq(patientSpecialResults.patientId, id))
+    .orderBy(desc(patientSpecialResults.createdAt));
+
   return (
     <PatientDetailClient
       patient={patient}
       visits={serializedVisits}
       labsByVisit={Object.fromEntries(labsByVisit)}
       medsByVisit={Object.fromEntries(medsByVisit)}
+      specials={specialRows.map((r) => ({
+        id: r.id,
+        jenis: r.jenis,
+        tanggal: r.tanggal,
+        klinis: r.klinis,
+        kesan: r.kesan,
+        kesimpulan: r.kesimpulan,
+        hasil: r.hasil,
+        accession: r.accession,
+        viewerUrl: r.viewerUrl,
+        state: r.state,
+        detail: r.detail as Record<string, unknown> | null,
+      }))}
     />
   );
 }
