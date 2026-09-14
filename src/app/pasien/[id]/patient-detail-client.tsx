@@ -16,6 +16,7 @@ import { DeleteVisitButton } from "./delete-visit-button";
 import { AddVisitDialogWrapper } from "./add-visit-dialog";
 import { PatientAIOverlay } from "./patient-ai-overlay";
 import { SimrsDataCard } from "./simrs-data-card";
+import { CpptSection } from "./cppt-section";
 import { EditPatientDialog } from "./edit-patient-dialog";
 import { EditVisitDialog } from "./edit-visit-dialog";
 import { GrowthChartCard } from "@/components/growth-chart";
@@ -284,6 +285,11 @@ export function PatientDetailClient({
             <SimrsDataCard norm={patient.medicalRecordNo} patientId={patient.id} />
           </CardContent>
         </Card>
+      )}
+
+      {/* CPPT History (SIMRS) */}
+      {patient.medicalRecordNo && (
+        <CpptSection norm={patient.medicalRecordNo} />
       )}
 
       {/* Growth Chart */}
