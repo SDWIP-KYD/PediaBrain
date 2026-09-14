@@ -15,39 +15,25 @@ import {
   RefreshCw,
   AlertCircle,
   FileText,
-  Thermometer,
-  Heart,
-  Activity,
-  Wind,
-  Droplets,
 } from "lucide-react";
 
-type VitalSigns = {
-  suhu?: string;
-  nadi?: string;
-  sistole?: string;
-  diastole?: string;
-  rr?: string;
-  spo2?: string;
-};
-
+// Matches SIRS /api/cppt response format
 type CpptVisit = {
   tanggal: string;
   kunjungan: string;
-  dpjp: string;
+  penulis: string;       // "dr. X (Sp.A)" — DPJP + spesialis
   subjektif: string;
   objektif: string;
   assesment: string;
-  plan: string;
-  vital?: VitalSigns;
+  terapi: string;
+  planning: string;
 };
 
 type CpptResponse = {
-  success: boolean;
+  ok: boolean;
   error?: string;
-  norm?: string;
-  name?: string;
-  visits?: CpptVisit[];
+  total?: number;
+  cppt?: CpptVisit[];
 };
 
 export function CpptSection({ norm }: { norm: string }) {
@@ -61,8 +47,8 @@ export function CpptSection({ norm }: { norm: string }) {
     try {
       const res = await fetch(`/api/cppt/${norm}`, { cache: "no-store" });
       const json: CpptResponse = await res.json();
-      if (json.success && json.visits) {
-        setData(json.visits);
+      if (json.ok && json.cppt) {
+        setData(json.cppt);
       } else {
         setError(json.error || "Tidak ada data CPPT");
       }
@@ -154,9 +140,6 @@ export function CpptSection({ norm }: { norm: string }) {
 }
 
 function CpptVisitCard({ visit }: { visit: CpptVisit }) {
-  const vital = visit.vital;
-  const hasVital = vital && Object.values(vital).some(Boolean);
-
   return (
     <div className="rounded-lg border border-border bg-card/50 p-3 space-y-2">
       {/* Header */}
@@ -168,45 +151,9 @@ function CpptVisitCard({ visit }: { visit: CpptVisit }) {
           {visit.kunjungan}
         </Badge>
         <span className="text-[10px] text-muted-foreground">
-          DPJP: {visit.dpjp}
+          Penulis: {visit.penulis}
         </span>
       </div>
-
-      {/* Vital Signs */}
-      {hasVital && (
-        <div className="flex gap-1.5 flex-wrap">
-          {vital.suhu && (
-            <Badge className="bg-red-500/10 text-red-300 text-[10px] gap-1">
-              <Thermometer className="h-2.5 w-2.5" />
-              {vital.suhu}°C
-            </Badge>
-          )}
-          {vital.nadi && (
-            <Badge className="bg-pink-500/10 text-pink-300 text-[10px] gap-1">
-              <Heart className="h-2.5 w-2.5" />
-              {vital.nadi}/m
-            </Badge>
-          )}
-          {vital.sistole && vital.diastole && (
-            <Badge className="bg-blue-500/10 text-blue-300 text-[10px] gap-1">
-              <Activity className="h-2.5 w-2.5" />
-              {vital.sistole}/{vital.diastole}
-            </Badge>
-          )}
-          {vital.rr && (
-            <Badge className="bg-green-500/10 text-green-300 text-[10px] gap-1">
-              <Wind className="h-2.5 w-2.5" />
-              {vital.rr}/m
-            </Badge>
-          )}
-          {vital.spo2 && (
-            <Badge className="bg-cyan-500/10 text-cyan-300 text-[10px] gap-1">
-              <Droplets className="h-2.5 w-2.5" />
-              O₂ {vital.spo2}%
-            </Badge>
-          )}
-        </div>
-      )}
 
       {/* SOAP Sections */}
       {visit.subjektif && (
@@ -218,7 +165,12 @@ function CpptVisitCard({ visit }: { visit: CpptVisit }) {
       {visit.assesment && (
         <SoapSection label="Assesment" content={visit.assesment} />
       )}
-      {visit.plan && <SoapSection label="Plan" content={visit.plan} />}
+      {visit.terapi && (
+        <SoapSection label="Terapi" content={visit.terapi} />
+      )}
+      {visit.planning && (
+        <SoapSection label="Planning" content={visit.planning} />
+      )}
     </div>
   );
 }
