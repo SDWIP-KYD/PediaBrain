@@ -40,7 +40,34 @@ export async function GET(
     }
 
     const data = await res.json();
-    return NextResponse.json(data);
+
+    // Normalize: SIRS returns {ok, cppt:[]}, Hema VPS returns {success, visits:[]}
+    const rawVisits = data.visits || data.cppt || [];
+    const success = data.success ?? data.ok ?? false;
+
+    // Map SIRS fields to PediaBrain CpptSection schema:
+    //   penulis → dpjp, terapi+planning → plan
+    const visits = rawVisits.map((v: Record<string, unknown>) => ({
+      tanggal: (v.tanggal || v.TANGGAL || "") as string,
+      kunjungan: (v.kunjungan || v.KUNJUNGAN || "") as string,
+      dpjp: (v.dpjp || v.penulis || v.PENULIS || "") as string,
+      subjektif: (v.subjektif || v.SUBYEKTIF || "") as string,
+      objektif: (v.objektif || v.OBYEKTIF || "") as string,
+      assesment: (v.assesment || v.ASSESMENT || "") as string,
+      plan: (
+        String(v.terapi || "") + (v.planning ? "\n\n" + String(v.planning) : "") ||
+        (v.plan || v.PLAN || "")
+      ) as string,
+      vital: v.vital,
+    }));
+
+    return NextResponse.json({
+      success: !!success,
+      error: data.error,
+      norm: norm,
+      name: data.name,
+      visits: visits,
+    });
   } catch (error) {
     console.error("cppt fetch error:", error);
     return NextResponse.json(
