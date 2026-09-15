@@ -48,6 +48,8 @@ export function SimrsDataCard({
           opened: true,
           fullNote: undefined,
         });
+        // Persist this snapshot silently; upgraded later if a full fetch follows.
+        void autoSave(d);
         if (d.is_partial) {
           startFullJob(d.job_id!, gen);
         }
@@ -105,6 +107,8 @@ export function SimrsDataCard({
             data: job.result!,
             fullNote: `Lengkap: ${job.result!.visits?.length ?? 0} kunjungan`,
           }));
+          // Upgrade the auto-saved snapshot with the complete data.
+          void autoSave(job.result!);
           return;
         }
         if (job.status === "error") {
@@ -140,6 +144,54 @@ export function SimrsDataCard({
   }
 
   const [savedNote, setSavedNote] = useState<string | null>(null);
+
+  // Signature of the last auto-saved snapshot, so we only save once per change.
+  const autoSaveSigRef = useRef<string | null>(null);
+
+  // Build a cheap fingerprint of loaded lab data to detect real changes.
+  function dataSignature(d: APIResponse): string {
+    const visits = d.visits ?? [];
+    const special = d.special ?? {};
+    const specialCount = Object.values(special).reduce<number>(
+      (n, arr) => n + (Array.isArray(arr) ? arr.length : 0),
+      0
+    );
+    const lastTanggal = visits[0]?.tgl ?? "";
+    return `${visits.length}|${specialCount}|${lastTanggal}`;
+  }
+
+  // Silent auto-save: persist the freshly-loaded live snapshot to My Patients.
+  // Skipped while a full fetch is still running (we save once, with final data).
+  const autoSavingRef = useRef(false);
+
+  async function autoSave(d: APIResponse) {
+    if (autoSavingRef.current) return;
+    const sig = dataSignature(d);
+    if (autoSaveSigRef.current === sig) return;
+    autoSavingRef.current = true;
+    autoSaveSigRef.current = sig;
+    try {
+      const res = await fetch('/api/patients/from-norm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ norm, labData: d }),
+        signal: AbortSignal.timeout(30000),
+      });
+      const json = await res.json().catch(() => null);
+      if (res.ok && json?.success) {
+        const visits = json.savedVisits ?? 0;
+        const special = json.savedSpecial ?? 0;
+        setSavedNote(`Otomatis tersimpan: ${visits} kunjungan lab${special ? ` + ${special} hasil special` : ''}`);
+      } else {
+        // Allow a later attempt to retry this snapshot.
+        autoSaveSigRef.current = null;
+      }
+    } catch {
+      autoSaveSigRef.current = null;
+    } finally {
+      autoSavingRef.current = false;
+    }
+  }
 
   async function handleAddToMyPatients(
     n: string,
